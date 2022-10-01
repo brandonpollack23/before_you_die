@@ -1,5 +1,5 @@
 plugins {
-    id("org.jetbrains.compose") version "1.1.1"
+    id("org.jetbrains.compose") version libs.versions.androidx.compose.plugin.get()
     id("com.android.application")
     kotlin("android")
 }
@@ -16,7 +16,7 @@ dependencies {
 }
 
 android {
-    compileSdk = 31
+    compileSdk = 33
 
     defaultConfig {
         applicationId = "com.beforeyoudie.beforeyoudie"

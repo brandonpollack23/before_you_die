@@ -16,6 +16,7 @@ include(":common")
 dependencyResolutionManagement {
     versionCatalogs {
         create("libs") {
+            version("androidx-compose-plugin", "1.2.0-beta02")
             library("kotlinx-coroutines", "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
             library("desugar", "com.android.tools:desugar_jdk_libs:1.1.5")
         }

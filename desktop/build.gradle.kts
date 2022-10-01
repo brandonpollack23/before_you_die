@@ -3,10 +3,10 @@ import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 
 plugins {
     kotlin("multiplatform")
-    id("org.jetbrains.compose") version "1.1.1"
+    id("org.jetbrains.compose") version libs.versions.androidx.compose.plugin.get()
 }
 
-group = "me.brand"
+group = "com.beforeyoudie"
 version = "1.0"
 
 kotlin {
