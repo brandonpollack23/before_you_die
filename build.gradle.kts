@@ -1,5 +1,6 @@
 plugins {
     id("org.jetbrains.dokka") version "1.7.10"
+    id("org.jlleitschuh.gradle.ktlint") version libs.versions.ktlint
 }
 
 buildscript {
@@ -23,6 +24,10 @@ allprojects {
         mavenCentral()
         maven("https://maven.pkg.jetbrains.space/public/p/compose/dev")
     }
+}
+
+subprojects {
+    apply(plugin = "org.jlleitschuh.gradle.ktlint") // Version should be inherited from parent
 }
 
 // TODO Dokka
