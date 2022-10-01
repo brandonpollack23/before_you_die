@@ -7,8 +7,6 @@ import org.koin.test.KoinTest
 import org.koin.test.inject
 import org.koin.test.mock.MockProvider
 
-// TODO NOW fix android assets
-// TODO NOW kotest integration to intellij?
 class SqlDelightBeforeYouDieDbTest : FunSpec(), KoinTest {
     private val mockProvider = MockProvider
     private val db by inject<BeforeYouDieStorageInterface>()

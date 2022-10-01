@@ -10,6 +10,6 @@ class MainApp : Application() {
         super.onCreate()
 
         Logger.setMinSeverity(Severity.Verbose)
-        startKoin()
+        // startKoin()
     }
 }

@@ -66,7 +66,7 @@ android {
         coreLibraryDesugaring(libs.desugar)
         implementation(compose.material)
         implementation(libs.kermit)
-        implementation(libs.koin.core)
+        implementation(libs.koin.android)
         implementation(project(":common-core"))
         implementation(project(":common-ui"))
         implementation("androidx.activity:activity-compose:1.6.0")
