@@ -11,7 +11,7 @@ repositories {
 }
 
 dependencies {
-    implementation(project(":common"))
+    implementation(project(":common-ui"))
     implementation("androidx.activity:activity-compose:1.6.0")
 }
 
