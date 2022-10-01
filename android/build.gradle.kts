@@ -72,5 +72,6 @@ android {
 
     dependencies {
         coreLibraryDesugaring(libs.desugar)
+        implementation(compose.material)
     }
 }
