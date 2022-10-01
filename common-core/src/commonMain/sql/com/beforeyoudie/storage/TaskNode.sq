@@ -1,0 +1,33 @@
+-- TODO SEARCH create a fts table
+CREATE TABLE IF NOT EXISTS TaskNode (
+    id TEXT NOT NULL PRIMARY KEY,
+    title TEXT NOT NULL,
+    description TEXT
+);
+
+CREATE TABLE IF NOT EXISTS TaskChildren (
+    id TEXT NOT NULL PRIMARY KEY,
+    child TEXT NOT NULL,
+    FOREIGN KEY(id) REFERENCES TaskNode(id),
+    FOREIGN KEY(child) REFERENCES TaskNode(id)
+);
+
+CREATE TABLE IF NOT EXISTS TaskDependency (
+    blocked_task TEXT NOT NULL PRIMARY KEY,
+    blocking_task TEXT NOT NULL,
+    FOREIGN KEY(blocking_task) REFERENCES TaskNode(id),
+    FOREIGN KEY(blocked_task) REFERENCES TaskNode(id)
+);
+CREATE INDEX blocked_task_index ON TaskDependency(blocked_task);
+
+-- TODO STORAGE test all these queries
+selectAllTaskNodes:
+SELECT * FROM TaskNode;
+
+selectAllNonBlockedTaskNodes:
+SELECT *
+FROM TaskNode
+WHERE TaskNode.id NOT IN (SELECT blocked_task FROM TaskDependency);
+
+selectAllChildren:
+SELECT child FROM TaskChildren WHERE id = :parentId;

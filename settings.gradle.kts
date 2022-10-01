@@ -13,6 +13,7 @@ include(":desktop")
 include(":common-core")
 include(":common-ui")
 
+/* ktlint-disable max-line-length */
 dependencyResolutionManagement {
     versionCatalogs {
         create("libs") {
@@ -21,7 +22,7 @@ dependencyResolutionManagement {
 
             library("kotlinx-coroutines", "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
 
-            // Koin
+            // Koin DI
             val koinVersion = "3.2.2"
             val koinAndroidVersion = "3.2.2"
             val koinAndroidComposeVersion = "3.2.1"
@@ -36,6 +37,19 @@ dependencyResolutionManagement {
             library("koin-androidx-compose", "io.insert-koin:koin-androidx-compose:$koinAndroidComposeVersion")
             library("koin-ktor", "io.insert-koin:koin-ktor:$koinKtorVersion")
             library("koin-ktor-logger-slf4j", "io.insert-koin:koin-logger-slf4j:$koinKtorVersion")
+
+            // Logging
+            val kermitVersion = "1.1.3"
+            library("kermit", "co.touchlab:kermit:$kermitVersion")
+            library("kermit-koin", "co.touchlab:kermit-koin:$kermitVersion")
+
+            // Storage/SQLite
+            val sqlDelightVersion = "1.5.3"
+            version("sqldelight", sqlDelightVersion)
+            library("sqldelight-android", "com.squareup.sqldelight:android-driver:$sqlDelightVersion")
+            library("sqldelight-native", "com.squareup.sqldelight:native-driver:$sqlDelightVersion")
+            library("sqldelight-jvm", "com.squareup.sqldelight:sqlite-driver:$sqlDelightVersion")
+            library("requiry-sqliteandroid", "com.github.requery:sqlite-android:3.39.2")
 
             library("desugar", "com.android.tools:desugar_jdk_libs:1.1.5")
         }

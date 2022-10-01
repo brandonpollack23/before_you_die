@@ -1,6 +1,7 @@
 plugins {
     id("org.jetbrains.dokka") version "1.7.10"
     id("org.jlleitschuh.gradle.ktlint") version libs.versions.ktlint
+    id("com.squareup.sqldelight") version libs.versions.sqldelight apply false
 }
 
 buildscript {
@@ -23,11 +24,12 @@ allprojects {
         google()
         mavenCentral()
         maven("https://maven.pkg.jetbrains.space/public/p/compose/dev")
+        maven("https://jitpack.io") // For requery sqlite
     }
 }
 
 subprojects {
-    apply(plugin = "org.jlleitschuh.gradle.ktlint") // Version should be inherited from parent
+    // apply(plugin = "org.jlleitschuh.gradle.ktlint") // Version should be inherited from parent
 }
 
 // TODO Dokka

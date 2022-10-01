@@ -145,3 +145,5 @@ local.properties
 *.jks
 
 android/release
+
+beforeyoudie.db
