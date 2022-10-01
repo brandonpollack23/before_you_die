@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS TaskDependency (
     FOREIGN KEY(blocking_task) REFERENCES TaskNode(id),
     FOREIGN KEY(blocked_task) REFERENCES TaskNode(id)
 );
-CREATE INDEX blocked_task_index ON TaskDependency(blocked_task);
+CREATE INDEX IF NOT EXISTS blocked_task_index ON TaskDependency(blocked_task);
 
 -- TODO STORAGE test all these queries
 selectAllTaskNodes:

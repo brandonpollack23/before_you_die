@@ -1,3 +1,5 @@
+import com.android.build.gradle.internal.res.processResources
+
 val kotlin_version: String by extra
 plugins {
     kotlin("multiplatform")
