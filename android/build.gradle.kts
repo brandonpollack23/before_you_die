@@ -4,34 +4,68 @@ plugins {
     kotlin("android")
 }
 
-group = "me.brand"
+group = "com.beforeyoudie"
 version = "1.0"
 
 repositories {
-    jcenter()
 }
 
 dependencies {
     implementation(project(":common"))
-    implementation("androidx.activity:activity-compose:1.4.0")
+    implementation("androidx.activity:activity-compose:1.6.0")
 }
 
 android {
-    compileSdkVersion(31)
+    compileSdk = 31
+
     defaultConfig {
-        applicationId = "me.brand.android"
-        minSdkVersion(24)
-        targetSdkVersion(31)
+        applicationId = "com.beforeyoudie.beforeyoudie"
+        minSdk = 24
+        targetSdk = 31
         versionCode = 1
         versionName = "1.0"
     }
+
+    signingConfigs {
+        create("release") {
+            storeFile = file("./key/key.jks")
+            com.android.build.gradle.internal.cxx.configure.gradleLocalProperties(rootDir).apply {
+                storePassword = getProperty("storePwd")
+                keyAlias = getProperty("keyAlias")
+                keyPassword = getProperty("keyPwd")
+            }
+        }
+    }
+
     compileOptions {
+        isCoreLibraryDesugaringEnabled = true
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
     }
+
     buildTypes {
-        getByName("release") {
-            isMinifyEnabled = false
+        create("debugPG") {
+            isDebuggable = false
+            isMinifyEnabled = true
+            versionNameSuffix = " debugPG"
+            matchingFallbacks.add("debug")
+
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                file("proguard-rules.pro")
+            )
         }
+        getByName("release") {
+            isMinifyEnabled = true
+            signingConfig = signingConfigs.getByName("release")
+
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                file("proguard-rules.pro")
+            )
+        }
+    }
+    dependencies {
+        coreLibraryDesugaring(libs.desugar)
     }
 }

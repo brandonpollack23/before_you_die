@@ -1,3 +1,3 @@
-package me.brand.common
+package com.beforeyoudie.common
 
 expect fun getPlatformName(): String

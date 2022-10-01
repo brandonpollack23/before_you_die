@@ -17,6 +17,7 @@ dependencyResolutionManagement {
     versionCatalogs {
         create("libs") {
             library("kotlinx-coroutines", "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
+            library("desugar", "com.android.tools:desugar_jdk_libs:1.1.5")
         }
     }
 }

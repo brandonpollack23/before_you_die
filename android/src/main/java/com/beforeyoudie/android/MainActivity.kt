@@ -1,6 +1,6 @@
-package me.brand.android
+package com.beforeyoudie.android
 
-import me.brand.common.App
+import com.beforeyoudie.common.App
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
