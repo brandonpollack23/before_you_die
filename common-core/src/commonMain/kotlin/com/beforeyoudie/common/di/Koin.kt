@@ -5,8 +5,14 @@ import co.touchlab.kermit.koin.KermitKoinLogger
 import org.koin.core.component.KoinComponent
 import org.koin.core.module.Module
 
+/**
+ * Load all platform specific dependencies, including database driver etc.
+ */
 expect fun loadPlatformSpecificModule(): Module
 
+/**
+ * Main Koin entrypoint for injection.
+ */
 class BeforeYouDieApplication : KoinComponent {
 }
 
