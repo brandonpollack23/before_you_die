@@ -8,6 +8,9 @@ import org.koin.core.module.Module
 import org.koin.dsl.bind
 import org.koin.dsl.module
 import io.requery.android.database.sqlite.RequerySQLiteOpenHelperFactory
+import io.requery.android.database.sqlite.SQLiteDatabase
+import org.koin.core.module.dsl.createdAtStart
+import org.koin.core.module.dsl.withOptions
 
 actual fun loadPlatformSpecificModule(): Module = module {
     single {
@@ -24,5 +27,7 @@ actual fun loadPlatformSpecificModule(): Module = module {
         )
 
         SqlDelightBeforeYouDieStorage(BeforeYouDieDb(driver), dbFileName == "")
+    } withOptions {
+        createdAtStart()
     } bind BeforeYouDieStorageInterface::class
 }

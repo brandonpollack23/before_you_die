@@ -7,14 +7,6 @@ plugins {
 group = "com.beforeyoudie"
 version = "1.0"
 
-repositories {
-}
-
-dependencies {
-    implementation(project(":common-ui"))
-    implementation("androidx.activity:activity-compose:1.6.0")
-}
-
 android {
     compileSdk = 33
 
@@ -73,5 +65,10 @@ android {
     dependencies {
         coreLibraryDesugaring(libs.desugar)
         implementation(compose.material)
+        implementation(libs.kermit)
+        implementation(libs.koin.core)
+        implementation(project(":common-core"))
+        implementation(project(":common-ui"))
+        implementation("androidx.activity:activity-compose:1.6.0")
     }
 }
