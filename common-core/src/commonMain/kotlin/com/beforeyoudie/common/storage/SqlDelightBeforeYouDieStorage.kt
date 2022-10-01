@@ -2,5 +2,8 @@ package com.beforeyoudie.common.storage
 
 import com.squareup.sqldelight.db.SqlDriver
 
-class SqlDelightBeforeYouDieStorage(driver: SqlDriver) : BeforeYouDieStorageInterface {
+/**
+ * Sqlite implementation of [BeforeYouDieStorageInterface]
+ */
+class SqlDelightBeforeYouDieStorage(private val database: BeforeYouDieDb) : BeforeYouDieStorageInterface {
 }

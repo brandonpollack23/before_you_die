@@ -14,6 +14,6 @@ actual fun loadPlatformSpecificModule(): Module = module {
         // TODO STORAGE override this is tests with IN_MEMORY
         val driver = JdbcSqliteDriver("jdbc:sqlite:beforeyoudie.db")
         BeforeYouDieDb.Schema.create(driver)
-        SqlDelightBeforeYouDieStorage(driver)
+        SqlDelightBeforeYouDieStorage(BeforeYouDieDb(driver))
     } bind BeforeYouDieStorageInterface::class
 }

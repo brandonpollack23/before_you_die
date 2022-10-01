@@ -19,6 +19,6 @@ actual fun loadPlatformSpecificModule(): Module = module {
             // Use this to use the newest version of sqlite (not the one packaged with android).
             factory = RequerySQLiteOpenHelperFactory()
         )
-        SqlDelightBeforeYouDieStorage(driver)
+        SqlDelightBeforeYouDieStorage(BeforeYouDieDb(driver))
     } bind BeforeYouDieStorageInterface::class
 }
