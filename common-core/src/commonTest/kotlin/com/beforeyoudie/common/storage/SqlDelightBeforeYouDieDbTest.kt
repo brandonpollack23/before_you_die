@@ -1,22 +1,21 @@
 package com.beforeyoudie.common.storage
 
-import co.touchlab.kermit.Logger
-import co.touchlab.kermit.Severity
-import com.beforeyoudie.common.di.loadKoinModules
-import io.kotest.core.extensions.Extension
+import com.beforeyoudie.common.di.startKoin
 import io.kotest.core.spec.style.FunSpec
-import io.kotest.koin.KoinExtension
 import io.kotest.matchers.shouldBe
 import org.koin.test.KoinTest
 import org.koin.test.inject
+import org.koin.test.mock.MockProvider
 
+// TODO NOW fix android assets
+// TODO NOW kotest integration to intellij?
 class SqlDelightBeforeYouDieDbTest : FunSpec(), KoinTest {
-    override fun extensions(): List<Extension> = listOf(KoinExtension(loadKoinModules()))
-
+    private val mockProvider = MockProvider
     private val db by inject<BeforeYouDieStorageInterface>()
-
     init {
+
         test("database is in memory for test") {
+            startKoin()
             db.isInMemory shouldBe true
         }
     }

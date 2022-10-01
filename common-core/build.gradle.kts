@@ -5,6 +5,7 @@ plugins {
     kotlin("multiplatform")
     id("com.android.library")
     id("com.squareup.sqldelight")
+    id("io.kotest.multiplatform")
 }
 
 group = "com.beforeyoudie"
@@ -63,6 +64,10 @@ kotlin {
             }
         }
     }
+}
+
+tasks.named<Copy>("desktopTestProcessResources") {
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
 }
 
 android {

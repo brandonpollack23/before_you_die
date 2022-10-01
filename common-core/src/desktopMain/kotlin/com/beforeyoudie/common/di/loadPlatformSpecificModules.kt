@@ -12,12 +12,14 @@ import org.koin.dsl.module
 
 actual fun loadPlatformSpecificModule(): Module = module {
     single {
-        val dbFileName = getProperty<String>(Properties.LOCAL_DATABASE_FILENAME.name)
+        val dbFileName = getProperty<String>(Properties.LOCAL_DATABASE_FILENAME.name).trim('"')
         if (dbFileName.isNotBlank()) logger.debug("opening db file with name: $dbFileName")
         else logger.debug("Using in memory database")
 
-        val driver = JdbcSqliteDriver("jdbc:sqlite:./sqlite/db/$dbFileName")
+        val jdbcUri = if (dbFileName.isNotBlank()) "jdbc:sqlite:./sqlite/db/$dbFileName" else JdbcSqliteDriver.IN_MEMORY
+        val driver = JdbcSqliteDriver(url = jdbcUri)
         BeforeYouDieDb.Schema.create(driver)
+
         SqlDelightBeforeYouDieStorage(BeforeYouDieDb(driver), dbFileName == "")
     } withOptions {
         createdAtStart()
