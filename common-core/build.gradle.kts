@@ -1,6 +1,5 @@
 plugins {
     kotlin("multiplatform")
-    id("org.jetbrains.compose") version libs.versions.androidx.compose.plugin.get()
     id("com.android.library")
 }
 
@@ -17,11 +16,7 @@ kotlin {
 
     sourceSets {
         val commonMain by getting {
-            dependencies {
-                api(compose.runtime)
-                api(compose.foundation)
-                api(compose.material)
-            }
+            dependencies { }
         }
         val commonTest by getting {
             dependencies {
@@ -41,7 +36,6 @@ kotlin {
         }
         val desktopMain by getting {
             dependencies {
-                api(compose.preview)
             }
         }
         val desktopTest by getting

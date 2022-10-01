@@ -10,6 +10,7 @@ rootProject.name = "before_you_die"
 
 include(":android")
 include(":desktop")
+include(":common-core")
 include(":common-ui")
 
 dependencyResolutionManagement {
