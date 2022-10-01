@@ -27,6 +27,15 @@ CREATE INDEX IF NOT EXISTS blocked_task_index ON TaskDependency(blocked_task);
 selectAllTaskNodes:
 SELECT * FROM TaskNode;
 
+selectAllTaskNodesWithDependentAndChildData:
+SELECT n.id, n.title, n.description, td.blocked_task, tc.child
+FROM TaskNode AS n
+LEFT JOIN TaskDependency AS td
+ON n.id = td.blocking_task
+LEFT JOIN TaskChildren AS tc
+ON n.id = tc.id;
+
+
 selectAllNonBlockedTaskNodes:
 SELECT *
 FROM TaskNode
