@@ -141,3 +141,7 @@ gradle-app.setting
 *.hprof
 
 local.properties
+
+*.jks
+
+android/release

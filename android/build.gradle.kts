@@ -65,6 +65,11 @@ android {
             )
         }
     }
+
+    buildFeatures {
+        compose = true
+    }
+
     dependencies {
         coreLibraryDesugaring(libs.desugar)
     }
