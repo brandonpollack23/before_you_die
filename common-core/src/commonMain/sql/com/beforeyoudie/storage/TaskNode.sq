@@ -11,6 +11,7 @@ CREATE TABLE IF NOT EXISTS TaskChildren (
     FOREIGN KEY(id) REFERENCES TaskNode(id),
     FOREIGN KEY(child) REFERENCES TaskNode(id)
 );
+CREATE INDEX IF NOT EXISTS child_to_parent ON TaskChildren(child);
 
 CREATE TABLE IF NOT EXISTS TaskDependency (
     blocked_task TEXT NOT NULL PRIMARY KEY,
@@ -28,12 +29,18 @@ selectAllTaskNodes:
 SELECT * FROM TaskNode;
 
 selectAllTaskNodesWithDependentAndChildData:
-SELECT n.id, n.title, n.description, td.blocked_task, tc.child
+SELECT
+  n.id,
+  n.title,
+  n.description,
+  group_concat(td.blocked_task) AS blocked_tasks,
+  group_concat(tc.child) AS children
 FROM TaskNode AS n
 LEFT JOIN TaskDependency AS td
 ON n.id = td.blocking_task
 LEFT JOIN TaskChildren AS tc
 ON n.id = tc.id;
+-- GROUP BY n.id, n.description, n.title;
 
 
 selectAllNonBlockedTaskNodes:

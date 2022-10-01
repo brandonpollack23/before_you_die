@@ -59,6 +59,9 @@ dependencyResolutionManagement {
             library("kotest-properties", "io.kotest:kotest-property:$kotestVersion")
             library("kotest-koin", "io.kotest.extensions:kotest-extensions-koin:1.1.0")
 
+            // UUID
+            library("uuid", "com.benasher44:uuid:0.5.0")
+
             library("desugar", "com.android.tools:desugar_jdk_libs:1.1.5")
         }
     }

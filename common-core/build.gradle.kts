@@ -25,6 +25,7 @@ kotlin {
                 implementation(libs.koin.core)
                 implementation(libs.kermit)
                 implementation(libs.kermit.koin)
+                implementation(libs.uuid)
             }
         }
 
