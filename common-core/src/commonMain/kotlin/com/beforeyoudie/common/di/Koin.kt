@@ -4,6 +4,7 @@ import co.touchlab.kermit.Logger
 import co.touchlab.kermit.koin.KermitKoinLogger
 import org.koin.core.component.KoinComponent
 import org.koin.core.module.Module
+import org.koin.fileProperties
 
 /**
  * Load all platform specific dependencies, including database driver etc.
@@ -19,9 +20,15 @@ class BeforeYouDieApplication : KoinComponent {
 fun startKoin() = org.koin.core.context.startKoin {
     // TODO LOGGING make a koin configuration to set a log file etc
     val kermit = Logger.withTag("koin")
-
     logger(KermitKoinLogger(kermit))
 
-    val platformModules = loadPlatformSpecificModule()
-    modules(platformModules)
+    fileProperties()
+
+    modules(loadKoinModules())
+}
+
+fun loadKoinModules() = listOf(loadPlatformSpecificModule())
+
+enum class Properties {
+    LOCAL_DATABASE_FILENAME
 }

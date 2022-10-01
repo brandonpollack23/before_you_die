@@ -5,5 +5,5 @@ package com.beforeyoudie.common.storage
  * could be backed by memory, firebase, or whatever.
  */
 interface BeforeYouDieStorageInterface {
-
+    val isInMemory: Boolean
 }

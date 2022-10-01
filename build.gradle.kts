@@ -2,6 +2,7 @@ plugins {
     id("org.jetbrains.dokka") version "1.7.10"
     id("org.jlleitschuh.gradle.ktlint") version libs.versions.ktlint
     id("com.squareup.sqldelight") version libs.versions.sqldelight apply false
+    id("io.kotest.multiplatform") version libs.versions.kotest
 }
 
 buildscript {
@@ -29,7 +30,24 @@ allprojects {
 }
 
 subprojects {
-    // apply(plugin = "org.jlleitschuh.gradle.ktlint") // Version should be inherited from parent
+    apply(plugin = "org.jlleitschuh.gradle.ktlint") // Version should be inherited from parent
+
+    // Configure kotest
+    tasks.withType<Test> {
+        useJUnitPlatform()
+        filter {
+            isFailOnNoMatchingTests = true
+        }
+        testLogging {
+            showExceptions = true
+            showStandardStreams = true
+            events = setOf(
+                org.gradle.api.tasks.testing.logging.TestLogEvent.FAILED,
+                org.gradle.api.tasks.testing.logging.TestLogEvent.PASSED
+            )
+            exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
+        }
+    }
 }
 
 // TODO Dokka

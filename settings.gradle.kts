@@ -29,7 +29,6 @@ dependencyResolutionManagement {
             val koinKtorVersion = "3.2.2"
             library("koin-core", "io.insert-koin:koin-core:$koinVersion")
             library("koin-test", "io.insert-koin:koin-test:$koinVersion")
-            library("koin-test-junit4", "io.insert-koin:koin-test-junit4:$koinVersion")
             library("koin-android", "io.insert-koin:koin-android:$koinAndroidVersion")
             library("koin-android-javacompat", "io.insert-koin:koin-android-compat:$koinAndroidVersion") // Java Compatibility
             library("koin-androidx-workmanager", "io.insert-koin:koin-androidx-workmanager:$koinAndroidVersion") // Jetpack WorkManager
@@ -50,6 +49,15 @@ dependencyResolutionManagement {
             library("sqldelight-native", "com.squareup.sqldelight:native-driver:$sqlDelightVersion")
             library("sqldelight-jvm", "com.squareup.sqldelight:sqlite-driver:$sqlDelightVersion")
             library("requiry-sqliteandroid", "com.github.requery:sqlite-android:3.39.2")
+
+            // Kotest framework
+            val kotestVersion = "5.4.2"
+            version("kotest", kotestVersion)
+            library("kotest", "io.kotest:kotest-framework-engine:$kotestVersion")
+            library("kotest-runner-junit5", "io.kotest:kotest-runner-junit5:$kotestVersion")
+            library("kotest-assertions", "io.kotest:kotest-assertions-core:$kotestVersion")
+            library("kotest-properties", "io.kotest:kotest-property:$kotestVersion")
+            library("kotest-koin", "io.kotest.extensions:kotest-extensions-koin:1.1.0")
 
             library("desugar", "com.android.tools:desugar_jdk_libs:1.1.5")
         }

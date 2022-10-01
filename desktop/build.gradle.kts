@@ -23,6 +23,7 @@ kotlin {
                 implementation(project(":common-core"))
 
                 implementation(compose.desktop.currentOs)
+                implementation(libs.kermit)
                 implementation(libs.koin.core)
             }
         }

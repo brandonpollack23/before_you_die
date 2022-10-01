@@ -11,14 +11,18 @@ import io.requery.android.database.sqlite.RequerySQLiteOpenHelperFactory
 
 actual fun loadPlatformSpecificModule(): Module = module {
     single {
-        // TODO KOIN use configuration to get DB name
+        val dbFileName = getProperty<String>(Properties.LOCAL_DATABASE_FILENAME.name)
+        if (dbFileName.isNotBlank()) logger.debug("opening db file with name: $dbFileName")
+        else logger.debug("Using in memory database")
+
         val driver = AndroidSqliteDriver(
             BeforeYouDieDb.Schema,
             get(),
-            "beforeyoudie.db",
+            dbFileName,
             // Use this to use the newest version of sqlite (not the one packaged with android).
             factory = RequerySQLiteOpenHelperFactory()
         )
-        SqlDelightBeforeYouDieStorage(BeforeYouDieDb(driver))
+
+        SqlDelightBeforeYouDieStorage(BeforeYouDieDb(driver), dbFileName == "")
     } bind BeforeYouDieStorageInterface::class
 }

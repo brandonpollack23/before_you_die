@@ -1,3 +1,4 @@
+val kotlin_version: String by extra
 plugins {
     kotlin("multiplatform")
     id("com.android.library")
@@ -26,14 +27,17 @@ kotlin {
 
         val commonTest by getting {
             dependencies {
-                // implementation(kotlin("test"))
+                implementation(kotlin("test-common"))
+                implementation(libs.kotest)
+                implementation(libs.kotest.assertions)
+                implementation(libs.kotest.properties)
+                implementation(libs.kotest.koin)
+                implementation(libs.koin.test)
             }
         }
 
         val androidMain by getting {
             dependencies {
-                api("androidx.appcompat:appcompat:1.5.1")
-                api("androidx.core:core-ktx:1.9.0")
                 implementation(libs.sqldelight.android)
                 implementation(libs.requiry.sqliteandroid)
             }
@@ -50,7 +54,12 @@ kotlin {
                 implementation(libs.sqldelight.jvm)
             }
         }
-        val desktopTest by getting
+
+        val desktopTest by getting {
+            dependencies {
+                implementation(libs.kotest.runner.junit5)
+            }
+        }
     }
 }
 

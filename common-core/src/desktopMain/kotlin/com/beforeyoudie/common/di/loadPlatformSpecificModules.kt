@@ -10,10 +10,12 @@ import org.koin.dsl.module
 
 actual fun loadPlatformSpecificModule(): Module = module {
     single {
-        // TODO KOIN use configuration to get DB name
-        // TODO STORAGE override this is tests with IN_MEMORY
-        val driver = JdbcSqliteDriver("jdbc:sqlite:beforeyoudie.db")
+        val dbFileName = getProperty<String>(Properties.LOCAL_DATABASE_FILENAME.name)
+        if (dbFileName.isNotBlank()) logger.debug("opening db file with name: $dbFileName")
+        else logger.debug("Using in memory database")
+
+        val driver = JdbcSqliteDriver("jdbc:sqlite:$dbFileName")
         BeforeYouDieDb.Schema.create(driver)
-        SqlDelightBeforeYouDieStorage(BeforeYouDieDb(driver))
+        SqlDelightBeforeYouDieStorage(BeforeYouDieDb(driver), dbFileName == "")
     } bind BeforeYouDieStorageInterface::class
 }
