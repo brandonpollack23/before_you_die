@@ -20,7 +20,10 @@ CREATE TABLE IF NOT EXISTS TaskDependency (
 );
 CREATE INDEX IF NOT EXISTS blocked_task_index ON TaskDependency(blocked_task);
 
+-- TODO STORAGE make a modifications db for syncing, store text or blobs and serialize them
+
 -- TODO STORAGE test all these queries
+-- TODO STORAGE how do i get things out of these 3 tables into reasonable objects? I could join them and then recombine rows...
 selectAllTaskNodes:
 SELECT * FROM TaskNode;
 

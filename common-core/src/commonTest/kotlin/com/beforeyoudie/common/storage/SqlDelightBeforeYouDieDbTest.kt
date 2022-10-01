@@ -11,10 +11,11 @@ class SqlDelightBeforeYouDieDbTest : FunSpec(), KoinTest {
     private val mockProvider = MockProvider
     private val db by inject<BeforeYouDieStorageInterface>()
     init {
-
         test("database is in memory for test") {
             startKoin()
             db.isInMemory shouldBe true
         }
+
+        // TODO NOW table behaves how I want tests
     }
 }
