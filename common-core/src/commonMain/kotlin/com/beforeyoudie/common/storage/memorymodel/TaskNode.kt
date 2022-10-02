@@ -1,13 +1,15 @@
 package com.beforeyoudie.common.storage.memorymodel
 
 import com.benasher44.uuid.Uuid
+import com.benasher44.uuid.uuid4
 
 data class TaskNode(
-    val id: Uuid,
+    val id: Uuid = uuid4(),
     val title: String,
-    val description: String?,
-    val parent: List<Uuid>,
-    val children: List<Uuid>,
-    val blockingTasks: List<Uuid>,
-    val blockedTasks: List<Uuid>,
+    val isComplete: Boolean = false,
+    val description: String? = null,
+    val parent: List<Uuid> = listOf(),
+    val children: List<Uuid> = listOf(),
+    val blockingTasks: List<Uuid> = listOf(),
+    val blockedTasks: List<Uuid> = listOf(),
 )

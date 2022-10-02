@@ -1,7 +1,7 @@
 package com.beforeyoudie.common.storage
 
 import com.beforeyoudie.common.storage.memorymodel.TaskNode
-import com.benasher44.uuid.uuidFrom
+import com.squareup.sqldelight.db.SqlDriver
 
 /**
  * Sqlite implementation of [BeforeYouDieStorageInterface]
@@ -11,21 +11,15 @@ class SqlDelightBeforeYouDieStorage(
     override val isInMemory: Boolean
 ) : BeforeYouDieStorageInterface {
     override fun getAllTaskNodeInformation() =
-        database.taskNodeQueries.selectAllTaskNodesWithDependentAndChildData().executeAsList()
-            .groupBy {
-                it.id
-            }.map {
-                val value = it.value
+        database.taskNodeQueries.selectAllTaskNodesWithDependentAndChildData().executeAsList().map {
+            TaskNode(
+                id =  it.id,
+                title = it.title,
 
-                TaskNode(
-                    uuidFrom(value.first().id),
-                    value.first().title,
-                    value.first.description,
-                    parent,
-                    children,
-                    blockingTasks,
-                    blockedTasks
-                )
-            }
+            )
+        }
 }
+
+fun createDatabase(driver: SqlDriver, isInMemory: Boolean): SqlDelightBeforeYouDieStorage {
+    return SqlDelightBeforeYouDieStorage(BeforeYouDieDb(driver), isInMemory)
 }

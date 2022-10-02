@@ -2,7 +2,8 @@
 CREATE TABLE IF NOT EXISTS TaskNode (
     id TEXT NOT NULL PRIMARY KEY,
     title TEXT NOT NULL,
-    description TEXT
+    description TEXT,
+    complete INTEGER AS Boolean DEFAULT 0
 );
 
 CREATE TABLE IF NOT EXISTS TaskChildren (
@@ -32,15 +33,19 @@ selectAllTaskNodesWithDependentAndChildData:
 SELECT
   n.id,
   n.title,
+  n.complete,
   n.description,
-  td.blocked_task,
-  tc.child
-  -- TODO NOW add a join to grab parents as well
+  p.id AS parent,
+  group_concat(tc.child) AS children,
+  group_concat(td.blocked_task) AS blocked_tasks
 FROM TaskNode AS n
 LEFT JOIN TaskDependency AS td
 ON n.id = td.blocking_task
 LEFT JOIN TaskChildren AS tc
-ON n.id = tc.id;
+ON n.id = tc.id
+LEFT JOIN TaskChildren AS p
+ON n.id = p.child
+GROUP BY n.id;
 
 
 selectAllNonBlockedTaskNodes:
