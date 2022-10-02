@@ -7,8 +7,8 @@ CREATE TABLE IF NOT EXISTS TaskNode (
 );
 
 CREATE TABLE IF NOT EXISTS TaskChildren (
-    parent TEXT NOT NULL PRIMARY KEY UNIQUE,
-    child TEXT NOT NULL,
+    parent TEXT NOT NULL PRIMARY KEY,
+    child TEXT NOT NULL UNIQUE, -- Can only be child of one task!
     FOREIGN KEY(parent) REFERENCES TaskNode(id),
     FOREIGN KEY(child) REFERENCES TaskNode(id)
 );
@@ -22,24 +22,24 @@ CREATE TABLE IF NOT EXISTS TaskDependency (
 );
 CREATE INDEX IF NOT EXISTS blocked_task_index ON TaskDependency(blocked_task);
 
+-- TODO STORAGE NOW test all these queries
+
 insertTaskNode:
 INSERT OR REPLACE INTO
     TaskNode( id, title, description, complete)
 VALUES (:id, :title, :description, :complete);
 
--- TODO STORAGE check if parent exists
 addChildToTaskNode:
 INSERT INTO
 TaskChildren(parent, child)
-VALUES (:id, :child);
+VALUES (:parent, :child);
 
--- TODO STORAGE check if parent exists
+-- TODO STORAGE NOW check if parent exists
 addDependencyToTaskNode:
 INSERT INTO
 TaskDependency(blocked_task, blocking_task)
 VALUES (:blocked_task, :blocking_task);
 
--- TODO STORAGE test all these queries
 selectAllTaskNodes:
 SELECT * FROM TaskNode;
 

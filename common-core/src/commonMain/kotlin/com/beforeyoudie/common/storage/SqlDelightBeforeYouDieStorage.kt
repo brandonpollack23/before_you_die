@@ -28,6 +28,10 @@ class SqlDelightBeforeYouDieStorage(
             )
         }
 
+    // TODO STORAGE NOW detect if node with uuid already exits ORRRR change to insert OR update
+    // TODO STORAGE NOW check if parent/dependent exists
+    // TODO STORAGE NOW detect loops
+
     override fun insertTaskNode(id: Uuid, title: String, description: String?, complete: Boolean) {
         database.taskNodeQueries.insertTaskNode(
             id.toString(),
@@ -35,6 +39,10 @@ class SqlDelightBeforeYouDieStorage(
             description,
             complete
         )
+    }
+
+    override fun addChildToTaskNode(parent: Uuid, child: Uuid) {
+        database.taskNodeQueries.addChildToTaskNode(parent.toString(), child.toString())
     }
 }
 
