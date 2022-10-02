@@ -1,15 +1,15 @@
 -- TODO SEARCH create a fts table
 CREATE TABLE IF NOT EXISTS TaskNode (
-    id TEXT NOT NULL PRIMARY KEY,
+    id TEXT NOT NULL PRIMARY KEY UNIQUE,
     title TEXT NOT NULL,
     description TEXT,
-    complete INTEGER AS Boolean DEFAULT 0
+    complete INTEGER AS Boolean DEFAULT 0 NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS TaskChildren (
-    id TEXT NOT NULL PRIMARY KEY,
+    parent TEXT NOT NULL PRIMARY KEY UNIQUE,
     child TEXT NOT NULL,
-    FOREIGN KEY(id) REFERENCES TaskNode(id),
+    FOREIGN KEY(parent) REFERENCES TaskNode(id),
     FOREIGN KEY(child) REFERENCES TaskNode(id)
 );
 CREATE INDEX IF NOT EXISTS child_to_parent ON TaskChildren(child);
@@ -22,10 +22,24 @@ CREATE TABLE IF NOT EXISTS TaskDependency (
 );
 CREATE INDEX IF NOT EXISTS blocked_task_index ON TaskDependency(blocked_task);
 
--- TODO STORAGE make a modifications db for syncing, store text or blobs and serialize them
+insertTaskNode:
+INSERT OR REPLACE INTO
+    TaskNode( id, title, description, complete)
+VALUES (:id, :title, :description, :complete);
+
+-- TODO STORAGE check if parent exists
+addChildToTaskNode:
+INSERT INTO
+TaskChildren(parent, child)
+VALUES (:id, :child);
+
+-- TODO STORAGE check if parent exists
+addDependencyToTaskNode:
+INSERT INTO
+TaskDependency(blocked_task, blocking_task)
+VALUES (:blocked_task, :blocking_task);
 
 -- TODO STORAGE test all these queries
--- TODO STORAGE how do i get things out of these 3 tables into reasonable objects? I could join them and then recombine rows...
 selectAllTaskNodes:
 SELECT * FROM TaskNode;
 
@@ -35,16 +49,15 @@ SELECT
   n.title,
   n.complete,
   n.description,
-  p.id AS parent,
-  group_concat(tc.child) AS children,
-  group_concat(td.blocked_task) AS blocked_tasks
+  IFNULL((SELECT parent FROM TaskChildren WHERE child = n.id LIMIT 1), "") AS parent,
+  group_concat(children_table.child) AS children,
+  group_concat(td.blocked_task) AS blocked_tasks,
+  IFNULL((SELECT group_concat(blocking_task) FROM TaskDependency WHERE blocked_task = n.id GROUP BY blocked_task), "") AS blocking_tasks
 FROM TaskNode AS n
 LEFT JOIN TaskDependency AS td
 ON n.id = td.blocking_task
-LEFT JOIN TaskChildren AS tc
-ON n.id = tc.id
-LEFT JOIN TaskChildren AS p
-ON n.id = p.child
+LEFT JOIN TaskChildren AS children_table
+ON n.id = children_table.parent
 GROUP BY n.id;
 
 
@@ -54,4 +67,6 @@ FROM TaskNode
 WHERE TaskNode.id NOT IN (SELECT blocked_task FROM TaskDependency);
 
 selectAllChildren:
-SELECT child FROM TaskChildren WHERE id = :parentId;
+SELECT child FROM TaskChildren WHERE parent = :parentId;
+
+-- TODO STORAGE make a modifications db for syncing, store text or blobs and serialize them

@@ -8,7 +8,7 @@ data class TaskNode(
     val title: String,
     val isComplete: Boolean = false,
     val description: String? = null,
-    val parent: List<Uuid> = listOf(),
+    val parent: Uuid? = null,
     val children: List<Uuid> = listOf(),
     val blockingTasks: List<Uuid> = listOf(),
     val blockedTasks: List<Uuid> = listOf(),

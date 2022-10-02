@@ -1,6 +1,9 @@
 package com.beforeyoudie.common.storage
 
 import com.beforeyoudie.common.storage.memorymodel.TaskNode
+import com.beforeyoudie.storage.SelectAllTaskNodesWithDependentAndChildData
+import com.benasher44.uuid.Uuid
+import com.benasher44.uuid.uuidFrom
 import com.squareup.sqldelight.db.SqlDriver
 
 /**
@@ -13,12 +16,32 @@ class SqlDelightBeforeYouDieStorage(
     override fun getAllTaskNodeInformation() =
         database.taskNodeQueries.selectAllTaskNodesWithDependentAndChildData().executeAsList().map {
             TaskNode(
-                id =  it.id,
+                id =  uuidFrom(it.id),
                 title = it.title,
-
+                isComplete = it.complete,
+                description = it.description,
+                // TODO NOW remove this if and the other after fixing broken correlated subqueries
+                parent = if (it.parent.isNotBlank()) uuidFrom(it.parent) else null,
+                children = expandUuidList(it.children),
+                blockingTasks = if (it.blocking_tasks.isNotEmpty()) expandUuidList(it.blocking_tasks) else emptyList(),
+                blockedTasks = expandUuidList(it.blocked_tasks),
             )
         }
+
+    override fun insertTaskNode(id: Uuid, title: String, description: String?, complete: Boolean) {
+        database.taskNodeQueries.insertTaskNode(
+            id.toString(),
+            title,
+            description,
+            complete
+        )
+    }
 }
+
+fun <T> expandDelimitedList(str: String?, delim: String = ",", mapper: (String) -> T) =
+    str?.split(delim)?.map { child -> mapper(child) } ?: emptyList()
+
+fun expandUuidList(s: String?) = expandDelimitedList(s, mapper = ::uuidFrom)
 
 fun createDatabase(driver: SqlDriver, isInMemory: Boolean): SqlDelightBeforeYouDieStorage {
     return SqlDelightBeforeYouDieStorage(BeforeYouDieDb(driver), isInMemory)
