@@ -7,19 +7,21 @@ CREATE TABLE IF NOT EXISTS TaskNode (
 );
 
 CREATE TABLE IF NOT EXISTS TaskChildren (
-    parent TEXT NOT NULL PRIMARY KEY,
+    parent TEXT NOT NULL,
     child TEXT NOT NULL UNIQUE, -- Can only be child of one task!
     FOREIGN KEY(parent) REFERENCES TaskNode(id),
     FOREIGN KEY(child) REFERENCES TaskNode(id)
 );
-CREATE INDEX IF NOT EXISTS child_to_parent ON TaskChildren(child);
+CREATE INDEX IF NOT EXISTS parent_idx ON TaskChildren(parent);
+CREATE INDEX IF NOT EXISTS child_idx ON TaskChildren(child);
 
 CREATE TABLE IF NOT EXISTS TaskDependency (
-    blocked_task TEXT NOT NULL PRIMARY KEY,
+    blocked_task TEXT NOT NULL,
     blocking_task TEXT NOT NULL,
     FOREIGN KEY(blocking_task) REFERENCES TaskNode(id),
     FOREIGN KEY(blocked_task) REFERENCES TaskNode(id)
 );
+CREATE INDEX IF NOT EXISTS blocking_task_index ON TaskDependency(blocking_task);
 CREATE INDEX IF NOT EXISTS blocked_task_index ON TaskDependency(blocked_task);
 
 -- TODO STORAGE NOW test all these queries

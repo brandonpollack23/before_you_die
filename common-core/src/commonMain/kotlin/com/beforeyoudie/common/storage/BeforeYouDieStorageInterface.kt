@@ -11,6 +11,7 @@ import com.benasher44.uuid.Uuid
  */
 interface BeforeYouDieStorageInterface {
     val isInMemory: Boolean
+
     fun getAllTaskNodeInformation(): List<TaskNode>
 
     fun insertTaskNode(id: Uuid, title: String, description: String?, complete: Boolean)

@@ -13,6 +13,7 @@ class SqlDelightBeforeYouDieStorage(
     private val database: BeforeYouDieDb,
     override val isInMemory: Boolean
 ) : BeforeYouDieStorageInterface {
+
     override fun getAllTaskNodeInformation() =
         database.taskNodeQueries.selectAllTaskNodesWithDependentAndChildData().executeAsList().map {
             TaskNode(

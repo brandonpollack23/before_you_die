@@ -20,7 +20,7 @@ actual fun loadPlatformSpecificModule(): Module = module {
         val driver = JdbcSqliteDriver(url = jdbcUri)
         BeforeYouDieDb.Schema.create(driver)
 
-        SqlDelightBeforeYouDieStorage(BeforeYouDieDb(driver), dbFileName == JdbcSqliteDriver.IN_MEMORY)
+        SqlDelightBeforeYouDieStorage(BeforeYouDieDb(driver), jdbcUri == JdbcSqliteDriver.IN_MEMORY)
     } withOptions {
         createdAtStart()
     } bind BeforeYouDieStorageInterface::class
