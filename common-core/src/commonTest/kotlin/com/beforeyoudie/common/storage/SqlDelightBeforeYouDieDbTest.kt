@@ -9,9 +9,9 @@ import io.kotest.matchers.shouldBe
 import org.koin.core.context.stopKoin
 import org.koin.test.KoinTest
 import org.koin.test.get
-import org.koin.test.inject
 
 class SqlDelightBeforeYouDieDbTest : FunSpec(), KoinTest {
+    // TODO NOW move off kotest(read more first) and just use regular fucking inject
     private lateinit var db: BeforeYouDieStorageInterface
 
     init {
