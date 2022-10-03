@@ -104,8 +104,6 @@ class SqlDelightBeforeYouDieDbTest : CommonTest() {
             result.shouldBeFailure<BYDResult.DuplicateParent>()
         }
 
-        // TODO now check exception/failure when childed to multiple parents (have to remove parent to reparent first or allow alteration operations)
-
         // TODO NOW read more about test framework
         // TODO NOW deps test
         // TODO NOW children test
