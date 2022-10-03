@@ -1,7 +1,8 @@
 package com.beforeyoudie.common.storage
 
 import com.beforeyoudie.common.storage.memorymodel.TaskNode
-import com.beforeyoudie.storage.SelectAllTaskNodesWithDependentAndChildData
+import com.beforeyoudie.common.util.BYDResult
+import com.beforeyoudie.common.util.ResultExt
 import com.benasher44.uuid.Uuid
 import com.benasher44.uuid.uuidFrom
 import com.squareup.sqldelight.db.SqlDriver
@@ -33,18 +34,23 @@ class SqlDelightBeforeYouDieStorage(
     // TODO STORAGE NOW check if parent/dependent exists
     // TODO STORAGE NOW detect loops
 
-    override fun insertTaskNode(id: Uuid, title: String, description: String?, complete: Boolean) {
-        database.taskNodeQueries.insertTaskNode(
-            id.toString(),
-            title,
-            description,
-            complete
-        )
-    }
+    override fun insertTaskNode(id: Uuid, title: String, description: String?, complete: Boolean) =
+        ResultExt.asResult(BYDResult::InsertionFailure) {
+            database.taskNodeQueries.insertTaskNode(
+                id.toString(),
+                title,
+                description,
+                complete
+            )
+        }
 
-    override fun addChildToTaskNode(parent: Uuid, child: Uuid) {
-        database.taskNodeQueries.addChildToTaskNode(parent.toString(), child.toString())
-    }
+    override fun addChildToTaskNode(parent: Uuid, child: Uuid) =
+        ResultExt.asResult(BYDResult::DuplicateParent) {
+            database.taskNodeQueries.addChildToTaskNode(
+                parent.toString(),
+                child.toString()
+            )
+        }
 }
 
 fun <T> expandDelimitedList(str: String?, delim: String = ",", mapper: (String) -> T) =

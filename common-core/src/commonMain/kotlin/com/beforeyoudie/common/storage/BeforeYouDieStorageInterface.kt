@@ -14,7 +14,7 @@ interface BeforeYouDieStorageInterface {
 
     fun getAllTaskNodeInformation(): List<TaskNode>
 
-    fun insertTaskNode(id: Uuid, title: String, description: String?, complete: Boolean)
+    fun insertTaskNode(id: Uuid, title: String, description: String?, complete: Boolean): Result<Unit>
 
-    fun addChildToTaskNode(parent: Uuid, child: Uuid)
+    fun addChildToTaskNode(parent: Uuid, child: Uuid): Result<Unit>
 }
