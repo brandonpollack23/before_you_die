@@ -106,7 +106,6 @@ class SqlDelightBeforeYouDieDbTest : CommonTest() {
 
         // TODO NOW read more about test framework
         // TODO NOW deps test
-        // TODO NOW children test
 
         // TODO TESTING change to property testing
     }
