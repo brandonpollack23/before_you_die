@@ -35,6 +35,7 @@ subprojects {
     // Configure kotest
     tasks.withType<Test> {
         useJUnitPlatform()
+
         filter {
             isFailOnNoMatchingTests = true
         }
