@@ -29,6 +29,7 @@ dependencyResolutionManagement {
             val koinKtorVersion = "3.2.2"
             library("koin-core", "io.insert-koin:koin-core:$koinVersion")
             library("koin-test", "io.insert-koin:koin-test:$koinVersion")
+            library("koin-test-junit5", "io.insert-koin:koin-test-junit5:$koinVersion")
             library("koin-android", "io.insert-koin:koin-android:$koinAndroidVersion")
             library("koin-android-javacompat", "io.insert-koin:koin-android-compat:$koinAndroidVersion") // Java Compatibility
             library("koin-androidx-workmanager", "io.insert-koin:koin-androidx-workmanager:$koinAndroidVersion") // Jetpack WorkManager
@@ -58,6 +59,8 @@ dependencyResolutionManagement {
             library("kotest-assertions", "io.kotest:kotest-assertions-core:$kotestVersion")
             library("kotest-properties", "io.kotest:kotest-property:$kotestVersion")
             library("kotest-koin", "io.kotest.extensions:kotest-extensions-koin:1.1.0")
+
+            library("mockk", "io.mockk:mockk:1.13.2")
 
             // UUID
             library("uuid", "com.benasher44:uuid:0.5.0")

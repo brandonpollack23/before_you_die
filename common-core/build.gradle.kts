@@ -50,12 +50,16 @@ kotlin {
                 implementation(libs.kotest.properties)
                 implementation(libs.kotest.koin)
                 implementation(libs.koin.test)
+                implementation(libs.koin.test.junit5)
+                implementation(libs.mockk)
             }
         }
 
         val androidTest by getting {
             dependencies {
                 implementation(libs.kotest.runner.junit5)
+                implementation(libs.koin.core)
+                implementation(libs.koin.test)
             }
         }
 
@@ -63,6 +67,7 @@ kotlin {
         val desktopTest by getting {
             dependencies {
                 implementation(libs.kotest.runner.junit5)
+                implementation(libs.koin.test)
             }
         }
     }

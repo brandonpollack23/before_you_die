@@ -8,7 +8,6 @@ import io.kotest.matchers.shouldBe
 import org.koin.test.get
 
 class SqlDelightBeforeYouDieDbTest : CommonTest() {
-    // TODO NOW move off kotest(read more first) and just use regular fucking inject
     private lateinit var db: BeforeYouDieStorageInterface
 
     init {
