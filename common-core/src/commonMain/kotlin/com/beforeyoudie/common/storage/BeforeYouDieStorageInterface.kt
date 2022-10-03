@@ -15,12 +15,12 @@ interface BeforeYouDieStorageInterface {
     /**
      * Get all the task nodes from the database.
      */
-    fun getAllTaskNodeInformation(): List<TaskNode>
+    fun selectAllTaskNodeInformation(): List<TaskNode>
 
     /**
      * Returns only task nodes who's direct blockers are complete
      */
-    fun getAllActionableTaskNodeInformation(): List<TaskNode>
+    fun selectAllActionableTaskNodeInformation(): List<TaskNode>
 
     /**
      * Insert a task node with the given information into the database.

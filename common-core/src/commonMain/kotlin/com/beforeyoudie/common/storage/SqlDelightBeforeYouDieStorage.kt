@@ -15,7 +15,7 @@ class SqlDelightBeforeYouDieStorage(
     override val isInMemory: Boolean
 ) : BeforeYouDieStorageInterface {
 
-    override fun getAllTaskNodeInformation() =
+    override fun selectAllTaskNodeInformation() =
         database.taskNodeQueries.selectAllTaskNodesWithDependentAndChildData().executeAsList().map {
             TaskNode(
                 id = uuidFrom(it.id),
@@ -34,7 +34,7 @@ class SqlDelightBeforeYouDieStorage(
             )
         }
 
-    override fun getAllActionableTaskNodeInformation() =
+    override fun selectAllActionableTaskNodeInformation() =
         database.taskNodeQueries.selectAllActionableTaskNodes().executeAsList().map {
             TaskNode(
                 id = uuidFrom(it.id),
@@ -84,8 +84,7 @@ class SqlDelightBeforeYouDieStorage(
     }
 
     override fun addChildToTaskNode(parent: Uuid, child: Uuid): Result<Unit> {
-        // SQLite will throw an exception because child must be unique
-        // TODO NOW check for cycles and test
+        // SQLite will throw an exception because child must be unique, I also check for cycles.
         var failureReason: Result<Unit> = Result.success(Unit)
 
         database.taskNodeQueries.transaction {
@@ -122,7 +121,8 @@ class SqlDelightBeforeYouDieStorage(
             val blockedTaskDbEntry =
                 database.taskNodeQueries.selectTaskNode(blockedTask.toString()).executeAsOneOrNull()
             val blockingTaskDbEntry =
-                database.taskNodeQueries.selectTaskNode(blockingTask.toString()).executeAsOneOrNull()
+                database.taskNodeQueries.selectTaskNode(blockingTask.toString())
+                    .executeAsOneOrNull()
             if (blockedTaskDbEntry == null || blockingTaskDbEntry == null ||
                 isDependencyAncestorOf(blockingTask, blockedTask)
             ) {
