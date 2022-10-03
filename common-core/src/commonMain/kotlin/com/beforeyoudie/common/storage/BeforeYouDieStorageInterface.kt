@@ -18,6 +18,11 @@ interface BeforeYouDieStorageInterface {
     fun getAllTaskNodeInformation(): List<TaskNode>
 
     /**
+     * Returns only task nodes who's direct blockers are complete
+     */
+    fun getAllActionableTaskNodeInformation(): List<TaskNode>
+
+    /**
      * Insert a task node with the given information into the database.
      *
      * @returns [Result] of with fail type [InsertionFailure]
@@ -28,6 +33,11 @@ interface BeforeYouDieStorageInterface {
         description: String?,
         complete: Boolean
     ): Result<Unit>
+
+    /**
+     * Mark a task as done, returning an error if it doesnt exist.
+     */
+    fun markComplete(uuid: Uuid): Result<Unit>
 
     /**
      * Add a child to a task mode, if you need to reparent use that operation instead.

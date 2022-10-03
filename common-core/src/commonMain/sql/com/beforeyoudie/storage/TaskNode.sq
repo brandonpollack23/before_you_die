@@ -24,30 +24,24 @@ CREATE TABLE IF NOT EXISTS TaskDependency (
 CREATE INDEX IF NOT EXISTS blocking_task_index ON TaskDependency(blockingTask);
 CREATE INDEX IF NOT EXISTS blocked_task_index ON TaskDependency(blockedTask);
 
--- TODO STORAGE NOW test all these queries
-
--- Modification operations
-insertTaskNode:
-INSERT OR REPLACE INTO
-    TaskNode( id, title, description, complete)
-VALUES (:id, :title, :description, :complete);
-
-addChildToTaskNode:
-INSERT INTO
-TaskChildren(parent, child)
-VALUES (:parent, :child);
-
-addDependencyToTaskNode:
-INSERT INTO
-TaskDependency(blockedTask, blockingTask)
--- VALUES (:blocked_task, :blocking_task)
-SELECT :blockedTask, :blockingTask
-WHERE NOT EXISTS (SELECT * FROM TaskDependency WHERE blockedTask = :blockedTask AND blockingTask = :blockingTask);
-
 -- Selection operations
-getTaskNode:
-SELECT DISTINCT * FROM TaskNode
-WHERE id = :nodeId;
+selectTaskNode:
+SELECT
+  n.id,
+  n.title,
+  n.complete,
+  n.description,
+  IFNULL((SELECT parent FROM TaskChildren WHERE child = n.id LIMIT 1), "") AS parent,
+  group_concat(children_table.child) AS children,
+  group_concat(td.blockedTask) AS blocked_tasks,
+  IFNULL((SELECT group_concat(blockingTask) FROM TaskDependency WHERE blockedTask = n.id GROUP BY blockedTask), "") AS blocking_tasks
+FROM TaskNode AS n
+LEFT JOIN TaskDependency AS td
+ON n.id = td.blockingTask
+LEFT JOIN TaskChildren AS children_table
+ON n.id = children_table.parent
+WHERE n.id = :nodeId
+GROUP BY n.id;
 
 selectAllTaskNodes:
 SELECT * FROM TaskNode;
@@ -71,6 +65,35 @@ GROUP BY n.id;
 
 selectAllChildren:
 SELECT child FROM TaskChildren WHERE parent = :parentId;
+
+-- Modification operations
+insertTaskNode:
+INSERT OR REPLACE INTO
+    TaskNode( id, title, description, complete)
+VALUES (:id, :title, :description, :complete);
+
+toggleTaskCompletion:
+UPDATE TaskNode
+SET complete = IIF(complete = 1, 0, 1)
+WHERE id = :nodeId;
+
+markTaskComplete:
+UPDATE TaskNode
+SET complete = :isComplete
+WHERE id = :nodeId;
+
+addChildToTaskNode:
+INSERT INTO
+TaskChildren(parent, child)
+VALUES (:parent, :child);
+
+addDependencyToTaskNode:
+INSERT INTO
+TaskDependency(blockedTask, blockingTask)
+-- VALUES (:blocked_task, :blocking_task)
+SELECT :blockedTask, :blockingTask
+WHERE NOT EXISTS (SELECT * FROM TaskDependency WHERE blockedTask = :blockedTask AND blockingTask = :blockingTask);
+
 
 -- This selects all nodes who have all their blocking tasks marked as complete
 selectAllActionableTaskNodes:
@@ -115,7 +138,7 @@ LEFT JOIN TaskDependency AS td
 ON n.id = td.blockingTask
 LEFT JOIN TaskChildren AS children_table
 ON n.id = children_table.parent
-WHERE nodesToInclude.id = n.id
+WHERE nodesToInclude.id = n.id AND n.complete = 0
 GROUP BY n.id;
 
 -- Utility operations
