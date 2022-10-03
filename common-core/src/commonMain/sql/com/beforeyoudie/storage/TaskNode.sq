@@ -129,4 +129,14 @@ WITH RECURSIVE
 )
 SELECT COUNT(*) FROM recursedBlockedTasks WHERE blockedTask = :blockingTask;
 
+isParentAncestorOf:
+WITH RECURSIVE
+  recursedBlockedTasks(child) AS (
+    VALUES (IFNULL(:childTask, ""))
+    UNION ALL
+    SELECT TaskChildren.child FROM TaskChildren, recursedBlockedTasks
+    WHERE TaskChildren.parent = recursedBlockedTasks.child
+)
+SELECT COUNT(*) FROM recursedBlockedTasks WHERE child = :parentTask;
+
 -- TODO STORAGE make a modifications db for syncing, store text or blobs and serialize them

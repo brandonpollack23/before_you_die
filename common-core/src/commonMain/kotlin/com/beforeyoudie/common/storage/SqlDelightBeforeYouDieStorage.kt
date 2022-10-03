@@ -44,15 +44,31 @@ class SqlDelightBeforeYouDieStorage(
             )
         }
 
-    override fun addChildToTaskNode(parent: Uuid, child: Uuid) =
+    override fun addChildToTaskNode(parent: Uuid, child: Uuid): Result<Unit> {
         // SQLite will throw an exception because child must be unique
         // TODO NOW check for cycles and test
-        ResultExt.asResult(BYDFailure::DuplicateParent) {
-            database.taskNodeQueries.addChildToTaskNode(
-                parent.toString(),
-                child.toString()
-            )
+        var failureReason: Result<Unit> = Result.success(Unit)
+
+        database.taskNodeQueries.transaction {
+            val parentTaskDbEntry = database.taskNodeQueries.getTaskNode(parent.toString()).executeAsOneOrNull()
+            val childTaskDbEntry = database.taskNodeQueries.getTaskNode(child.toString()).executeAsOneOrNull()
+
+            if (parentTaskDbEntry == null || childTaskDbEntry == null || isParentAncestorOf(parent, child)) {
+                failureReason =
+                    Result.failure(BYDFailure.OperationWouldIntroduceCycle(parent, child))
+                rollback()
+            }
+
+            failureReason = ResultExt.asResult(BYDFailure::DuplicateParent) {
+                database.taskNodeQueries.addChildToTaskNode(
+                    parent.toString(),
+                    child.toString()
+                )
+            }
         }
+
+        return failureReason
+    }
 
     override fun addDependencyRelationship(blockingTask: Uuid, blockedTask: Uuid): Result<Unit> {
         // TODO NOW check for cycles and test
@@ -65,7 +81,12 @@ class SqlDelightBeforeYouDieStorage(
             if (blockedTaskDbEntry == null || blockingTaskDbEntry == null ||
                 isDependencyAncestorOf(blockingTask, blockedTask)
             ) {
-                failureReason = Result.failure(BYDFailure.OperationWouldIntroduceCycle(blockedTask, blockingTask))
+                failureReason = Result.failure(
+                    BYDFailure.OperationWouldIntroduceCycle(
+                        blockingTask,
+                        blockedTask
+                    )
+                )
                 rollback()
             }
 
@@ -79,6 +100,12 @@ class SqlDelightBeforeYouDieStorage(
         database.taskNodeQueries.isDependencyAncestorOf(
             blockedTask.toString(),
             blockingTask.toString()
+        ).executeAsOne() != 0L
+
+    private fun isParentAncestorOf(parentTask: Uuid, childTask: Uuid) =
+        database.taskNodeQueries.isParentAncestorOf(
+            childTask.toString(),
+            parentTask.toString()
         ).executeAsOne() != 0L
 }
 
