@@ -18,14 +18,18 @@ class SqlDelightBeforeYouDieStorage(
     override fun getAllTaskNodeInformation() =
         database.taskNodeQueries.selectAllTaskNodesWithDependentAndChildData().executeAsList().map {
             TaskNode(
-                id =  uuidFrom(it.id),
+                id = uuidFrom(it.id),
                 title = it.title,
                 isComplete = it.complete,
                 description = it.description,
                 // TODO NOW remove this if and the other after fixing broken correlated subqueries
                 parent = if (it.parent.isNotBlank()) uuidFrom(it.parent) else null,
                 children = expandUuidList(it.children),
-                blockingTasks = if (it.blocking_tasks.isNotEmpty()) expandUuidList(it.blocking_tasks) else emptySet(),
+                blockingTasks = if (it.blocking_tasks.isNotEmpty()) {
+                    expandUuidList(it.blocking_tasks)
+                } else {
+                    emptySet()
+                },
                 blockedTasks = expandUuidList(it.blocked_tasks),
             )
         }
@@ -50,10 +54,16 @@ class SqlDelightBeforeYouDieStorage(
         var failureReason: Result<Unit> = Result.success(Unit)
 
         database.taskNodeQueries.transaction {
-            val parentTaskDbEntry = database.taskNodeQueries.getTaskNode(parent.toString()).executeAsOneOrNull()
-            val childTaskDbEntry = database.taskNodeQueries.getTaskNode(child.toString()).executeAsOneOrNull()
+            val parentTaskDbEntry =
+                database.taskNodeQueries.getTaskNode(parent.toString()).executeAsOneOrNull()
+            val childTaskDbEntry =
+                database.taskNodeQueries.getTaskNode(child.toString()).executeAsOneOrNull()
 
-            if (parentTaskDbEntry == null || childTaskDbEntry == null || isParentAncestorOf(parent, child)) {
+            if (parentTaskDbEntry == null || childTaskDbEntry == null || isParentAncestorOf(
+                    parent,
+                    child
+                )
+            ) {
                 failureReason =
                     Result.failure(BYDFailure.OperationWouldIntroduceCycle(parent, child))
                 rollback()
@@ -90,7 +100,10 @@ class SqlDelightBeforeYouDieStorage(
                 rollback()
             }
 
-            database.taskNodeQueries.addDependencyToTaskNode(blockedTask.toString(), blockingTask.toString())
+            database.taskNodeQueries.addDependencyToTaskNode(
+                blockedTask.toString(),
+                blockingTask.toString()
+            )
         }
 
         return failureReason

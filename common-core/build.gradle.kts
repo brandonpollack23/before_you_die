@@ -1,4 +1,4 @@
-import com.android.build.gradle.internal.res.processResources
+
 
 val kotlin_version: String by extra
 plugins {
@@ -55,7 +55,6 @@ kotlin {
                 implementation(libs.koin.test)
             }
         }
-
 
         val desktopTest by getting {
             dependencies {

@@ -4,12 +4,10 @@ import com.beforeyoudie.common.storage.BeforeYouDieDb
 import com.beforeyoudie.common.storage.BeforeYouDieStorageInterface
 import com.beforeyoudie.common.storage.createDatabase
 import com.squareup.sqldelight.android.AndroidSqliteDriver
+import io.requery.android.database.sqlite.RequerySQLiteOpenHelperFactory
 import org.koin.core.module.Module
 import org.koin.dsl.bind
 import org.koin.dsl.module
-import io.requery.android.database.sqlite.RequerySQLiteOpenHelperFactory
-import org.koin.core.module.dsl.createdAtStart
-import org.koin.core.module.dsl.withOptions
 
 actual fun loadPlatformSpecificModule(): Module = module {
     single {

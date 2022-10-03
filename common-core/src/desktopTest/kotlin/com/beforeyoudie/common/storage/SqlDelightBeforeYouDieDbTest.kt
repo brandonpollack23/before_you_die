@@ -58,7 +58,14 @@ class SqlDelightBeforeYouDieDbTest : CommonTest() {
             allResults shouldContainExactlyInAnyOrder
                 setOf(
                     TaskNode(uuid1, "uuid1", children = setOf(uuid2, uuid4)),
-                    TaskNode(uuid2, "uuid2", isComplete = true, description = "", parent = uuid1, children = setOf(uuid3)),
+                    TaskNode(
+                        uuid2,
+                        "uuid2",
+                        isComplete = true,
+                        description = "",
+                        parent = uuid1,
+                        children = setOf(uuid3)
+                    ),
                     TaskNode(uuid3, "uuid3", description = "captain picard baby", parent = uuid2),
                     TaskNode(uuid4, "uuid4", description = "no love for worf", parent = uuid1)
                 )
@@ -83,7 +90,14 @@ class SqlDelightBeforeYouDieDbTest : CommonTest() {
             allResults shouldContainExactlyInAnyOrder
                 setOf(
                     TaskNode(uuid1, "uuid1", children = setOf(uuid2, uuid4)),
-                    TaskNode(uuid2, "uuid2", isComplete = true, description = "", parent = uuid1, children = setOf(uuid3)),
+                    TaskNode(
+                        uuid2,
+                        "uuid2",
+                        isComplete = true,
+                        description = "",
+                        parent = uuid1,
+                        children = setOf(uuid3)
+                    ),
                     TaskNode(uuid3, "uuid3", description = "captain picard baby", parent = uuid2),
                     TaskNode(uuid4, "uuid4", description = "no love for worf", parent = uuid1)
                 )
@@ -97,7 +111,7 @@ class SqlDelightBeforeYouDieDbTest : CommonTest() {
             val uuid3 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3597")
             db.insertTaskNode(uuid3, "uuid3", "captain picard baby", false)
 
-            db.addChildToTaskNode(uuid1, uuid2) shouldBeSuccess(Unit)
+            db.addChildToTaskNode(uuid1, uuid2) shouldBeSuccess (Unit)
             val result = db.addChildToTaskNode(uuid3, uuid2)
             result.shouldBeFailure<BYDFailure.DuplicateParent>()
         }
@@ -120,9 +134,27 @@ class SqlDelightBeforeYouDieDbTest : CommonTest() {
 
             allResults shouldContainExactlyInAnyOrder setOf(
                 TaskNode(uuid1, "uuid1", blockingTasks = setOf(uuid2)),
-                TaskNode(uuid2, "uuid2", isComplete = true, description = "", blockingTasks = setOf(uuid3), blockedTasks = setOf(uuid1)),
-                TaskNode(uuid3, "uuid3", description = "captain picard baby", blockingTasks = setOf(uuid4), blockedTasks = setOf(uuid2)),
-                TaskNode(uuid4, "uuid4", description = "no love for worf", blockedTasks = setOf(uuid3))
+                TaskNode(
+                    uuid2,
+                    "uuid2",
+                    isComplete = true,
+                    description = "",
+                    blockingTasks = setOf(uuid3),
+                    blockedTasks = setOf(uuid1)
+                ),
+                TaskNode(
+                    uuid3,
+                    "uuid3",
+                    description = "captain picard baby",
+                    blockingTasks = setOf(uuid4),
+                    blockedTasks = setOf(uuid2)
+                ),
+                TaskNode(
+                    uuid4,
+                    "uuid4",
+                    description = "no love for worf",
+                    blockedTasks = setOf(uuid3)
+                )
             )
         }
 
@@ -153,9 +185,26 @@ class SqlDelightBeforeYouDieDbTest : CommonTest() {
 
             allResults shouldContainExactlyInAnyOrder setOf(
                 TaskNode(uuid1, "uuid1", blockingTasks = setOf(uuid2, uuid3)),
-                TaskNode(uuid2, "uuid2", description = "", blockingTasks = setOf(uuid4), blockedTasks = setOf(uuid1)),
-                TaskNode(uuid3, "uuid3", description = "captain picard baby", blockingTasks = setOf(uuid4), blockedTasks = setOf(uuid1)),
-                TaskNode(uuid4, "uuid4", description = "no love for worf", blockedTasks = setOf(uuid3, uuid2))
+                TaskNode(
+                    uuid2,
+                    "uuid2",
+                    description = "",
+                    blockingTasks = setOf(uuid4),
+                    blockedTasks = setOf(uuid1)
+                ),
+                TaskNode(
+                    uuid3,
+                    "uuid3",
+                    description = "captain picard baby",
+                    blockingTasks = setOf(uuid4),
+                    blockedTasks = setOf(uuid1)
+                ),
+                TaskNode(
+                    uuid4,
+                    "uuid4",
+                    description = "no love for worf",
+                    blockedTasks = setOf(uuid3, uuid2)
+                )
             )
         }
 
@@ -169,8 +218,9 @@ class SqlDelightBeforeYouDieDbTest : CommonTest() {
             // 1 -> 2
             // 2 -> 2
 
-            db.addDependencyRelationship(uuid2, uuid1) shouldBeSuccess(Unit)
-            db.addDependencyRelationship(uuid1, uuid2).shouldBeFailure<BYDFailure.OperationWouldIntroduceCycle>()
+            db.addDependencyRelationship(uuid2, uuid1) shouldBeSuccess (Unit)
+            db.addDependencyRelationship(uuid1, uuid2)
+                .shouldBeFailure<BYDFailure.OperationWouldIntroduceCycle>()
         }
 
         test("dependencies fail with a larger loop") {
@@ -186,9 +236,10 @@ class SqlDelightBeforeYouDieDbTest : CommonTest() {
             // ^         |
             //  \--------/
 
-            db.addDependencyRelationship(uuid1, uuid2) shouldBeSuccess(Unit)
-            db.addDependencyRelationship(uuid2, uuid3) shouldBeSuccess(Unit)
-            db.addDependencyRelationship(uuid3, uuid1).shouldBeFailure<BYDFailure.OperationWouldIntroduceCycle>()
+            db.addDependencyRelationship(uuid1, uuid2) shouldBeSuccess (Unit)
+            db.addDependencyRelationship(uuid2, uuid3) shouldBeSuccess (Unit)
+            db.addDependencyRelationship(uuid3, uuid1)
+                .shouldBeFailure<BYDFailure.OperationWouldIntroduceCycle>()
         }
 
         test("child parent relationship fail with a loop") {
@@ -204,9 +255,13 @@ class SqlDelightBeforeYouDieDbTest : CommonTest() {
             // ^         |
             //  \--------/
 
-            db.addChildToTaskNode(uuid1, uuid2) shouldBeSuccess(Unit)
-            db.addChildToTaskNode(uuid2, uuid3) shouldBeSuccess(Unit)
-            db.addChildToTaskNode(uuid3, uuid1).shouldBeFailure<BYDFailure.OperationWouldIntroduceCycle>()
+            db.addChildToTaskNode(uuid1, uuid2) shouldBeSuccess (Unit)
+            db.addChildToTaskNode(uuid2, uuid3) shouldBeSuccess (Unit)
+            db.addChildToTaskNode(uuid3, uuid1)
+                .shouldBeFailure<BYDFailure.OperationWouldIntroduceCycle>()
+        }
+
+        test("select all actionable selects non blocked nodes and top level nodes") {
         }
 
         // TODO NOW selectAllActionableTaskNodes

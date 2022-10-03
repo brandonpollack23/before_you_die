@@ -22,7 +22,12 @@ interface BeforeYouDieStorageInterface {
      *
      * @returns [Result] of with fail type [InsertionFailure]
      */
-    fun insertTaskNode(id: Uuid, title: String, description: String?, complete: Boolean): Result<Unit>
+    fun insertTaskNode(
+        id: Uuid,
+        title: String,
+        description: String?,
+        complete: Boolean
+    ): Result<Unit>
 
     /**
      * Add a child to a task mode, if you need to reparent use that operation instead.

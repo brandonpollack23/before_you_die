@@ -14,8 +14,7 @@ expect fun loadPlatformSpecificModule(): Module
 /**
  * Main Koin entrypoint for injection.
  */
-class BeforeYouDieApplication : KoinComponent {
-}
+class BeforeYouDieApplication : KoinComponent
 
 fun startKoin() = org.koin.core.context.startKoin {
     // TODO LOGGING make a koin configuration to set a log file etc

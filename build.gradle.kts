@@ -49,6 +49,13 @@ subprojects {
             exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
         }
     }
+
+    configure<org.jlleitschuh.gradle.ktlint.KtlintExtension> {
+        filter {
+            // exclude { element -> element.file.path.contains("$buildDir/generated/") }
+            exclude("**/build/**")
+        }
+    }
 }
 
 // TODO Dokka

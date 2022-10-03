@@ -16,7 +16,10 @@ actual fun loadPlatformSpecificModule(): Module = module {
         if (dbFileName.isNotBlank()) logger.debug("opening db file with name: $dbFileName")
         else logger.debug("Using in memory database")
 
-        val jdbcUri = if (dbFileName.isNotBlank()) "jdbc:sqlite:./sqlite/db/$dbFileName" else JdbcSqliteDriver.IN_MEMORY
+        val jdbcUri =
+            if (dbFileName.isNotBlank()) "jdbc:sqlite:./sqlite/db/$dbFileName"
+            else JdbcSqliteDriver.IN_MEMORY
+
         val driver = JdbcSqliteDriver(url = jdbcUri)
         BeforeYouDieDb.Schema.create(driver)
 
