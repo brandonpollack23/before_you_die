@@ -8,21 +8,18 @@ import io.kotest.core.spec.style.FunSpec
 import io.kotest.core.test.TestCase
 import io.kotest.core.test.TestResult
 import io.mockk.mockkClass
-import org.junit.jupiter.api.extension.RegisterExtension
 import org.koin.core.context.stopKoin
 import org.koin.test.KoinTest
-import org.koin.test.junit5.mock.MockProviderExtension
+import org.koin.test.mock.MockProvider
 
-open class CommonTest : FunSpec(), KoinTest {
-    @JvmField
-    @RegisterExtension
-    val mockProvider = MockProviderExtension.create { mockkClass(it) }
-
+abstract class CommonTest : FunSpec(), KoinTest {
     init {
+        MockProvider.register { mockkClass(it) }
+
         beforeTest {
             Logger.setLogWriters(CommonWriter())
-            declareMocksForPlatform()
             startKoin()
+            declareMocksForPlatform()
         }
         afterTest {
             stopKoin()

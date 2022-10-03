@@ -26,7 +26,5 @@ actual fun loadPlatformSpecificModule(): Module = module {
         )
 
         createDatabase(driver, dbFileName.isNotBlank())
-    } withOptions {
-        createdAtStart()
     } bind BeforeYouDieStorageInterface::class
 }
