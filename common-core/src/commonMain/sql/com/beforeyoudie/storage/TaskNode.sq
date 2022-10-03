@@ -16,16 +16,17 @@ CREATE INDEX IF NOT EXISTS parent_idx ON TaskChildren(parent);
 CREATE INDEX IF NOT EXISTS child_idx ON TaskChildren(child);
 
 CREATE TABLE IF NOT EXISTS TaskDependency (
-    blocked_task TEXT NOT NULL,
-    blocking_task TEXT NOT NULL,
-    FOREIGN KEY(blocking_task) REFERENCES TaskNode(id),
-    FOREIGN KEY(blocked_task) REFERENCES TaskNode(id)
+    blockedTask TEXT NOT NULL,
+    blockingTask TEXT NOT NULL,
+    FOREIGN KEY(blockingTask) REFERENCES TaskNode(id),
+    FOREIGN KEY(blockedTask) REFERENCES TaskNode(id)
 );
-CREATE INDEX IF NOT EXISTS blocking_task_index ON TaskDependency(blocking_task);
-CREATE INDEX IF NOT EXISTS blocked_task_index ON TaskDependency(blocked_task);
+CREATE INDEX IF NOT EXISTS blocking_task_index ON TaskDependency(blockingTask);
+CREATE INDEX IF NOT EXISTS blocked_task_index ON TaskDependency(blockedTask);
 
 -- TODO STORAGE NOW test all these queries
 
+-- Modification operations
 insertTaskNode:
 INSERT OR REPLACE INTO
     TaskNode( id, title, description, complete)
@@ -36,11 +37,17 @@ INSERT INTO
 TaskChildren(parent, child)
 VALUES (:parent, :child);
 
--- TODO STORAGE NOW check if parent exists
 addDependencyToTaskNode:
 INSERT INTO
-TaskDependency(blocked_task, blocking_task)
-VALUES (:blocked_task, :blocking_task);
+TaskDependency(blockedTask, blockingTask)
+-- VALUES (:blocked_task, :blocking_task)
+SELECT :blockedTask, :blockingTask
+WHERE NOT EXISTS (SELECT * FROM TaskDependency WHERE blockedTask = :blockedTask AND blockingTask = :blockingTask);
+
+-- Selection operations
+getTaskNode:
+SELECT DISTINCT * FROM TaskNode
+WHERE id = :nodeId;
 
 selectAllTaskNodes:
 SELECT * FROM TaskNode;
@@ -53,22 +60,29 @@ SELECT
   n.description,
   IFNULL((SELECT parent FROM TaskChildren WHERE child = n.id LIMIT 1), "") AS parent,
   group_concat(children_table.child) AS children,
-  group_concat(td.blocked_task) AS blocked_tasks,
-  IFNULL((SELECT group_concat(blocking_task) FROM TaskDependency WHERE blocked_task = n.id GROUP BY blocked_task), "") AS blocking_tasks
+  group_concat(td.blockedTask) AS blocked_tasks,
+  IFNULL((SELECT group_concat(blockingTask) FROM TaskDependency WHERE blockedTask = n.id GROUP BY blockedTask), "") AS blocking_tasks
 FROM TaskNode AS n
 LEFT JOIN TaskDependency AS td
-ON n.id = td.blocking_task
+ON n.id = td.blockingTask
 LEFT JOIN TaskChildren AS children_table
 ON n.id = children_table.parent
 GROUP BY n.id;
 
-
-selectAllNonBlockedTaskNodes:
-SELECT *
-FROM TaskNode
-WHERE TaskNode.id NOT IN (SELECT blocked_task FROM TaskDependency);
-
 selectAllChildren:
 SELECT child FROM TaskChildren WHERE parent = :parentId;
+
+-- TODO STORAGE select all nodes who's parents are complete
+
+-- Utility operations
+isDependencyAncestorOf:
+WITH RECURSIVE
+  recursedBlockedTasks(blockedTask) AS (
+    SELECT blockedTask FROM TaskDependency WHERE blockingTask = :blockingTask
+    UNION
+    SELECT TaskDependency.blockedTask FROM TaskDependency, recursedBlockedTasks
+      WHERE TaskDependency.blockingTask = recursedBlockedTasks.blockedTask
+)
+SELECT COUNT(blockedTask) FROM recursedBlockedTasks WHERE blockedTask = :blockedTask;
 
 -- TODO STORAGE make a modifications db for syncing, store text or blobs and serialize them

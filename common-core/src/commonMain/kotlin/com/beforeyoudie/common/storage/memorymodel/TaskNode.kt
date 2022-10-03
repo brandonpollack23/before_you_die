@@ -9,7 +9,7 @@ data class TaskNode(
     val isComplete: Boolean = false,
     val description: String? = null,
     val parent: Uuid? = null,
-    val children: List<Uuid> = listOf(),
-    val blockingTasks: List<Uuid> = listOf(),
-    val blockedTasks: List<Uuid> = listOf(),
+    val children: Set<Uuid> = setOf(),
+    val blockingTasks: Set<Uuid> = setOf(),
+    val blockedTasks: Set<Uuid> = setOf(),
 )

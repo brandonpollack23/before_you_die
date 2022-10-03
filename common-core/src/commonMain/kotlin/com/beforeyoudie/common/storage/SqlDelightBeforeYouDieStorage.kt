@@ -1,7 +1,7 @@
 package com.beforeyoudie.common.storage
 
 import com.beforeyoudie.common.storage.memorymodel.TaskNode
-import com.beforeyoudie.common.util.BYDResult
+import com.beforeyoudie.common.util.BYDFailure
 import com.beforeyoudie.common.util.ResultExt
 import com.benasher44.uuid.Uuid
 import com.benasher44.uuid.uuidFrom
@@ -25,7 +25,7 @@ class SqlDelightBeforeYouDieStorage(
                 // TODO NOW remove this if and the other after fixing broken correlated subqueries
                 parent = if (it.parent.isNotBlank()) uuidFrom(it.parent) else null,
                 children = expandUuidList(it.children),
-                blockingTasks = if (it.blocking_tasks.isNotEmpty()) expandUuidList(it.blocking_tasks) else emptyList(),
+                blockingTasks = if (it.blocking_tasks.isNotEmpty()) expandUuidList(it.blocking_tasks) else emptySet(),
                 blockedTasks = expandUuidList(it.blocked_tasks),
             )
         }
@@ -35,7 +35,7 @@ class SqlDelightBeforeYouDieStorage(
     // TODO STORAGE NOW detect loops
 
     override fun insertTaskNode(id: Uuid, title: String, description: String?, complete: Boolean) =
-        ResultExt.asResult(BYDResult::InsertionFailure) {
+        ResultExt.asResult(BYDFailure::InsertionFailure) {
             database.taskNodeQueries.insertTaskNode(
                 id.toString(),
                 title,
@@ -45,16 +45,45 @@ class SqlDelightBeforeYouDieStorage(
         }
 
     override fun addChildToTaskNode(parent: Uuid, child: Uuid) =
-        ResultExt.asResult(BYDResult::DuplicateParent) {
+        // SQLite will throw an exception because child must be unique
+        // TODO NOW check for cycles and test
+        ResultExt.asResult(BYDFailure::DuplicateParent) {
             database.taskNodeQueries.addChildToTaskNode(
                 parent.toString(),
                 child.toString()
             )
         }
+
+    override fun addDependencyRelationship(blockedTask: Uuid, blockingTask: Uuid): Result<Unit> {
+        // TODO NOW check for cycles and test
+        var failureReason: Result<Unit> = Result.success(Unit)
+        database.taskNodeQueries.transaction {
+            val blockedTaskDbEntry =
+                database.taskNodeQueries.getTaskNode(blockedTask.toString()).executeAsOneOrNull()
+            val blockingTaskDbEntry =
+                database.taskNodeQueries.getTaskNode(blockingTask.toString()).executeAsOneOrNull()
+            if (blockedTaskDbEntry != null && blockingTaskDbEntry != null &&
+                isDependencyAncestorOf(blockingTask, blockedTask)
+            ) {
+                failureReason = Result.failure(BYDFailure.OperationWouldIntroduceCycle(blockedTask, blockingTask))
+                rollback()
+            }
+
+            database.taskNodeQueries.addDependencyToTaskNode(blockedTask.toString(), blockingTask.toString())
+        }
+
+        return failureReason
+    }
+
+    private fun isDependencyAncestorOf(blockingTask: Uuid, blockedTask: Uuid) =
+        database.taskNodeQueries.isDependencyAncestorOf(
+            blockingTask.toString(),
+            blockedTask.toString()
+        ).executeAsOneOrNull()!! == 1L
 }
 
 fun <T> expandDelimitedList(str: String?, delim: String = ",", mapper: (String) -> T) =
-    str?.split(delim)?.map { child -> mapper(child) } ?: emptyList()
+    str?.splitToSequence(delim)?.map { child -> mapper(child) }?.toSet() ?: emptySet()
 
 fun expandUuidList(s: String?) = expandDelimitedList(s, mapper = ::uuidFrom)
 
