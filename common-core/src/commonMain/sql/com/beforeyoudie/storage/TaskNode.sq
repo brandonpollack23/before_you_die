@@ -106,6 +106,7 @@ WITH completedBlockers AS (
                           FROM TaskDependency AS td
                           JOIN TaskNode AS tn
                           ON tn.id = td.blockingTask
+                          WHERE tn.complete = 0
                           GROUP BY td.blockedTask
                           )
   WHERE count = numComplete
@@ -115,7 +116,7 @@ nodesWithNoBlockingTasks AS (
   SELECT
     id
   FROM TaskNode
-  WHERE (SELECT blockingTask FROM TaskDependency WHERE blockingTask = id) IS NULL
+  WHERE (SELECT blockingTask FROM TaskDependency WHERE blockingTask = id) IS NULL AND TaskNode.complete = 0
 ),
 -- Those two tables unioned is what we want
 nodesToInclude AS (
@@ -138,7 +139,7 @@ LEFT JOIN TaskDependency AS td
 ON n.id = td.blockingTask
 LEFT JOIN TaskChildren AS children_table
 ON n.id = children_table.parent
-WHERE nodesToInclude.id = n.id AND n.complete = 0
+WHERE nodesToInclude.id = n.id
 GROUP BY n.id;
 
 -- Utility operations
