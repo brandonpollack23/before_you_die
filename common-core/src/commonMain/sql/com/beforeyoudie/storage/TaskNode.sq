@@ -99,15 +99,15 @@ WHERE NOT EXISTS (SELECT * FROM TaskDependency WHERE blockedTask = :blockedTask 
 selectAllActionableTaskNodes:
 WITH completedBlockers AS (
 -- This is all the task ids who's blocking tasks are ALL marked complete
-  SELECT id FROM
-    (SELECT
-      td.blockedTask AS id,
-      SUM(blockingTaskNode.complete) AS completedBlockers,
-      COUNT(*) AS totalBlockers
-    FROM TaskDependency AS td, TaskNode AS blockingTaskNode
-    WHERE blockingTaskNode.id = td.blockingTask
-    GROUP BY id
-    )
+  SELECT id FROM (
+    SELECT
+        td.blockedTask AS id,
+        SUM(blockingTaskNode.complete) AS completedBlockers,
+        COUNT(blockingTaskNode.complete) AS totalBlockers
+      FROM TaskDependency AS td, TaskNode AS blockingTaskNode
+      WHERE blockingTaskNode.id = td.blockingTask
+      GROUP BY td.blockedTask
+  )
   WHERE completedBlockers = totalBlockers
 ),
 -- This is all nodes that have no blockers at all
@@ -120,7 +120,7 @@ nodesWithNoBlockingTasks AS (
 -- Those two tables unioned is what we want
 nodesToInclude AS (
   SELECT id FROM completedBlockers
-  UNION
+  UNION ALL
   SELECT id FROM nodesWithNoBlockingTasks
 )
 -- This query repeats the regular joins etc to get all the nodes and then joins it with the nodesToInclude as a filter
