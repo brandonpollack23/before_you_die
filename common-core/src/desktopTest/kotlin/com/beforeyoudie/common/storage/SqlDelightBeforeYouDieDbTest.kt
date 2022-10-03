@@ -6,6 +6,7 @@ import com.beforeyoudie.common.util.BYDFailure
 import com.benasher44.uuid.uuidFrom
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
+import io.kotest.matchers.collections.shouldHaveAtMostSize
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.result.shouldBeFailure
 import io.kotest.matchers.result.shouldBeSuccess
@@ -297,7 +298,6 @@ class SqlDelightBeforeYouDieDbTest : CommonTest() {
                 .shouldBeFailure<BYDFailure.OperationWouldIntroduceCycle>()
         }
 
-        // TODO NOW selectAllActionableTaskNodes
         test("select all actionable selects non blocked nodes and top level nodes") {
             val uuid0 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3589")
             db.insertTaskNode(uuid0, "uuid0", null, false)
@@ -340,11 +340,38 @@ class SqlDelightBeforeYouDieDbTest : CommonTest() {
                     blockedTasks = setOf(uuid4)
                 ),
             )
+
+            db.markComplete(uuid2) shouldBeSuccess(Unit)
+            // only 3 should still be actionable, since 4 is blocked by 3 still
+            db.selectAllActionableTaskNodeInformation() shouldContainExactlyInAnyOrder setOf(
+                TaskNode(
+                    uuid3,
+                    "uuid3",
+                    description = "captain picard baby",
+                    blockingTasks = setOf(uuid1),
+                    blockedTasks = setOf(uuid4)
+                ),
+            )
+
+            db.markComplete(uuid3) shouldBeSuccess(Unit)
+            // now 4 is opened up!
+            db.selectAllActionableTaskNodeInformation() shouldContainExactlyInAnyOrder setOf(
+                TaskNode(
+                    uuid4,
+                    "uuid4",
+                    description = "no love for worf",
+                    blockingTasks = setOf(uuid3, uuid2)
+                )
+            )
+
+            db.markComplete(uuid4) shouldBeSuccess(Unit)
+            // now 4 is opened up!
+            db.selectAllActionableTaskNodeInformation() shouldHaveAtMostSize 0
         }
 
-        // TODO NOW reparent operation
         // TODO NOW remove child, remove dependency relationship, remove node
-        // TODO NOW selectAllActionableTaskNodes
+        // TODO NOW reparent operation
+        // TODO NOW markIncomplete reshows deps
 
         // TODO TESTING change to property testing
     }

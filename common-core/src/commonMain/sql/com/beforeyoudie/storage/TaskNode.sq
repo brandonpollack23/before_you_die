@@ -138,7 +138,7 @@ LEFT JOIN TaskDependency AS td
 ON n.id = td.blockingTask
 LEFT JOIN TaskChildren AS children_table
 ON n.id = children_table.parent
-WHERE nodesToInclude.id = n.id
+WHERE nodesToInclude.id = n.id AND n.complete = 0
 GROUP BY n.id;
 
 -- Utility operations
