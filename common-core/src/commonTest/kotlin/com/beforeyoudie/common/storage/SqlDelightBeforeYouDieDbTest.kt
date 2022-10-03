@@ -69,6 +69,7 @@ class SqlDelightBeforeYouDieDbTest : FunSpec(), KoinTest {
                 )
         }
 
+        // TODO NOW change to property testing
         // TODO now check exception/failure when childed to multiple parents (have to remove parent to reparent first or allow alteration operations)
 
         // TODO NOW read more about test framework

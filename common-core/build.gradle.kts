@@ -29,6 +29,19 @@ kotlin {
             }
         }
 
+        val androidMain by getting {
+            dependencies {
+                implementation(libs.sqldelight.android)
+                implementation(libs.requiry.sqliteandroid)
+            }
+        }
+
+        val desktopMain by getting {
+            dependencies {
+                implementation(libs.sqldelight.jvm)
+            }
+        }
+
         val commonTest by getting {
             dependencies {
                 implementation(kotlin("test-common"))
@@ -40,24 +53,12 @@ kotlin {
             }
         }
 
-        val androidMain by getting {
-            dependencies {
-                implementation(libs.sqldelight.android)
-                implementation(libs.requiry.sqliteandroid)
-            }
-        }
-
         val androidTest by getting {
             dependencies {
-                implementation("junit:junit:4.13.2")
+                implementation(libs.kotest.runner.junit5)
             }
         }
 
-        val desktopMain by getting {
-            dependencies {
-                implementation(libs.sqldelight.jvm)
-            }
-        }
 
         val desktopTest by getting {
             dependencies {
