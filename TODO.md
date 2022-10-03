@@ -4,15 +4,15 @@
   * [ ] List View
     * [ ] Whether blocked or not
     * [ ] Completed expandable gutter
-  * [ ] Graph view (should i roll this? Use graphviz as an svg generator? How can i make it all clickable then)
+  * [ ] Graph view (should I roll this? Use graphviz as an SVG generator? How can I make it all clickable then)
 * [ ] Syncing to a database
   * [ ] Self-hosted
   * [ ] Cloud based solution that is easy to spin up/sign up
   * [ ] Firebase solution (this would actually replace sqlite altogether)
-* [ ] (optionally if compose doesnt work) SwiftUI based UI for iOS
-* 
+* [ ] (optionally if compose doesn't work) SwiftUI based UI for iOS
+
 # High Level Ideas
-* [ ] Multiple Lists/Graphs that can be chosen between (like seperate keep notes) (I can do this with an extra column in the db for list id, and a list table for names)
+* [ ] Multiple Lists/Graphs that can be chosen between (like separate keep notes). I can do this with an extra column in the db for list id, and a list table for names
 * [ ] Multiview mode that merges all the lists into one actionable items list
 
 # Documentation
