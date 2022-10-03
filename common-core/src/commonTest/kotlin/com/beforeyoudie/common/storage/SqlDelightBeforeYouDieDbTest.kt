@@ -1,26 +1,19 @@
 package com.beforeyoudie.common.storage
 
-import com.beforeyoudie.common.di.startKoin
+import com.beforeyoudie.common.CommonTest
 import com.beforeyoudie.common.storage.memorymodel.TaskNode
 import com.benasher44.uuid.uuidFrom
-import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.shouldBe
-import org.koin.core.context.stopKoin
-import org.koin.test.KoinTest
 import org.koin.test.get
 
-class SqlDelightBeforeYouDieDbTest : FunSpec(), KoinTest {
+class SqlDelightBeforeYouDieDbTest : CommonTest() {
     // TODO NOW move off kotest(read more first) and just use regular fucking inject
     private lateinit var db: BeforeYouDieStorageInterface
 
     init {
         beforeTest {
-            startKoin()
             db = get()
-        }
-        afterTest {
-            stopKoin()
         }
 
         test("database is in memory for test") {
