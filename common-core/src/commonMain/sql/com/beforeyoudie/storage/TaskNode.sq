@@ -72,17 +72,61 @@ GROUP BY n.id;
 selectAllChildren:
 SELECT child FROM TaskChildren WHERE parent = :parentId;
 
--- TODO STORAGE select all nodes who's parents are complete
+-- This selects all nodes who have all their blocking tasks marked as complete
+selectAllActionableTaskNodes:
+WITH completedBlockers AS (
+-- This is all the task ids who's blocking tasks are ALL marked complete
+  SELECT blockedTask AS id FROM (SELECT
+                            td.blockedTask AS blockedTask,
+                            SUM(tn.complete) AS numComplete,
+                            COUNT(*) AS count
+                          FROM TaskDependency AS td
+                          JOIN TaskNode AS tn
+                          ON tn.id = td.blockingTask
+                          GROUP BY td.blockedTask
+                          )
+  WHERE count = numComplete
+),
+-- This is all nodes that have no blockers at all
+nodesWithNoBlockingTasks AS (
+  SELECT
+    id
+  FROM TaskNode
+  WHERE (SELECT blockingTask FROM TaskDependency WHERE blockingTask = id) IS NULL
+),
+-- Those two tables unioned is what we want
+nodesToInclude AS (
+  SELECT * FROM completedBlockers
+  UNION
+  SELECT * FROM nodesWithNoBlockingTasks
+)
+-- This query repeats the regular joins etc to get all the nodes and then joins it with the nodesToInclude as a filter
+SELECT
+  n.id,
+  n.title,
+  n.complete,
+  n.description,
+  IFNULL((SELECT parent FROM TaskChildren WHERE child = n.id LIMIT 1), "") AS parent,
+  group_concat(children_table.child) AS children,
+  group_concat(td.blockedTask) AS blocked_tasks,
+  IFNULL((SELECT group_concat(blockingTask) FROM TaskDependency WHERE blockedTask = n.id GROUP BY blockedTask), "") AS blocking_tasks
+FROM TaskNode AS n, nodesToInclude
+LEFT JOIN TaskDependency AS td
+ON n.id = td.blockingTask
+LEFT JOIN TaskChildren AS children_table
+ON n.id = children_table.parent
+WHERE nodesToInclude.id = n.id
+GROUP BY n.id;
 
 -- Utility operations
 isDependencyAncestorOf:
 WITH RECURSIVE
   recursedBlockedTasks(blockedTask) AS (
-    SELECT blockedTask FROM TaskDependency WHERE blockingTask = :blockingTask
-    UNION
+    VALUES (IFNULL(:blockedTask, ""))
+    UNION ALL
     SELECT TaskDependency.blockedTask FROM TaskDependency, recursedBlockedTasks
-      WHERE TaskDependency.blockingTask = recursedBlockedTasks.blockedTask
+    WHERE TaskDependency.blockingTask = recursedBlockedTasks.blockedTask
 )
-SELECT COUNT(blockedTask) FROM recursedBlockedTasks WHERE blockedTask = :blockedTask;
+SELECT COUNT(*) FROM recursedBlockedTasks WHERE blockedTask = :blockingTask;
 
 -- TODO STORAGE make a modifications db for syncing, store text or blobs and serialize them

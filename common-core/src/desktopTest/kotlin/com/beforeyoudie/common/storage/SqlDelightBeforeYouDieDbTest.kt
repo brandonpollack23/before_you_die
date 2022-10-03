@@ -4,7 +4,6 @@ import com.beforeyoudie.common.CommonTest
 import com.beforeyoudie.common.storage.memorymodel.TaskNode
 import com.beforeyoudie.common.util.BYDFailure
 import com.benasher44.uuid.uuidFrom
-import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.result.shouldBeFailure
 import io.kotest.matchers.result.shouldBeSuccess
@@ -113,9 +112,9 @@ class SqlDelightBeforeYouDieDbTest : CommonTest() {
             val uuid4 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3596")
             db.insertTaskNode(uuid4, "uuid4", "no love for worf", false)
 
-            db.addDependencyRelationship(uuid1, uuid2)
-            db.addDependencyRelationship(uuid2, uuid3)
-            db.addDependencyRelationship(uuid3, uuid4)
+            db.addDependencyRelationship(uuid2, uuid1)
+            db.addDependencyRelationship(uuid3, uuid2)
+            db.addDependencyRelationship(uuid4, uuid3)
 
             val allResults = db.getAllTaskNodeInformation()
 
@@ -144,11 +143,11 @@ class SqlDelightBeforeYouDieDbTest : CommonTest() {
             //    \   /
             //      4
 
-            db.addDependencyRelationship(uuid1, uuid2)
-            db.addDependencyRelationship(uuid1, uuid3)
+            db.addDependencyRelationship(uuid2, uuid1)
+            db.addDependencyRelationship(uuid3, uuid1)
 
-            db.addDependencyRelationship(uuid2, uuid4)
-            db.addDependencyRelationship(uuid3, uuid4)
+            db.addDependencyRelationship(uuid4, uuid2)
+            db.addDependencyRelationship(uuid4, uuid3)
 
             val allResults = db.getAllTaskNodeInformation()
 
@@ -160,7 +159,42 @@ class SqlDelightBeforeYouDieDbTest : CommonTest() {
             )
         }
 
-        // TODO NOW deps test with loop
+        test("dependencies fail with a small loop") {
+            val uuid1 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3599")
+            db.insertTaskNode(uuid1, "uuid1", null, false)
+            val uuid2 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3598")
+            db.insertTaskNode(uuid2, "uuid2", null, false)
+
+            // Block the deps like so:
+            // 1 -> 2
+            // 2 -> 2
+
+            db.addDependencyRelationship(uuid2, uuid1) shouldBeSuccess(Unit)
+            db.addDependencyRelationship(uuid1, uuid2).shouldBeFailure<BYDFailure.OperationWouldIntroduceCycle>()
+        }
+
+        test("dependencies fail with a larger loop") {
+            val uuid1 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3599")
+            db.insertTaskNode(uuid1, "uuid1", null, false)
+            val uuid2 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3598")
+            db.insertTaskNode(uuid2, "uuid2", null, false)
+            val uuid3 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3597")
+            db.insertTaskNode(uuid3, "uuid3", null, false)
+
+            // Block the deps like so:
+            // 1 -> 2 -> 3
+            // ^         |
+            //  \--------/
+
+            db.addDependencyRelationship(uuid1, uuid2) shouldBeSuccess(Unit)
+            db.addDependencyRelationship(uuid2, uuid3) shouldBeSuccess(Unit)
+            db.addDependencyRelationship(uuid3, uuid1).shouldBeFailure<BYDFailure.OperationWouldIntroduceCycle>()
+        }
+
+        // TODO NOW selectAllActionableTaskNodes
+        // TODO NOW reparent operation
+        // TODO NOW remove child, remove dependency relationship, remove node
+        // TODO NOW selectAllActionableTaskNodes
 
         // TODO TESTING change to property testing
     }

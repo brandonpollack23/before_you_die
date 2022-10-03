@@ -36,8 +36,9 @@ interface BeforeYouDieStorageInterface {
      *
      * @returns [NonExistantNodeId]
      */
-    fun addDependencyRelationship(blockedTask: Uuid, blockingTask: Uuid): Result<Unit>
+    fun addDependencyRelationship(blockingTask: Uuid, blockedTask: Uuid): Result<Unit>
 
     // TODO NOW reparent operation
     // TODO NOW remove child, remove dependency relationship, remove node
+    // TODO NOW selectAllActionableTaskNodes
 }

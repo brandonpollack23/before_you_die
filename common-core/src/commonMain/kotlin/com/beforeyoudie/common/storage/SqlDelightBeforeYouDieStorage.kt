@@ -54,7 +54,7 @@ class SqlDelightBeforeYouDieStorage(
             )
         }
 
-    override fun addDependencyRelationship(blockedTask: Uuid, blockingTask: Uuid): Result<Unit> {
+    override fun addDependencyRelationship(blockingTask: Uuid, blockedTask: Uuid): Result<Unit> {
         // TODO NOW check for cycles and test
         var failureReason: Result<Unit> = Result.success(Unit)
         database.taskNodeQueries.transaction {
@@ -62,7 +62,7 @@ class SqlDelightBeforeYouDieStorage(
                 database.taskNodeQueries.getTaskNode(blockedTask.toString()).executeAsOneOrNull()
             val blockingTaskDbEntry =
                 database.taskNodeQueries.getTaskNode(blockingTask.toString()).executeAsOneOrNull()
-            if (blockedTaskDbEntry != null && blockingTaskDbEntry != null &&
+            if (blockedTaskDbEntry == null || blockingTaskDbEntry == null ||
                 isDependencyAncestorOf(blockingTask, blockedTask)
             ) {
                 failureReason = Result.failure(BYDFailure.OperationWouldIntroduceCycle(blockedTask, blockingTask))
@@ -77,9 +77,9 @@ class SqlDelightBeforeYouDieStorage(
 
     private fun isDependencyAncestorOf(blockingTask: Uuid, blockedTask: Uuid) =
         database.taskNodeQueries.isDependencyAncestorOf(
-            blockingTask.toString(),
-            blockedTask.toString()
-        ).executeAsOneOrNull()!! == 1L
+            blockedTask.toString(),
+            blockingTask.toString()
+        ).executeAsOne() != 0L
 }
 
 fun <T> expandDelimitedList(str: String?, delim: String = ",", mapper: (String) -> T) =
