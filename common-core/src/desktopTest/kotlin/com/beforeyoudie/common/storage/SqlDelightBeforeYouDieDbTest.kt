@@ -435,10 +435,9 @@ class SqlDelightBeforeYouDieDbTest : CommonTest() {
       db.addDependencyRelationship(uuid0, uuid2)
       db.addDependencyRelationship(uuid4, uuid0)
 
-      db.removeTaskNode(uuid0)
+      db.removeTaskNodeAndChildren(uuid0)
 
       db.selectAllTaskNodeInformation() shouldContainExactlyInAnyOrder setOf(
-        TaskNode(uuid1, "uuid1"),
         TaskNode(uuid2, "uuid2"),
         TaskNode(uuid3, "uuid3"),
         TaskNode(uuid4, "uuid4"),
@@ -450,7 +449,7 @@ class SqlDelightBeforeYouDieDbTest : CommonTest() {
       db.insertTaskNode(uuid0, "uuid0", null, false)
       val uuid1 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3588")
 
-      db.removeTaskNode(uuid1) shouldBeFailure BYDFailure.NonExistentNodeId(uuid1)
+      db.removeTaskNodeAndChildren(uuid1) shouldBeFailure BYDFailure.NonExistentNodeId(uuid1)
     }
 
     test("remove dependency relationship works") {

@@ -100,7 +100,7 @@ SELECT :blockedTask, :blockingTask
 WHERE NOT EXISTS (SELECT * FROM TaskDependency WHERE blockedTask = :blockedTask AND blockingTask = :blockingTask);
 
 -- Removal Operations
-removeTaskNode {
+removeTaskNodeAndChildren {
   WITH RECURSIVE nodesToRemove(parent) AS (
     VALUES (:uuid)
     UNION ALL

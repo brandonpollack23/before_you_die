@@ -179,7 +179,7 @@ class SqlDelightBeforeYouDieStorage(
     return result
   }
 
-  override fun removeTaskNode(uuid: Uuid): Result<Unit> {
+  override fun removeTaskNodeAndChildren(uuid: Uuid): Result<Unit> {
     var result: Result<Unit> = Result.success(Unit)
     database.transaction {
       val taskDbEntry =
@@ -189,7 +189,7 @@ class SqlDelightBeforeYouDieStorage(
         rollback()
       }
 
-      database.taskNodeQueries.removeTaskNode(uuid.toString())
+      database.taskNodeQueries.removeTaskNodeAndChildren(uuid.toString())
     }
 
     return result

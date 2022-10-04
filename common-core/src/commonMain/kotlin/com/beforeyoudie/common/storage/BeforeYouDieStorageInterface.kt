@@ -64,7 +64,7 @@ interface BeforeYouDieStorageInterface {
    *
    * @retuns [NonExistantNodeId]
    */
-  fun removeTaskNode(uuid: Uuid): Result<Unit>
+  fun removeTaskNodeAndChildren(uuid: Uuid): Result<Unit>
 
   /**
    * Remove a depedency relationship between two nodes
