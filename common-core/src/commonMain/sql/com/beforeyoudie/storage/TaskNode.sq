@@ -107,15 +107,6 @@ removeTaskNodeAndChildren {
     SELECT child FROM TaskChildren, nodesToRemove
     WHERE TaskChildren.parent = nodesToRemove.parent
   )
-  DELETE FROM TaskChildren
-  WHERE child IN nodesToRemove OR parent IN nodesToRemove;
-
-  WITH RECURSIVE nodesToRemove(parent) AS (
-    VALUES (:uuid)
-    UNION ALL
-    SELECT child FROM TaskChildren, nodesToRemove
-    WHERE TaskChildren.parent = nodesToRemove.parent
-  )
   DELETE FROM TaskDependency
   WHERE blockedTask IN nodesToRemove OR blockingTask IN nodesToRemove;
 
@@ -127,6 +118,15 @@ removeTaskNodeAndChildren {
   )
   DELETE FROM TaskNode
   WHERE id IN nodesToRemove;
+
+  WITH RECURSIVE nodesToRemove(parent) AS (
+    VALUES (:uuid)
+    UNION ALL
+    SELECT child FROM TaskChildren, nodesToRemove
+    WHERE TaskChildren.parent = nodesToRemove.parent
+  )
+  DELETE FROM TaskChildren
+  WHERE child IN nodesToRemove OR parent IN nodesToRemove;
 }
 
 removeDependencyRelationship:
