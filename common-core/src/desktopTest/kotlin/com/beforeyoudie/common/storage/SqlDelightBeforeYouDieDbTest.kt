@@ -4,6 +4,7 @@ import com.beforeyoudie.common.CommonTest
 import com.beforeyoudie.common.storage.memorymodel.TaskNode
 import com.beforeyoudie.common.util.BYDFailure
 import com.benasher44.uuid.uuidFrom
+import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.collections.shouldHaveAtMostSize
 import io.kotest.matchers.result.shouldBeFailure
@@ -418,7 +419,7 @@ class SqlDelightBeforeYouDieDbTest : CommonTest() {
       ) shouldBeFailure BYDFailure.OperationWouldIntroduceCycle(uuid3, uuid1)
     }
 
-    test("remove task node removes task, children/parents, and blocked/blocking") {
+    test("remove task node removes task, children, and blocked/blocking info") {
       val uuid0 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3589")
       db.insertTaskNode(uuid0, "uuid0", null, false)
       val uuid1 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3599")
@@ -442,6 +443,27 @@ class SqlDelightBeforeYouDieDbTest : CommonTest() {
         TaskNode(uuid3, "uuid3"),
         TaskNode(uuid4, "uuid4"),
       )
+    }
+
+    test("remve task recursively removes all chilrdren") {
+      val uuid0 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3589")
+      db.insertTaskNode(uuid0, "uuid0", null, false)
+      val uuid1 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3599")
+      db.insertTaskNode(uuid1, "uuid1", null, false)
+      val uuid2 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3598")
+      db.insertTaskNode(uuid2, "uuid2", null, false)
+      val uuid3 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3597")
+      db.insertTaskNode(uuid3, "uuid3", null, false)
+      val uuid4 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-504fb9ea3597")
+      db.insertTaskNode(uuid4, "uuid4", null, false)
+
+      db.addChildToTaskNode(uuid0, uuid1)
+      db.addChildToTaskNode(uuid1, uuid2)
+      db.addChildToTaskNode(uuid2, uuid3)
+      db.addChildToTaskNode(uuid3, uuid4)
+
+      db.removeTaskNodeAndChildren(uuid0) shouldBeSuccess Unit
+      db.selectAllTaskNodeInformation() shouldContainExactlyInAnyOrder setOf()
     }
 
     test("remove nonexistant node fails") {
@@ -501,7 +523,6 @@ class SqlDelightBeforeYouDieDbTest : CommonTest() {
       ) shouldBeFailure BYDFailure.NoSuchDependencyRelationship(uuid2, uuid3)
     }
 
-    // TODO NOW remove node removes all children test
     // TODO NOW markIncomplete reshows deps
 
     // TODO TESTING change to property testing

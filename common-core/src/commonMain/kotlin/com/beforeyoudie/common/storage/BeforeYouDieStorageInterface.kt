@@ -3,6 +3,9 @@ package com.beforeyoudie.common.storage
 import com.beforeyoudie.common.storage.memorymodel.TaskNode
 import com.benasher44.uuid.Uuid
 
+// TODO(#2) STORAGE convenience of deleting a parent and reparenting children one level up.
+//  Could be useful for deeper lists
+
 /**
  * Implementation agnostic interface for storage.  At first will only be backed by sqlite, but
  * could be backed by memory, firebase, or whatever.
