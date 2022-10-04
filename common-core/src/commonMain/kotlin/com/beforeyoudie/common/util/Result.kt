@@ -14,14 +14,17 @@ object ResultExt {
 
 sealed class BYDFailure(cause: Throwable? = null) : Throwable(cause) {
   /** There was a failure on insertion caused by {@param inner} */
-  class InsertionFailure(inner: Throwable) : BYDFailure(inner)
+  data class InsertionFailure(private val inner: Throwable) : BYDFailure(inner)
 
   /** A child can only have one parent, remove existing relationship first or use the reparent operation. */
-  class DuplicateParent(inner: Throwable) : BYDFailure(inner)
+  data class DuplicateParent(private val uuid: Uuid) : BYDFailure()
+
+  /** Moving a child to a new parent requires it already has one. */
+  data class ChildHasNoParent(val uuid: Uuid): BYDFailure()
 
   /** Operation tried to use a node id that didn't exist */
-  class NonExistentNodeId(val uuid: Uuid) : BYDFailure()
+  data class NonExistentNodeId(val uuid: Uuid) : BYDFailure()
 
   /** Cycles aren't allowed, the dependency graph is a DAG */
-  class OperationWouldIntroduceCycle(val uuid1: Uuid, val uuid2: Uuid) : BYDFailure()
+  data class OperationWouldIntroduceCycle(val uuid1: Uuid, val uuid2: Uuid) : BYDFailure()
 }

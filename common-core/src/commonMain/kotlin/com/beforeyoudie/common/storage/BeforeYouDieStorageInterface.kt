@@ -3,8 +3,6 @@ package com.beforeyoudie.common.storage
 import com.beforeyoudie.common.storage.memorymodel.TaskNode
 import com.benasher44.uuid.Uuid
 
-// TODO NOW DOCS
-
 /**
  * Implementation agnostic interface for storage.  At first will only be backed by sqlite, but
  * could be backed by memory, firebase, or whatever.
@@ -41,10 +39,18 @@ interface BeforeYouDieStorageInterface {
 
   /**
    * Add a child to a task mode, if you need to reparent use that operation instead.
+   * I figured making them seperate would catch any bugs where you try to assign a parent to
+   * existing node and losing original parent on accident because of weird state.
    *
    * @returns [Result] of with fail type [DuplicateParent]
    */
   fun addChildToTaskNode(parent: Uuid, child: Uuid): Result<Unit>
+
+  /**
+   * See [addChildToTaskNode], this is like that but only works on children that already have a
+   * parent and moves them
+   */
+  fun reparentChildToTaskNode(newParent: Uuid, child: Uuid): Result<Unit>
 
   /**
    * Add dependency relationship

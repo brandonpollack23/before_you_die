@@ -147,8 +147,7 @@ class SqlDelightBeforeYouDieDbTest : CommonTest() {
       db.insertTaskNode(uuid3, "uuid3", "captain picard baby", false)
 
       db.addChildToTaskNode(uuid1, uuid2) shouldBeSuccess (Unit)
-      val result = db.addChildToTaskNode(uuid3, uuid2)
-      result.shouldBeFailure<BYDFailure.DuplicateParent>()
+      db.addChildToTaskNode(uuid3, uuid2) shouldBeFailure BYDFailure.DuplicateParent(uuid3)
     }
 
     test("dependencies work in a line") {
@@ -253,9 +252,8 @@ class SqlDelightBeforeYouDieDbTest : CommonTest() {
       // 1 -> 2
       // 2 -> 2
 
-      db.addDependencyRelationship(uuid2, uuid1) shouldBeSuccess (Unit)
-      db.addDependencyRelationship(uuid1, uuid2)
-        .shouldBeFailure<BYDFailure.OperationWouldIntroduceCycle>()
+      db.addDependencyRelationship(uuid2, uuid1) shouldBeSuccess Unit
+      db.addDependencyRelationship(uuid1, uuid2) shouldBeFailure BYDFailure.OperationWouldIntroduceCycle(uuid1, uuid2)
     }
 
     test("dependencies fail with a larger loop") {
@@ -271,8 +269,8 @@ class SqlDelightBeforeYouDieDbTest : CommonTest() {
       // ^         |
       //  \--------/
 
-      db.addDependencyRelationship(uuid1, uuid2) shouldBeSuccess (Unit)
-      db.addDependencyRelationship(uuid2, uuid3) shouldBeSuccess (Unit)
+      db.addDependencyRelationship(uuid1, uuid2) shouldBeSuccess Unit
+      db.addDependencyRelationship(uuid2, uuid3) shouldBeSuccess Unit
       db.addDependencyRelationship(uuid3, uuid1)
         .shouldBeFailure<BYDFailure.OperationWouldIntroduceCycle>()
     }
@@ -290,10 +288,9 @@ class SqlDelightBeforeYouDieDbTest : CommonTest() {
       // ^         |
       //  \--------/
 
-      db.addChildToTaskNode(uuid1, uuid2) shouldBeSuccess (Unit)
-      db.addChildToTaskNode(uuid2, uuid3) shouldBeSuccess (Unit)
-      db.addChildToTaskNode(uuid3, uuid1)
-        .shouldBeFailure<BYDFailure.OperationWouldIntroduceCycle>()
+      db.addChildToTaskNode(uuid1, uuid2) shouldBeSuccess Unit
+      db.addChildToTaskNode(uuid2, uuid3) shouldBeSuccess Unit
+      db.addChildToTaskNode(uuid3, uuid1) shouldBeFailure BYDFailure.OperationWouldIntroduceCycle(uuid3, uuid1)
     }
 
     test("select all actionable selects non blocked nodes and top level nodes") {
@@ -319,8 +316,8 @@ class SqlDelightBeforeYouDieDbTest : CommonTest() {
         TaskNode(uuid1, "uuid1", blockedTasks = setOf(uuid2, uuid3))
       )
 
-      db.markComplete(uuid0) shouldBeSuccess(Unit)
-      db.markComplete(uuid1) shouldBeSuccess(Unit)
+      db.markComplete(uuid0) shouldBeSuccess Unit
+      db.markComplete(uuid1) shouldBeSuccess Unit
       // Now 2 and 3 should be actionable, since 4 is blocked and 1 is complete.
       db.selectAllActionableTaskNodeInformation() shouldContainExactlyInAnyOrder setOf(
         TaskNode(
@@ -339,7 +336,7 @@ class SqlDelightBeforeYouDieDbTest : CommonTest() {
         )
       )
 
-      db.markComplete(uuid2) shouldBeSuccess(Unit)
+      db.markComplete(uuid2) shouldBeSuccess Unit
       // only 3 should still be actionable, since 4 is blocked by 3 still
       db.selectAllActionableTaskNodeInformation() shouldContainExactlyInAnyOrder setOf(
         TaskNode(
@@ -351,7 +348,7 @@ class SqlDelightBeforeYouDieDbTest : CommonTest() {
         )
       )
 
-      db.markComplete(uuid3) shouldBeSuccess(Unit)
+      db.markComplete(uuid3) shouldBeSuccess Unit
       // now 4 is opened up!
       db.selectAllActionableTaskNodeInformation() shouldContainExactlyInAnyOrder setOf(
         TaskNode(
@@ -362,9 +359,54 @@ class SqlDelightBeforeYouDieDbTest : CommonTest() {
         )
       )
 
-      db.markComplete(uuid4) shouldBeSuccess(Unit)
+      db.markComplete(uuid4) shouldBeSuccess Unit
       // now 4 is opened up!
       db.selectAllActionableTaskNodeInformation() shouldHaveAtMostSize 0
+    }
+
+    test("reparenting operation completes successfully") {
+      val uuid0 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3589")
+      db.insertTaskNode(uuid0, "uuid0", null, false)
+      val uuid1 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3599")
+      db.insertTaskNode(uuid1, "uuid1", null, false)
+      val uuid2 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3598")
+      db.insertTaskNode(uuid2, "uuid2", null, false)
+
+      db.addChildToTaskNode(uuid0, uuid1) shouldBeSuccess Unit
+      db.reparentChildToTaskNode(uuid2, uuid1) shouldBeSuccess Unit
+
+      db.selectAllTaskNodeInformation() shouldContainExactlyInAnyOrder setOf(
+        TaskNode(uuid0, "uuid0"),
+        TaskNode(uuid1, "uuid1", parent = uuid2),
+        TaskNode(uuid2, "uuid2", children = setOf(uuid1)),
+      )
+    }
+
+    test("reparenting operation fails when there is no existing parent") {
+      val uuid0 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3589")
+      db.insertTaskNode(uuid0, "uuid0", null, false)
+      val uuid1 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3599")
+      db.insertTaskNode(uuid1, "uuid1", null, false)
+      val uuid2 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3598")
+      db.insertTaskNode(uuid2, "uuid2", null, false)
+
+      db.reparentChildToTaskNode(uuid2, uuid1) shouldBeFailure BYDFailure.ChildHasNoParent(uuid1)
+    }
+
+    test("reparenting operation fails when creates a cycle") {
+      val uuid0 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3589")
+      db.insertTaskNode(uuid0, "uuid0", null, false)
+      val uuid1 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3599")
+      db.insertTaskNode(uuid1, "uuid1", null, false)
+      val uuid2 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3598")
+      db.insertTaskNode(uuid2, "uuid2", null, false)
+      val uuid3 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3597")
+      db.insertTaskNode(uuid3, "uuid3", null, false)
+
+      db.addChildToTaskNode(uuid0, uuid1) shouldBeSuccess Unit
+      db.addChildToTaskNode(uuid1, uuid2) shouldBeSuccess Unit
+      db.addChildToTaskNode(uuid2, uuid3) shouldBeSuccess Unit
+      db.reparentChildToTaskNode(uuid3, uuid1) shouldBeFailure BYDFailure.OperationWouldIntroduceCycle(uuid3, uuid1)
     }
 
     // TODO NOW remove child, remove dependency relationship, remove node

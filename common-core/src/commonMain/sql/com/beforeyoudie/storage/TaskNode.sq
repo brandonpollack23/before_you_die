@@ -87,6 +87,11 @@ INSERT INTO
 TaskChildren(parent, child)
 VALUES (:parent, :child);
 
+reparentChild:
+UPDATE TaskChildren
+SET parent = :newParent
+WHERE child = :child;
+
 addDependencyToTaskNode:
 INSERT INTO
 TaskDependency(blockedTask, blockingTask)

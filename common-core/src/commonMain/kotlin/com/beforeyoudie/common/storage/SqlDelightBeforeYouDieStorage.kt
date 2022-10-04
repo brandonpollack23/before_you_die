@@ -68,24 +68,24 @@ class SqlDelightBeforeYouDieStorage(
     }
 
   override fun markComplete(uuid: Uuid): Result<Unit> {
-    var failureReason: Result<Unit> = Result.success(Unit)
+    var result: Result<Unit> = Result.success(Unit)
     database.transaction {
       val taskNode =
         database.taskNodeQueries.selectTaskNode(uuid.toString()).executeAsOneOrNull()
       if (taskNode == null) {
-        failureReason = Result.failure(BYDFailure.NonExistentNodeId(uuid))
+        result = Result.failure(BYDFailure.NonExistentNodeId(uuid))
         rollback()
       }
 
       database.taskNodeQueries.markTaskComplete(true, uuid.toString())
     }
 
-    return failureReason
+    return result
   }
 
   override fun addChildToTaskNode(parent: Uuid, child: Uuid): Result<Unit> {
     // SQLite will throw an exception because child must be unique, I also check for cycles.
-    var failureReason: Result<Unit> = Result.success(Unit)
+    var result: Result<Unit> = Result.success(Unit)
 
     database.taskNodeQueries.transaction {
       val parentTaskDbEntry =
@@ -98,12 +98,12 @@ class SqlDelightBeforeYouDieStorage(
           child
         )
       ) {
-        failureReason =
+        result =
           Result.failure(BYDFailure.OperationWouldIntroduceCycle(parent, child))
         rollback()
       }
 
-      failureReason = ResultExt.asResult(BYDFailure::DuplicateParent) {
+      result = ResultExt.asResult({ BYDFailure.DuplicateParent(parent) }) {
         database.taskNodeQueries.addChildToTaskNode(
           parent.toString(),
           child.toString()
@@ -111,12 +111,45 @@ class SqlDelightBeforeYouDieStorage(
       }
     }
 
-    return failureReason
+    return result
+  }
+
+  override fun reparentChildToTaskNode(newParent: Uuid, child: Uuid): Result<Unit> {
+    // SQLite will throw an exception because child must be unique, I also check for cycles and
+    // that there is an existing parent.
+    var result: Result<Unit> = Result.success(Unit)
+
+    database.taskNodeQueries.transaction {
+      val childTaskDbEntry =
+        database.taskNodeQueries.selectTaskNode(child.toString()).executeAsOneOrNull()
+      if (childTaskDbEntry == null) {
+        result = Result.failure(BYDFailure.NonExistentNodeId(child))
+        rollback()
+      }
+      if (childTaskDbEntry.parent.isBlank()) {
+        result = Result.failure(BYDFailure.ChildHasNoParent(child))
+        rollback()
+      }
+
+      val newParentTaskDbEntry =
+        database.taskNodeQueries.selectTaskNode(newParent.toString()).executeAsOneOrNull()
+      if (isParentAncestorOf(newParent, child)) {
+        result =
+          Result.failure(BYDFailure.OperationWouldIntroduceCycle(newParent, child))
+        rollback()
+      }
+
+      result = ResultExt.asResult({ BYDFailure.DuplicateParent(newParent) }) {
+        database.taskNodeQueries.reparentChild(newParent.toString(), child.toString())
+      }
+    }
+
+    return result
   }
 
   override fun addDependencyRelationship(blockingTask: Uuid, blockedTask: Uuid): Result<Unit> {
     // TODO NOW check for cycles and test
-    var failureReason: Result<Unit> = Result.success(Unit)
+    var result: Result<Unit> = Result.success(Unit)
     database.taskNodeQueries.transaction {
       val blockedTaskDbEntry =
         database.taskNodeQueries.selectTaskNode(blockedTask.toString()).executeAsOneOrNull()
@@ -126,7 +159,7 @@ class SqlDelightBeforeYouDieStorage(
       if (blockedTaskDbEntry == null || blockingTaskDbEntry == null ||
         isDependencyAncestorOf(blockingTask, blockedTask)
       ) {
-        failureReason = Result.failure(
+        result = Result.failure(
           BYDFailure.OperationWouldIntroduceCycle(
             blockingTask,
             blockedTask
@@ -141,7 +174,7 @@ class SqlDelightBeforeYouDieStorage(
       )
     }
 
-    return failureReason
+    return result
   }
 
   private fun isDependencyAncestorOf(blockingTask: Uuid, blockedTask: Uuid) =
