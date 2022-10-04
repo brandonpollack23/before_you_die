@@ -152,9 +152,15 @@ class SqlDelightBeforeYouDieStorage(
       val blockingTaskDbEntry =
         database.taskNodeQueries.selectTaskNode(blockingTask.toString())
           .executeAsOneOrNull()
-      if (blockedTaskDbEntry == null || blockingTaskDbEntry == null ||
-        isDependencyAncestorOf(blockingTask, blockedTask)
-      ) {
+      if (blockedTaskDbEntry == null) {
+        result = Result.failure(BYDFailure.NonExistentNodeId(blockedTask))
+        rollback()
+      }
+      else if(blockingTaskDbEntry == null) {
+        result = Result.failure(BYDFailure.NonExistentNodeId(blockingTask))
+        rollback()
+      }
+      else if (isDependencyAncestorOf(blockingTask, blockedTask)) {
         result = Result.failure(
           BYDFailure.OperationWouldIntroduceCycle(
             blockingTask,
@@ -174,9 +180,51 @@ class SqlDelightBeforeYouDieStorage(
   }
 
   override fun removeTaskNode(uuid: Uuid): Result<Unit> {
-    return ResultExt.asResult({ BYDFailure.NonExistentNodeId(uuid) }) {
+    var result: Result<Unit> = Result.success(Unit)
+    database.transaction {
+      val taskDbEntry =
+        database.taskNodeQueries.selectTaskNode(uuid.toString()).executeAsOneOrNull()
+      if (taskDbEntry == null) {
+        result = Result.failure(BYDFailure.NonExistentNodeId(uuid))
+        rollback()
+      }
+
       database.taskNodeQueries.removeTaskNode(uuid.toString())
     }
+
+    return result
+  }
+
+  override fun removeDependencyRelationship(blockingTask: Uuid, blockedTask: Uuid): Result<Unit> {
+    var result: Result<Unit> = Result.success(Unit)
+    database.taskNodeQueries.transaction {
+      val blockedTaskDbEntry =
+        database.taskNodeQueries.selectTaskNode(blockedTask.toString()).executeAsOneOrNull()
+      val blockingTaskDbEntry =
+        database.taskNodeQueries.selectTaskNode(blockingTask.toString())
+          .executeAsOneOrNull()
+      if (blockedTaskDbEntry == null) {
+        result = Result.failure(BYDFailure.NonExistentNodeId(blockedTask))
+        rollback()
+      } else if (blockingTaskDbEntry == null) {
+        result = Result.failure(BYDFailure.NonExistentNodeId(blockingTask))
+        rollback()
+      }
+
+      val blockedTaskList = expandUuidList(blockingTaskDbEntry.blockedTasks)
+      val blockingTaskList = expandUuidList(blockedTaskDbEntry.blockingTasks)
+      if (!blockedTaskList.contains(blockedTask) || !blockingTaskList.contains(blockingTask)) {
+        result = Result.failure(BYDFailure.NoSuchDependencyRelationship(blockingTask, blockedTask))
+        rollback()
+      }
+
+      database.taskNodeQueries.removeDependencyRelationship(
+        blockingTask.toString(),
+        blockedTask.toString()
+      )
+    }
+
+    return result
   }
 
   private fun isDependencyAncestorOf(blockingTask: Uuid, blockedTask: Uuid) =

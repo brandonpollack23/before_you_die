@@ -253,7 +253,10 @@ class SqlDelightBeforeYouDieDbTest : CommonTest() {
       // 2 -> 2
 
       db.addDependencyRelationship(uuid2, uuid1) shouldBeSuccess Unit
-      db.addDependencyRelationship(uuid1, uuid2) shouldBeFailure BYDFailure.OperationWouldIntroduceCycle(uuid1, uuid2)
+      db.addDependencyRelationship(
+        uuid1,
+        uuid2
+      ) shouldBeFailure BYDFailure.OperationWouldIntroduceCycle(uuid1, uuid2)
     }
 
     test("dependencies fail with a larger loop") {
@@ -290,7 +293,10 @@ class SqlDelightBeforeYouDieDbTest : CommonTest() {
 
       db.addChildToTaskNode(uuid1, uuid2) shouldBeSuccess Unit
       db.addChildToTaskNode(uuid2, uuid3) shouldBeSuccess Unit
-      db.addChildToTaskNode(uuid3, uuid1) shouldBeFailure BYDFailure.OperationWouldIntroduceCycle(uuid3, uuid1)
+      db.addChildToTaskNode(uuid3, uuid1) shouldBeFailure BYDFailure.OperationWouldIntroduceCycle(
+        uuid3,
+        uuid1
+      )
     }
 
     test("select all actionable selects non blocked nodes and top level nodes") {
@@ -406,7 +412,10 @@ class SqlDelightBeforeYouDieDbTest : CommonTest() {
       db.addChildToTaskNode(uuid0, uuid1) shouldBeSuccess Unit
       db.addChildToTaskNode(uuid1, uuid2) shouldBeSuccess Unit
       db.addChildToTaskNode(uuid2, uuid3) shouldBeSuccess Unit
-      db.reparentChildToTaskNode(uuid3, uuid1) shouldBeFailure BYDFailure.OperationWouldIntroduceCycle(uuid3, uuid1)
+      db.reparentChildToTaskNode(
+        uuid3,
+        uuid1
+      ) shouldBeFailure BYDFailure.OperationWouldIntroduceCycle(uuid3, uuid1)
     }
 
     test("remove task node removes task, children/parents, and blocked/blocking") {
@@ -436,7 +445,64 @@ class SqlDelightBeforeYouDieDbTest : CommonTest() {
       )
     }
 
-    // TODO NOW remove dependency relationship, remove node
+    test("remove nonexistant node fails") {
+      val uuid0 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3589")
+      db.insertTaskNode(uuid0, "uuid0", null, false)
+      val uuid1 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3588")
+
+      db.removeTaskNode(uuid1) shouldBeFailure BYDFailure.NonExistentNodeId(uuid1)
+    }
+
+    test("remove dependency relationship works") {
+      val uuid1 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3599")
+      db.insertTaskNode(uuid1, "uuid1", null, false)
+      val uuid2 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3598")
+      db.insertTaskNode(uuid2, "uuid2", "", false)
+      val uuid3 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3597")
+      db.insertTaskNode(uuid3, "uuid3", "captain picard baby", false)
+      val uuid4 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3596")
+      db.insertTaskNode(uuid4, "uuid4", "no love for worf", false)
+
+      db.addDependencyRelationship(uuid2, uuid1)
+      db.addDependencyRelationship(uuid3, uuid2)
+      db.addDependencyRelationship(uuid4, uuid3)
+
+      db.removeDependencyRelationship(uuid3, uuid2) shouldBeSuccess Unit
+
+      db.selectAllTaskNodeInformation() shouldContainExactlyInAnyOrder setOf(
+        TaskNode(uuid1, "uuid1", blockingTasks = setOf(uuid2)),
+        TaskNode(uuid2, "uuid2", description = "", blockedTasks = setOf(uuid1)),
+        TaskNode(
+          uuid3,
+          "uuid3",
+          description = "captain picard baby",
+          blockingTasks = setOf(uuid4),
+        ),
+        TaskNode(uuid4, "uuid4", description = "no love for worf", blockedTasks = setOf(uuid3))
+      )
+    }
+
+    test("fails to remove non existant dep") {
+      val uuid1 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3599")
+      db.insertTaskNode(uuid1, "uuid1", null, false)
+      val uuid2 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3598")
+      db.insertTaskNode(uuid2, "uuid2", "", false)
+      val uuid3 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3597")
+      db.insertTaskNode(uuid3, "uuid3", "captain picard baby", false)
+      val uuid4 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3596")
+      db.insertTaskNode(uuid4, "uuid4", "no love for worf", false)
+
+      db.addDependencyRelationship(uuid2, uuid1)
+      db.addDependencyRelationship(uuid3, uuid2)
+      db.addDependencyRelationship(uuid4, uuid3)
+
+      db.removeDependencyRelationship(
+        uuid2,
+        uuid3
+      ) shouldBeFailure BYDFailure.NoSuchDependencyRelationship(uuid2, uuid3)
+    }
+
+    // TODO NOW remove node removes all children test
     // TODO NOW markIncomplete reshows deps
 
     // TODO TESTING change to property testing

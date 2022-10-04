@@ -27,4 +27,8 @@ sealed class BYDFailure(cause: Throwable? = null) : Throwable(cause) {
 
   /** Cycles aren't allowed, the dependency graph is a DAG */
   data class OperationWouldIntroduceCycle(val uuid1: Uuid, val uuid2: Uuid) : BYDFailure()
+
+  /** These two tasks don't have a depenency relationship, so nothing to remove, etc. */
+  data class NoSuchDependencyRelationship(val blockingTask: Uuid, val blockedTask: Uuid) :
+    BYDFailure()
 }

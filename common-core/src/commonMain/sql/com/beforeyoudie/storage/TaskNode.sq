@@ -33,8 +33,8 @@ SELECT
   n.description,
   IFNULL((SELECT parent FROM TaskChildren WHERE child = n.id LIMIT 1), "") AS parent,
   group_concat(children_table.child) AS children,
-  group_concat(td.blockedTask) AS blocked_tasks,
-  IFNULL((SELECT group_concat(blockingTask) FROM TaskDependency WHERE blockedTask = n.id GROUP BY blockedTask), "") AS blocking_tasks
+  group_concat(td.blockedTask) AS blockedTasks,
+  IFNULL((SELECT group_concat(blockingTask) FROM TaskDependency WHERE blockedTask = n.id GROUP BY blockedTask), "") AS blockingTasks
 FROM TaskNode AS n
 LEFT JOIN TaskDependency AS td
 ON n.id = td.blockingTask
@@ -101,16 +101,39 @@ WHERE NOT EXISTS (SELECT * FROM TaskDependency WHERE blockedTask = :blockedTask 
 
 -- Removal Operations
 removeTaskNode {
-  DELETE FROM TaskNode
-  WHERE id = :uuid;
-
-  DELETE FROM TaskDependency
-  WHERE blockedTask = :uuid OR blockingTask = :uuid;
-
+  WITH RECURSIVE nodesToRemove(parent) AS (
+    VALUES (:uuid)
+    UNION ALL
+    SELECT child FROM TaskChildren, nodesToRemove
+    WHERE TaskChildren.parent = nodesToRemove.parent
+  )
   DELETE FROM TaskChildren
-  WHERE parent = :uuid OR child = :uuid;
+  WHERE child IN nodesToRemove OR parent IN nodesToRemove;
+
+  WITH RECURSIVE nodesToRemove(parent) AS (
+    VALUES (:uuid)
+    UNION ALL
+    SELECT child FROM TaskChildren, nodesToRemove
+    WHERE TaskChildren.parent = nodesToRemove.parent
+  )
+  DELETE FROM TaskDependency
+  WHERE blockedTask IN nodesToRemove OR blockingTask IN nodesToRemove;
+
+  WITH RECURSIVE nodesToRemove(parent) AS (
+    VALUES (:uuid)
+    UNION ALL
+    SELECT child FROM TaskChildren, nodesToRemove
+    WHERE TaskChildren.parent = nodesToRemove.parent
+  )
+  DELETE FROM TaskNode
+  WHERE id IN nodesToRemove;
 }
 
+removeDependencyRelationship:
+DELETE FROM TaskDependency
+WHERE blockingTask = :blockingTask AND blockedTask = :blockedTask;
+
+-- TODO NOW replace some selects with ins
 -- This selects all nodes who have all their blocking tasks marked as complete
 selectAllActionableTaskNodes:
 WITH completedBlockers AS (
