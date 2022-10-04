@@ -133,7 +133,6 @@ removeDependencyRelationship:
 DELETE FROM TaskDependency
 WHERE blockingTask = :blockingTask AND blockedTask = :blockedTask;
 
--- TODO NOW replace some selects with ins
 -- This selects all nodes who have all their blocking tasks marked as complete
 selectAllActionableTaskNodes:
 WITH completedBlockers AS (
@@ -154,7 +153,7 @@ nodesWithNoBlockingTasks AS (
   SELECT
     id
   FROM TaskNode AS n
-  WHERE (SELECT blockedTask FROM TaskDependency WHERE blockedTask = n.id) IS NULL AND n.complete = 0
+  WHERE n.id NOT IN (SELECT blockedTask FROM TaskDependency) AND n.complete = 0
 ),
 -- Those two tables unioned is what we want
 nodesToInclude AS (
