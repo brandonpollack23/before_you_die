@@ -7,14 +7,14 @@ import com.beforeyoudie.common.App
 import com.beforeyoudie.common.di.startKoin
 
 fun main() {
-    Logger.setMinSeverity(Severity.Verbose)
-    startKoin()
+  Logger.setMinSeverity(Severity.Verbose)
+  startKoin()
 
-    application {
-        Window(onCloseRequest = ::exitApplication) {
-            MaterialTheme {
-                App()
-            }
-        }
+  application {
+    Window(onCloseRequest = ::exitApplication) {
+      MaterialTheme {
+        App()
+      }
     }
+  }
 }

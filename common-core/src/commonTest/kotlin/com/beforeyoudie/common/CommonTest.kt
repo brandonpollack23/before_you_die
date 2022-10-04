@@ -13,22 +13,22 @@ import org.koin.test.KoinTest
 import org.koin.test.mock.MockProvider
 
 abstract class CommonTest : FunSpec(), KoinTest {
-    init {
-        MockProvider.register { mockkClass(it) }
+  init {
+    MockProvider.register { mockkClass(it) }
 
-        beforeTest {
-            Logger.setLogWriters(CommonWriter())
-            startKoin()
-            declareMocksForPlatform()
-        }
-        afterTest {
-            stopKoin()
-        }
+    beforeTest {
+      Logger.setLogWriters(CommonWriter())
+      startKoin()
+      declareMocksForPlatform()
     }
+    afterTest {
+      stopKoin()
+    }
+  }
 
-    final override fun afterTest(f: suspend (Tuple2<TestCase, TestResult>) -> Unit) =
-        super.afterTest(f)
-    final override fun beforeTest(f: suspend (TestCase) -> Unit) = super.beforeTest(f)
+  final override fun afterTest(f: suspend (Tuple2<TestCase, TestResult>) -> Unit) =
+    super.afterTest(f)
+  final override fun beforeTest(f: suspend (TestCase) -> Unit) = super.beforeTest(f)
 }
 
 expect fun KoinTest.declareMocksForPlatform()

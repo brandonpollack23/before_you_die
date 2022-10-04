@@ -17,17 +17,17 @@ expect fun loadPlatformSpecificModule(): Module
 class BeforeYouDieApplication : KoinComponent
 
 fun startKoin() = org.koin.core.context.startKoin {
-    // TODO LOGGING make a koin configuration to set a log file etc
-    val kermit = Logger.withTag("koin")
-    logger(KermitKoinLogger(kermit))
+  // TODO LOGGING make a koin configuration to set a log file etc
+  val kermit = Logger.withTag("koin")
+  logger(KermitKoinLogger(kermit))
 
-    fileProperties()
+  fileProperties()
 
-    modules(loadKoinModules())
+  modules(loadKoinModules())
 }
 
 fun loadKoinModules() = listOf(loadPlatformSpecificModule())
 
 enum class Properties {
-    LOCAL_DATABASE_FILENAME
+  LOCAL_DATABASE_FILENAME
 }
