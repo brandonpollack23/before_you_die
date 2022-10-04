@@ -410,7 +410,6 @@ class SqlDelightBeforeYouDieDbTest : CommonTest() {
     }
 
     // TODO NOW remove child, remove dependency relationship, remove node
-    // TODO NOW reparent operation
     // TODO NOW markIncomplete reshows deps
 
     // TODO TESTING change to property testing

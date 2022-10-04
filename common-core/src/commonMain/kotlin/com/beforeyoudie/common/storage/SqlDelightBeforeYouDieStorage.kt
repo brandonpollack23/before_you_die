@@ -7,6 +7,8 @@ import com.benasher44.uuid.Uuid
 import com.benasher44.uuid.uuidFrom
 import com.squareup.sqldelight.db.SqlDriver
 
+// TODO STORAGE NOW detect if node with uuid already exits ORRRR change to insert OR update
+
 /**
  * Sqlite implementation of [BeforeYouDieStorageInterface]
  */
@@ -22,7 +24,7 @@ class SqlDelightBeforeYouDieStorage(
         title = it.title,
         isComplete = it.complete,
         description = it.description,
-        // TODO NOW remove this if and the other after fixing broken correlated subqueries
+        // TODO(#1) SQLDELIGHT_BLOCKED remove this if and the other after fixing broken correlated subqueries
         parent = if (it.parent.isNotBlank()) uuidFrom(it.parent) else null,
         children = expandUuidList(it.children),
         blockingTasks = if (it.blocking_tasks.isNotEmpty()) {
@@ -41,7 +43,7 @@ class SqlDelightBeforeYouDieStorage(
         title = it.title,
         isComplete = it.complete,
         description = it.description,
-        // TODO NOW remove this if and the other after fixing broken correlated subqueries
+        // TODO(#1) SQLDELIGHT_BLOCKED remove this if and the other after fixing broken correlated subqueries
         parent = if (it.parent.isNotBlank()) uuidFrom(it.parent) else null,
         children = expandUuidList(it.children),
         blockingTasks = if (it.blocking_tasks.isNotEmpty()) {
@@ -52,10 +54,6 @@ class SqlDelightBeforeYouDieStorage(
         blockedTasks = expandUuidList(it.blocked_tasks)
       )
     }
-
-  // TODO STORAGE NOW detect if node with uuid already exits ORRRR change to insert OR update
-  // TODO STORAGE NOW check if parent/dependent exists
-  // TODO STORAGE NOW detect loops
 
   override fun insertTaskNode(id: Uuid, title: String, description: String?, complete: Boolean) =
     ResultExt.asResult(BYDFailure::InsertionFailure) {
@@ -148,7 +146,6 @@ class SqlDelightBeforeYouDieStorage(
   }
 
   override fun addDependencyRelationship(blockingTask: Uuid, blockedTask: Uuid): Result<Unit> {
-    // TODO NOW check for cycles and test
     var result: Result<Unit> = Result.success(Unit)
     database.taskNodeQueries.transaction {
       val blockedTaskDbEntry =
