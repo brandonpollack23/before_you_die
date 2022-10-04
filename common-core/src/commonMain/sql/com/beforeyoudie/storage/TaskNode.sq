@@ -99,6 +99,17 @@ TaskDependency(blockedTask, blockingTask)
 SELECT :blockedTask, :blockingTask
 WHERE NOT EXISTS (SELECT * FROM TaskDependency WHERE blockedTask = :blockedTask AND blockingTask = :blockingTask);
 
+-- Removal Operations
+removeTaskNode {
+  DELETE FROM TaskNode
+  WHERE id = :uuid;
+
+  DELETE FROM TaskDependency
+  WHERE blockedTask = :uuid OR blockingTask = :uuid;
+
+  DELETE FROM TaskChildren
+  WHERE parent = :uuid OR child = :uuid;
+}
 
 -- This selects all nodes who have all their blocking tasks marked as complete
 selectAllActionableTaskNodes:

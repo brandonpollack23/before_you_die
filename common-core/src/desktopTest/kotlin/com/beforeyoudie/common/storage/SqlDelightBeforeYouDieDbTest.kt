@@ -409,7 +409,34 @@ class SqlDelightBeforeYouDieDbTest : CommonTest() {
       db.reparentChildToTaskNode(uuid3, uuid1) shouldBeFailure BYDFailure.OperationWouldIntroduceCycle(uuid3, uuid1)
     }
 
-    // TODO NOW remove child, remove dependency relationship, remove node
+    test("remove task node removes task, children/parents, and blocked/blocking") {
+      val uuid0 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3589")
+      db.insertTaskNode(uuid0, "uuid0", null, false)
+      val uuid1 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3599")
+      db.insertTaskNode(uuid1, "uuid1", null, false)
+      val uuid2 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3598")
+      db.insertTaskNode(uuid2, "uuid2", null, false)
+      val uuid3 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3597")
+      db.insertTaskNode(uuid3, "uuid3", null, false)
+      val uuid4 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-504fb9ea3597")
+      db.insertTaskNode(uuid4, "uuid4", null, false)
+
+      db.addChildToTaskNode(uuid0, uuid1)
+      db.addChildToTaskNode(uuid3, uuid0)
+      db.addDependencyRelationship(uuid0, uuid2)
+      db.addDependencyRelationship(uuid4, uuid0)
+
+      db.removeTaskNode(uuid0)
+
+      db.selectAllTaskNodeInformation() shouldContainExactlyInAnyOrder setOf(
+        TaskNode(uuid1, "uuid1"),
+        TaskNode(uuid2, "uuid2"),
+        TaskNode(uuid3, "uuid3"),
+        TaskNode(uuid4, "uuid4"),
+      )
+    }
+
+    // TODO NOW remove dependency relationship, remove node
     // TODO NOW markIncomplete reshows deps
 
     // TODO TESTING change to property testing

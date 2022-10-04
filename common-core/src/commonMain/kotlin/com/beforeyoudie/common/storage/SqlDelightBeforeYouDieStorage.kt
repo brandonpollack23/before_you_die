@@ -16,7 +16,6 @@ class SqlDelightBeforeYouDieStorage(
   private val database: BeforeYouDieDb,
   override val isInMemory: Boolean
 ) : BeforeYouDieStorageInterface {
-
   override fun selectAllTaskNodeInformation() =
     database.taskNodeQueries.selectAllTaskNodesWithDependentAndChildData().executeAsList().map {
       TaskNode(
@@ -174,6 +173,12 @@ class SqlDelightBeforeYouDieStorage(
     return result
   }
 
+  override fun removeTaskNode(uuid: Uuid): Result<Unit> {
+    return ResultExt.asResult({ BYDFailure.NonExistentNodeId(uuid) }) {
+      database.taskNodeQueries.removeTaskNode(uuid.toString())
+    }
+  }
+
   private fun isDependencyAncestorOf(blockingTask: Uuid, blockedTask: Uuid) =
     database.taskNodeQueries.isDependencyAncestorOf(
       blockedTask.toString(),
@@ -187,11 +192,11 @@ class SqlDelightBeforeYouDieStorage(
     ).executeAsOne() != 0L
 }
 
-fun <T> expandDelimitedList(str: String?, delim: String = ",", mapper: (String) -> T) =
-  str?.splitToSequence(delim)?.map { child -> mapper(child) }?.toSet() ?: emptySet()
-
-fun expandUuidList(s: String?) = expandDelimitedList(s, mapper = ::uuidFrom)
-
 fun createDatabase(driver: SqlDriver, isInMemory: Boolean): SqlDelightBeforeYouDieStorage {
   return SqlDelightBeforeYouDieStorage(BeforeYouDieDb(driver), isInMemory)
 }
+
+fun expandUuidList(s: String?) = expandDelimitedList(s, mapper = ::uuidFrom)
+
+fun <T> expandDelimitedList(str: String?, delim: String = ",", mapper: (String) -> T) =
+  str?.splitToSequence(delim)?.map { child -> mapper(child) }?.toSet() ?: emptySet()
