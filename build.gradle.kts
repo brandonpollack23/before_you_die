@@ -1,8 +1,8 @@
 plugins {
     id("org.jetbrains.dokka") version "1.7.10"
-    id("org.jlleitschuh.gradle.ktlint") version libs.versions.ktlint
     id("com.squareup.sqldelight") version libs.versions.sqldelight apply false
     id("io.kotest.multiplatform") version libs.versions.kotest
+    id("com.diffplug.spotless") version libs.versions.spotless
 }
 
 buildscript {
@@ -30,7 +30,7 @@ allprojects {
 }
 
 subprojects {
-    apply(plugin = "org.jlleitschuh.gradle.ktlint") // Version should be inherited from parent
+    apply(plugin = "com.diffplug.spotless") // Version should be inherited from parent
 
     // Configure kotest
     tasks.withType<Test> {
@@ -50,10 +50,15 @@ subprojects {
         }
     }
 
-    ktlint {
-        filter {
-            exclude("**/generated/**")
-            include("**/kotlin/**")
+    spotless {
+        java {
+            googleJavaFormat("1.8")
+        }
+        kotlin {
+            // version, setUseExperimental, userData and editorConfigOverride are all optional
+            ktlint("0.45.2")
+                .setUseExperimental(true)
+                .editorConfigOverride(mapOf("indent_size" to 2, "max_line_length" to 100))
         }
     }
 }

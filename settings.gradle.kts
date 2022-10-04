@@ -18,7 +18,7 @@ dependencyResolutionManagement {
     versionCatalogs {
         create("libs") {
             version("androidx-compose-plugin", "1.2.0-beta02")
-            version("ktlint", "11.0.0")
+            version("spotless", "6.11.0")
 
             library("kotlinx-coroutines", "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
 
