@@ -50,10 +50,10 @@ subprojects {
         }
     }
 
-    configure<org.jlleitschuh.gradle.ktlint.KtlintExtension> {
+    ktlint {
         filter {
-            // exclude { element -> element.file.path.contains("$buildDir/generated/") }
-            exclude("**/build/**")
+            exclude("**/generated/**")
+            include("**/kotlin/**")
         }
     }
 }

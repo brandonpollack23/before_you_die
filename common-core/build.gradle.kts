@@ -45,6 +45,7 @@ kotlin {
         val commonTest by getting {
             dependencies {
                 implementation(libs.kotest.runner.junit5)
+                implementation(libs.mockk)
             }
         }
 
