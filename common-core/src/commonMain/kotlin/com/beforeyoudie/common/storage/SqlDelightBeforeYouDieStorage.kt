@@ -7,8 +7,6 @@ import com.benasher44.uuid.Uuid
 import com.benasher44.uuid.uuidFrom
 import com.squareup.sqldelight.db.SqlDriver
 
-// TODO STORAGE NOW detect if node with uuid already exits ORRRR change to insert OR update
-
 /**
  * Sqlite implementation of [BeforeYouDieStorageInterface]
  */
@@ -65,35 +63,15 @@ class SqlDelightBeforeYouDieStorage(
     }
 
   override fun markComplete(uuid: Uuid): Result<Unit> {
-    var result: Result<Unit> = Result.success(Unit)
-    database.transaction {
-      val taskNode =
-        database.taskNodeQueries.selectTaskNode(uuid.toString()).executeAsOneOrNull()
-      if (taskNode == null) {
-        result = Result.failure(BYDFailure.NonExistentNodeId(uuid))
-        rollback()
-      }
-
+    return simpleUpdate(uuid) {
       database.taskNodeQueries.markTaskComplete(true, uuid.toString())
     }
-
-    return result
   }
 
   override fun markIncomplete(uuid: Uuid): Result<Unit> {
-    var result: Result<Unit> = Result.success(Unit)
-    database.transaction {
-      val taskNode =
-        database.taskNodeQueries.selectTaskNode(uuid.toString()).executeAsOneOrNull()
-      if (taskNode == null) {
-        result = Result.failure(BYDFailure.NonExistentNodeId(uuid))
-        rollback()
-      }
-
+    return simpleUpdate(uuid) {
       database.taskNodeQueries.markTaskComplete(false, uuid.toString())
     }
-
-    return result
   }
 
   override fun addChildToTaskNode(parent: Uuid, child: Uuid): Result<Unit> {
@@ -193,6 +171,21 @@ class SqlDelightBeforeYouDieStorage(
     return result
   }
 
+  override fun updateTaskTitle(uuid: Uuid, title: String): Result<Unit> {
+    return simpleUpdate(uuid) {
+      database.taskNodeQueries.updateTitle(nodeId = uuid.toString(), title = title)
+    }
+  }
+
+  override fun updateTaskDescription(uuid: Uuid, description: String?): Result<Unit> {
+    return simpleUpdate(uuid) {
+      database.taskNodeQueries.updateDescription(
+        nodeId = uuid.toString(),
+        description = description
+      )
+    }
+  }
+
   override fun removeTaskNodeAndChildren(uuid: Uuid): Result<Unit> {
     var result: Result<Unit> = Result.success(Unit)
     database.transaction {
@@ -252,6 +245,25 @@ class SqlDelightBeforeYouDieStorage(
       childTask.toString(),
       parentTask.toString()
     ).executeAsOne() != 0L
+
+  private inline fun simpleUpdate(
+    uuid: Uuid,
+    crossinline updateOperation: (Uuid) -> Unit
+  ): Result<Unit> {
+    var result: Result<Unit> = Result.success(Unit)
+    database.transaction {
+      val taskNode =
+        database.taskNodeQueries.selectTaskNode(uuid.toString()).executeAsOneOrNull()
+      if (taskNode == null) {
+        result = Result.failure(BYDFailure.NonExistentNodeId(uuid))
+        rollback()
+      }
+
+      updateOperation(uuid)
+    }
+
+    return result
+  }
 }
 
 fun createDatabase(driver: SqlDriver, isInMemory: Boolean): SqlDelightBeforeYouDieStorage {

@@ -77,6 +77,16 @@ UPDATE TaskNode
 SET complete = IIF(complete = 1, 0, 1)
 WHERE id = :nodeId;
 
+updateTitle:
+UPDATE TaskNode
+SET title = :title
+WHERE id = :nodeId;
+
+updateDescription:
+UPDATE TaskNode
+SET description = :description
+WHERE id = :nodeId;
+
 markTaskComplete:
 UPDATE TaskNode
 SET complete = :isComplete
