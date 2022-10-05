@@ -1,6 +1,5 @@
 import org.jetbrains.dokka.gradle.DokkaTaskPartial
 
-val kotlin_version: String by extra
 plugins {
   kotlin("multiplatform")
   id("com.android.library")
@@ -22,9 +21,11 @@ kotlin {
   sourceSets {
     val commonMain by getting {
       dependencies {
-        implementation(libs.koin.core)
+        implementation(libs.decompose)
         implementation(libs.kermit)
         implementation(libs.kermit.koin)
+        implementation(libs.koin.core)
+        implementation(libs.kotlinx.coroutines)
         implementation(libs.uuid)
       }
     }

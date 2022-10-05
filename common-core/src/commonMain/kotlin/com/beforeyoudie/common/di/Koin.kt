@@ -2,14 +2,18 @@ package com.beforeyoudie.common.di
 
 import co.touchlab.kermit.Logger
 import co.touchlab.kermit.koin.KermitKoinLogger
+import com.arkivanov.decompose.DefaultComponentContext
+import com.arkivanov.essenty.lifecycle.LifecycleRegistry
+import com.beforeyoudie.common.applogic.impl.RootDecomposeComponent
 import com.beforeyoudie.common.storage.BeforeYouDieDb
-import com.beforeyoudie.common.storage.BeforeYouDieStorageInterface
-import com.beforeyoudie.common.storage.SqlDelightBeforeYouDieStorage
+import com.beforeyoudie.common.storage.IBydStorage
+import com.beforeyoudie.common.storage.SqlDelightIBydStorage
 import com.squareup.sqldelight.db.SqlDriver
 import org.koin.core.component.KoinComponent
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.createdAtStart
 import org.koin.core.module.dsl.withOptions
+import org.koin.core.qualifier.named
 import org.koin.dsl.bind
 import org.koin.dsl.module
 import org.koin.fileProperties
@@ -45,21 +49,39 @@ expect fun loadPlatformSpecificModule(): Module
 
 /** Platform independent modules that depend on things constructed in the platform module. */
 fun loadPlatformDependentSharedModules() = listOf(
+  // Storage interface module.
   module {
     single {
       val driver: SqlDriver = get()
       BeforeYouDieDb.Schema.create(driver)
 
       val dbFileName = getProperty<String>(Properties.LOCAL_DATABASE_FILENAME.name).trim('"')
-      SqlDelightBeforeYouDieStorage(
+      SqlDelightIBydStorage(
         database = BeforeYouDieDb(driver),
         isInMemory = dbFileName.isBlank()
       )
     } withOptions {
       createdAtStart()
-    } bind BeforeYouDieStorageInterface::class
+    } bind IBydStorage::class
+  },
+  // Decompose module
+  module {
+    single {
+      LifecycleRegistry()
+    }
+    single(named(Qualifiers.DefaultComponentContext)) {
+      DefaultComponentContext(get())
+    }
+    single(named(Qualifiers.RootComponent)) {
+      RootDecomposeComponent(get())
+    }
   }
 )
+
+enum class Qualifiers {
+  DefaultComponentContext,
+  RootComponent,
+}
 
 /** Properties to be read from configuration file koin.properties. */
 enum class Properties {

@@ -1,10 +1,12 @@
-package com.beforeyoudie.common.storage.memorymodel
+package com.beforeyoudie.common.state
 
 import com.benasher44.uuid.Uuid
 import com.benasher44.uuid.uuid4
 
+typealias TaskId = Uuid
+
 /**
- * The in memory representation of a task after reading it from the [com.beforeyoudie.common.storage.BeforeYouDieStorageInterface]
+ * The in memory representation of a task after reading it from the [com.beforeyoudie.common.storage.IBydStorage]
  *
  * @property id unique UUID of the task
  * @property title the title of the task, required
@@ -16,7 +18,7 @@ import com.benasher44.uuid.uuid4
  * @property blockedTasks inverse of blocking, can't be seen in actionable view.
  */
 data class TaskNode(
-  val id: Uuid = uuid4(),
+  val id: TaskId = uuid4(),
   val title: String,
   val isComplete: Boolean = false,
   val description: String? = null,
@@ -24,4 +26,7 @@ data class TaskNode(
   val children: Set<Uuid> = setOf(),
   val blockingTasks: Set<Uuid> = setOf(),
   val blockedTasks: Set<Uuid> = setOf()
-)
+) {
+  override fun hashCode() = id.hashCode()
+  override fun equals(other: Any?) = id == other
+}

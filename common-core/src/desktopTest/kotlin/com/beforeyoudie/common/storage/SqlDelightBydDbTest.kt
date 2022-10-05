@@ -1,7 +1,7 @@
 package com.beforeyoudie.common.storage
 
 import com.beforeyoudie.common.CommonTest
-import com.beforeyoudie.common.storage.memorymodel.TaskNode
+import com.beforeyoudie.common.state.TaskNode
 import com.beforeyoudie.common.util.BYDFailure
 import com.benasher44.uuid.uuidFrom
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
@@ -12,8 +12,8 @@ import io.kotest.matchers.shouldBe
 import org.koin.test.get
 
 // TODO(#3) TESTING make thsi run as android instrumentation test
-class SqlDelightBeforeYouDieDbTest : CommonTest() {
-  private lateinit var db: BeforeYouDieStorageInterface
+class SqlDelightBydDbTest : CommonTest() {
+  private lateinit var db: IBydStorage
 
   init {
     beforeTest {

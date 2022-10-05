@@ -22,6 +22,17 @@ separately, firebase, MongoDB Room, etc.
 
 The in memory representation of a task and related utilities
 
+# Package com.beforeyoudie.common.applogic
+
+This is where the core business logic goes of how you interact with the application.  
+
+## Naming 
+
+Most people probably call this "viewmodel" classically or "controller"
+
+These are all so overloaded and only server to confuse everyone. This holds state and events and talks to the
+storage/syncing for you. UI depends on this.
+
 # Package com.beforeyoudie.common.util
 
 Utility functions for result, logging, etc.

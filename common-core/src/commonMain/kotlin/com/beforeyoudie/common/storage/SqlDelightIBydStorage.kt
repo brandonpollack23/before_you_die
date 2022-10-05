@@ -1,6 +1,6 @@
 package com.beforeyoudie.common.storage
 
-import com.beforeyoudie.common.storage.memorymodel.TaskNode
+import com.beforeyoudie.common.state.TaskNode
 import com.beforeyoudie.common.util.BYDFailure
 import com.beforeyoudie.common.util.ResultExt
 import com.benasher44.uuid.Uuid
@@ -8,12 +8,12 @@ import com.benasher44.uuid.uuidFrom
 import com.squareup.sqldelight.db.SqlDriver
 
 /**
- * Sqlite implementation of [BeforeYouDieStorageInterface]
+ * Sqlite implementation of [IBydStorage]
  */
-class SqlDelightBeforeYouDieStorage(
+class SqlDelightIBydStorage(
   private val database: BeforeYouDieDb,
   override val isInMemory: Boolean
-) : BeforeYouDieStorageInterface {
+) : IBydStorage {
   override fun selectAllTaskNodeInformation() =
     database.taskNodeQueries.selectAllTaskNodesWithDependentAndChildData().executeAsList().map {
       TaskNode(
@@ -266,8 +266,8 @@ class SqlDelightBeforeYouDieStorage(
   }
 }
 
-fun createDatabase(driver: SqlDriver, isInMemory: Boolean): SqlDelightBeforeYouDieStorage {
-  return SqlDelightBeforeYouDieStorage(BeforeYouDieDb(driver), isInMemory)
+fun createDatabase(driver: SqlDriver, isInMemory: Boolean): SqlDelightIBydStorage {
+  return SqlDelightIBydStorage(BeforeYouDieDb(driver), isInMemory)
 }
 
 fun expandUuidList(s: String?) = expandDelimitedList(s, mapper = ::uuidFrom)
