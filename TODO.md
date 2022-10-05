@@ -1,6 +1,5 @@
 # Requisite functionality
 * [ ] some way to represent ordering in list view (aka Rank) [JIRA's lexorank](https://github.com/xissy/lexorank) [stackoverflow](https://softwareengineering.stackexchange.com/questions/195308/storing-a-re-orderable-list-in-a-database, )
-* 
 * [ ] Compose based UI for desktop/web/android
   * [ ] List View
     * [ ] Whether blocked or not
@@ -18,3 +17,6 @@
 
 # Documentation
 * [ ] A better graph structure example in the readme, perhaps a screenshot
+
+# Stretches
+* [ ] spellfix1 integration in order to have fuzzy text search
