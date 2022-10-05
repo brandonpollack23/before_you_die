@@ -6,6 +6,7 @@ import org.koin.core.component.KoinComponent
 import org.koin.core.module.Module
 import org.koin.fileProperties
 
+// TODO NOW make only the SqlDriver platform specific and make the SqlDelight construction shared.  Use named  or something boolean for isInMemory
 /**
  * Load all platform specific dependencies, including database driver etc.
  */

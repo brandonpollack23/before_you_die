@@ -26,7 +26,7 @@ interface BeforeYouDieStorageInterface {
   /**
    * Insert a task node with the given information into the database.
    *
-   * @returns [Result] of with fail type [InsertionFailure]
+   * @returns [Result] of with fail type [com.beforeyoudie.common.util.BYDFailure.InsertionFailure]
    */
   fun insertTaskNode(
     id: Uuid,
@@ -45,7 +45,7 @@ interface BeforeYouDieStorageInterface {
    * I figured making them seperate would catch any bugs where you try to assign a parent to
    * existing node and losing original parent on accident because of weird state.
    *
-   * @returns [Result] of with fail type [DuplicateParent]
+   * @returns [Result] of with fail type [com.beforeyoudie.common.util.BYDFailure.DuplicateParent]
    */
   fun addChildToTaskNode(parent: Uuid, child: Uuid): Result<Unit>
 
@@ -58,21 +58,21 @@ interface BeforeYouDieStorageInterface {
   /**
    * Add dependency relationship
    *
-   * @returns [NonExistantNodeId]
+   * @returns [com.beforeyoudie.common.util.BYDFailure.NonExistentNodeId]
    */
   fun addDependencyRelationship(blockingTask: Uuid, blockedTask: Uuid): Result<Unit>
 
   /**
    * Removes a given task node along with all relationships.
    *
-   * @retuns [NonExistantNodeId]
+   * @retuns [com.beforeyoudie.common.util.BYDFailure.NonExistentNodeId]
    */
   fun removeTaskNodeAndChildren(uuid: Uuid): Result<Unit>
 
   /**
    * Remove a depedency relationship between two nodes
    *
-   * @retuns [NonExistantNodeId] or [NoSuchDependencyRelationship]
+   * @retuns [com.beforeyoudie.common.util.BYDFailure.NonExistentNodeId] or [com.beforeyoudie.common.util.BYDFailure.NoSuchDependencyRelationship]
    */
   fun removeDependencyRelationship(blockingTask: Uuid, blockedTask: Uuid): Result<Unit>
 }

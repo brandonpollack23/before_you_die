@@ -2,8 +2,17 @@ package com.beforeyoudie.common.util
 
 import com.benasher44.uuid.Uuid
 
+/**
+ * Extension functions for [Result]
+ */
 object ResultExt {
-  public fun <T> asResult(errorConstructor: (Throwable) -> BYDFailure, c: () -> T): Result<T> {
+  /**
+   * Surround a block in a try catch and return the given failure on thrown exception.
+   *
+   * @param errorConstructor the constructor to call to wrap the Throwable called in [c]
+   * @param c the block that will be surrounded in try catch.
+   */
+  fun <T> asResult(errorConstructor: (Throwable) -> BYDFailure, c: () -> T): Result<T> {
     return try {
       Result.success(c())
     } catch (e: Exception) {
@@ -28,7 +37,7 @@ sealed class BYDFailure(cause: Throwable? = null) : Throwable(cause) {
   /** Cycles aren't allowed, the dependency graph is a DAG */
   data class OperationWouldIntroduceCycle(val uuid1: Uuid, val uuid2: Uuid) : BYDFailure()
 
-  /** These two tasks don't have a depenency relationship, so nothing to remove, etc. */
+  /** These two tasks don't have a dependency relationship, so nothing to remove, etc. */
   data class NoSuchDependencyRelationship(val blockingTask: Uuid, val blockedTask: Uuid) :
     BYDFailure()
 }

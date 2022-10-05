@@ -1,3 +1,5 @@
+import org.jetbrains.dokka.gradle.DokkaTaskPartial
+
 val kotlin_version: String by extra
 plugins {
   kotlin("multiplatform")
@@ -101,4 +103,8 @@ sqldelight {
     packageName = "com.beforeyoudie.common.storage"
     sourceFolders = listOf("sql")
   }
+}
+
+tasks.withType<DokkaTaskPartial>().configureEach {
+  moduleName.set("Common Core")
 }
