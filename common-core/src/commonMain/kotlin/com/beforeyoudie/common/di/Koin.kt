@@ -61,9 +61,7 @@ fun loadPlatformDependentSharedModules() = listOf(
   }
 )
 
-enum class Qualifiers {
-  IS_IN_MEMORY_DB
-}
+/** Properties to be read from configuration file koin.properties. */
 enum class Properties {
   LOCAL_DATABASE_FILENAME
 }
