@@ -20,7 +20,7 @@ sealed class BYDFailure(cause: Throwable? = null) : Throwable(cause) {
   data class DuplicateParent(private val uuid: Uuid) : BYDFailure()
 
   /** Moving a child to a new parent requires it already has one. */
-  data class ChildHasNoParent(val uuid: Uuid): BYDFailure()
+  data class ChildHasNoParent(val uuid: Uuid) : BYDFailure()
 
   /** Operation tried to use a node id that didn't exist */
   data class NonExistentNodeId(val uuid: Uuid) : BYDFailure()

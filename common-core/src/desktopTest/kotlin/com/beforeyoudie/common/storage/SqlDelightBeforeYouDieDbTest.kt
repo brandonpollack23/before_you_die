@@ -4,7 +4,6 @@ import com.beforeyoudie.common.CommonTest
 import com.beforeyoudie.common.storage.memorymodel.TaskNode
 import com.beforeyoudie.common.util.BYDFailure
 import com.benasher44.uuid.uuidFrom
-import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.collections.shouldHaveAtMostSize
 import io.kotest.matchers.result.shouldBeFailure
@@ -385,7 +384,7 @@ class SqlDelightBeforeYouDieDbTest : CommonTest() {
       db.selectAllTaskNodeInformation() shouldContainExactlyInAnyOrder setOf(
         TaskNode(uuid0, "uuid0"),
         TaskNode(uuid1, "uuid1", parent = uuid2),
-        TaskNode(uuid2, "uuid2", children = setOf(uuid1)),
+        TaskNode(uuid2, "uuid2", children = setOf(uuid1))
       )
     }
 
@@ -441,7 +440,7 @@ class SqlDelightBeforeYouDieDbTest : CommonTest() {
       db.selectAllTaskNodeInformation() shouldContainExactlyInAnyOrder setOf(
         TaskNode(uuid2, "uuid2"),
         TaskNode(uuid3, "uuid3"),
-        TaskNode(uuid4, "uuid4"),
+        TaskNode(uuid4, "uuid4")
       )
     }
 
@@ -497,7 +496,7 @@ class SqlDelightBeforeYouDieDbTest : CommonTest() {
           uuid3,
           "uuid3",
           description = "captain picard baby",
-          blockingTasks = setOf(uuid4),
+          blockingTasks = setOf(uuid4)
         ),
         TaskNode(uuid4, "uuid4", description = "no love for worf", blockedTasks = setOf(uuid3))
       )

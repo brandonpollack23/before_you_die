@@ -155,12 +155,10 @@ class SqlDelightBeforeYouDieStorage(
       if (blockedTaskDbEntry == null) {
         result = Result.failure(BYDFailure.NonExistentNodeId(blockedTask))
         rollback()
-      }
-      else if(blockingTaskDbEntry == null) {
+      } else if (blockingTaskDbEntry == null) {
         result = Result.failure(BYDFailure.NonExistentNodeId(blockingTask))
         rollback()
-      }
-      else if (isDependencyAncestorOf(blockingTask, blockedTask)) {
+      } else if (isDependencyAncestorOf(blockingTask, blockedTask)) {
         result = Result.failure(
           BYDFailure.OperationWouldIntroduceCycle(
             blockingTask,
