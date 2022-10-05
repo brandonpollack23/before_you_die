@@ -1,14 +1,14 @@
 package com.beforeyoudie.common.di
 
-import com.beforeyoudie.common.storage.BeforeYouDieDb
-import com.beforeyoudie.common.storage.BeforeYouDieStorageInterface
-import com.beforeyoudie.common.storage.SqlDelightBeforeYouDieStorage
+import com.squareup.sqldelight.db.SqlDriver
 import com.squareup.sqldelight.sqlite.driver.JdbcSqliteDriver
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.createdAtStart
 import org.koin.core.module.dsl.withOptions
 import org.koin.dsl.bind
 import org.koin.dsl.module
+import kotlin.io.path.Path
+import kotlin.io.path.createDirectories
 
 actual fun loadPlatformSpecificModule(): Module = module {
   single {
@@ -21,16 +21,14 @@ actual fun loadPlatformSpecificModule(): Module = module {
 
     val jdbcUri =
       if (dbFileName.isNotBlank()) {
+        Path("./sqlite/db").createDirectories()
         "jdbc:sqlite:./sqlite/db/$dbFileName"
       } else {
         JdbcSqliteDriver.IN_MEMORY
       }
 
-    val driver = JdbcSqliteDriver(url = jdbcUri)
-    BeforeYouDieDb.Schema.create(driver)
-
-    SqlDelightBeforeYouDieStorage(BeforeYouDieDb(driver), jdbcUri == JdbcSqliteDriver.IN_MEMORY)
+    JdbcSqliteDriver(url = jdbcUri)
   } withOptions {
     createdAtStart()
-  } bind BeforeYouDieStorageInterface::class
+  } bind SqlDriver::class
 }

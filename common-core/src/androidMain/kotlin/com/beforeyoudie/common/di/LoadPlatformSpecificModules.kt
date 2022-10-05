@@ -1,8 +1,6 @@
 package com.beforeyoudie.common.di
 
 import com.beforeyoudie.common.storage.BeforeYouDieDb
-import com.beforeyoudie.common.storage.BeforeYouDieStorageInterface
-import com.beforeyoudie.common.storage.createDatabase
 import com.squareup.sqldelight.android.AndroidSqliteDriver
 import io.requery.android.database.sqlite.RequerySQLiteOpenHelperFactory
 import org.koin.core.module.Module
@@ -18,14 +16,14 @@ actual fun loadPlatformSpecificModule(): Module = module {
       logger.debug("Using in memory database")
     }
 
-    val driver = AndroidSqliteDriver(
+    AndroidSqliteDriver(
       BeforeYouDieDb.Schema,
       get(),
       dbFileName,
       // Use this to use the newest version of sqlite (not the one packaged with android).
       factory = RequerySQLiteOpenHelperFactory()
     )
-
-    createDatabase(driver, dbFileName.isNotBlank())
-  } bind BeforeYouDieStorageInterface::class
+  } withOptions {
+    createdAtStart()
+  } bind SqlDriver::class
 }
