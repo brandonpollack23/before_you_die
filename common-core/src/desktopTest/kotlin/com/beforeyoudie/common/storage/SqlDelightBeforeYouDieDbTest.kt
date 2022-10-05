@@ -41,6 +41,74 @@ class SqlDelightBeforeYouDieDbTest : CommonTest() {
       )
     }
 
+    test("update title") {
+      val uuid1 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3599")
+      db.insertTaskNode(uuid1, "uuid1", null, false)
+      val uuid2 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3598")
+      db.insertTaskNode(uuid2, "uuid2", null, false)
+
+      db.selectAllTaskNodeInformation() shouldContainExactlyInAnyOrder setOf(
+        TaskNode(uuid1, "uuid1"),
+        TaskNode(uuid2, "uuid2")
+      )
+
+      db.updateTaskTitle(uuid1, "new uuid1 title") shouldBeSuccess Unit
+      db.selectAllTaskNodeInformation() shouldContainExactlyInAnyOrder setOf(
+        TaskNode(uuid1, "new uuid1 title"),
+        TaskNode(uuid2, "uuid2")
+      )
+    }
+
+    test("update title fail") {
+      val uuid1 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3599")
+      db.insertTaskNode(uuid1, "uuid1", null, false)
+      val uuid2 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3598")
+      db.insertTaskNode(uuid2, "uuid2", null, false)
+      val uuid3 = uuidFrom("3d8f7dd6-c345-49a8-aa1d-404fb9ea3598")
+
+      db.selectAllTaskNodeInformation() shouldContainExactlyInAnyOrder setOf(
+        TaskNode(uuid1, "uuid1"),
+        TaskNode(uuid2, "uuid2")
+      )
+
+      db.updateTaskTitle(uuid3, "new uuid1 title") shouldBeFailure
+        BYDFailure.NonExistentNodeId(uuid3)
+    }
+
+    test("update description") {
+      val uuid1 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3599")
+      db.insertTaskNode(uuid1, "uuid1", null, false)
+      val uuid2 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3598")
+      db.insertTaskNode(uuid2, "uuid2", null, false)
+
+      db.selectAllTaskNodeInformation() shouldContainExactlyInAnyOrder setOf(
+        TaskNode(uuid1, "uuid1"),
+        TaskNode(uuid2, "uuid2")
+      )
+
+      db.updateTaskDescription(uuid1, "new uuid1 description") shouldBeSuccess Unit
+      db.selectAllTaskNodeInformation() shouldContainExactlyInAnyOrder setOf(
+        TaskNode(uuid1, "uuid1", description = "new uuid1 description"),
+        TaskNode(uuid2, "uuid2")
+      )
+    }
+
+    test("update descprption fail") {
+      val uuid1 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3599")
+      db.insertTaskNode(uuid1, "uuid1", null, false)
+      val uuid2 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3598")
+      db.insertTaskNode(uuid2, "uuid2", null, false)
+      val uuid3 = uuidFrom("3d8f7dd6-c345-49a8-aa1d-404fb9ea3598")
+
+      db.selectAllTaskNodeInformation() shouldContainExactlyInAnyOrder setOf(
+        TaskNode(uuid1, "uuid1"),
+        TaskNode(uuid2, "uuid2")
+      )
+
+      db.updateTaskDescription(uuid3, "new uuid1 description") shouldBeFailure
+        BYDFailure.NonExistentNodeId(uuid3)
+    }
+
     test("set mark complete should work") {
       val uuid1 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3599")
       db.insertTaskNode(uuid1, "uuid1", null, false)
@@ -572,6 +640,4 @@ class SqlDelightBeforeYouDieDbTest : CommonTest() {
       ) shouldBeFailure BYDFailure.NoSuchDependencyRelationship(uuid2, uuid3)
     }
   }
-
-  // TODO NOW task title description update and failures
 }
