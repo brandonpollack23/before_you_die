@@ -35,10 +35,11 @@ interface BeforeYouDieStorageInterface {
     complete: Boolean
   ): Result<Unit>
 
-  /**
-   * Mark a task as done, returning an error if it doesnt exist.
-   */
+  /** Mark a task as done, returning an error if it doesn't exist. */
   fun markComplete(uuid: Uuid): Result<Unit>
+
+  /** Mark a task as incomplete, returning an error if it doesn't exist. */
+  fun markIncomplete(uuid: Uuid): Result<Unit>
 
   /**
    * Add a child to a task mode, if you need to reparent use that operation instead.

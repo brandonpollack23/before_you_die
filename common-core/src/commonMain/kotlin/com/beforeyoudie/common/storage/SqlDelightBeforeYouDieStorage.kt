@@ -80,6 +80,22 @@ class SqlDelightBeforeYouDieStorage(
     return result
   }
 
+  override fun markIncomplete(uuid: Uuid): Result<Unit> {
+    var result: Result<Unit> = Result.success(Unit)
+    database.transaction {
+      val taskNode =
+        database.taskNodeQueries.selectTaskNode(uuid.toString()).executeAsOneOrNull()
+      if (taskNode == null) {
+        result = Result.failure(BYDFailure.NonExistentNodeId(uuid))
+        rollback()
+      }
+
+      database.taskNodeQueries.markTaskComplete(false, uuid.toString())
+    }
+
+    return result
+  }
+
   override fun addChildToTaskNode(parent: Uuid, child: Uuid): Result<Unit> {
     // SQLite will throw an exception because child must be unique, I also check for cycles.
     var result: Result<Unit> = Result.success(Unit)

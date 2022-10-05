@@ -371,6 +371,55 @@ class SqlDelightBeforeYouDieDbTest : CommonTest() {
       db.selectAllActionableTaskNodeInformation() shouldHaveAtMostSize 0
     }
 
+    test("marking incomplete should force dependent tasks to no longer be visibile") {
+      val uuid0 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3589")
+      db.insertTaskNode(uuid0, "uuid0", null, false)
+      val uuid1 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3599")
+      db.insertTaskNode(uuid1, "uuid1", null, false)
+      val uuid2 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3598")
+      db.insertTaskNode(uuid2, "uuid2", "", false)
+      val uuid3 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3597")
+      db.insertTaskNode(uuid3, "uuid3", "captain picard baby", false)
+      val uuid4 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3596")
+      db.insertTaskNode(uuid4, "uuid4", "no love for worf", false)
+
+      db.addDependencyRelationship(uuid1, uuid2)
+      db.addDependencyRelationship(uuid1, uuid3)
+      db.addDependencyRelationship(uuid2, uuid4)
+      db.addDependencyRelationship(uuid3, uuid4)
+
+      // First only 1 should be actionable
+      db.selectAllActionableTaskNodeInformation() shouldContainExactlyInAnyOrder setOf(
+        TaskNode(uuid0, "uuid0"),
+        TaskNode(uuid1, "uuid1", blockedTasks = setOf(uuid2, uuid3))
+      )
+
+      db.markComplete(uuid0) shouldBeSuccess Unit
+      db.markComplete(uuid1) shouldBeSuccess Unit
+      // Now 2 and 3 should be actionable, since 4 is blocked and 1 is complete.
+      db.selectAllActionableTaskNodeInformation() shouldContainExactlyInAnyOrder setOf(
+        TaskNode(
+          uuid2,
+          "uuid2",
+          description = "",
+          blockingTasks = setOf(uuid1),
+          blockedTasks = setOf(uuid4)
+        ),
+        TaskNode(
+          uuid3,
+          "uuid3",
+          description = "captain picard baby",
+          blockingTasks = setOf(uuid1),
+          blockedTasks = setOf(uuid4)
+        )
+      )
+
+      db.markIncomplete(uuid1) shouldBeSuccess Unit
+      db.selectAllActionableTaskNodeInformation() shouldContainExactlyInAnyOrder setOf(
+        TaskNode(uuid1, "uuid1", blockedTasks = setOf(uuid2, uuid3))
+      )
+    }
+
     test("reparenting operation completes successfully") {
       val uuid0 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3589")
       db.insertTaskNode(uuid0, "uuid0", null, false)
@@ -522,9 +571,5 @@ class SqlDelightBeforeYouDieDbTest : CommonTest() {
         uuid3
       ) shouldBeFailure BYDFailure.NoSuchDependencyRelationship(uuid2, uuid3)
     }
-
-    // TODO NOW markIncomplete reshows deps
-
-    // TODO TESTING change to property testing
   }
 }
