@@ -20,7 +20,7 @@ import org.koin.fileProperties
 class BeforeYouDieApplication : KoinComponent
 
 fun startKoin() = org.koin.core.context.startKoin {
-  // TODO LOGGING make a koin configuration to set a log file etc
+  // TODO(#5) LOGGING make a koin configuration to set a log file etc
   val kermit = Logger.withTag("koin")
   logger(KermitKoinLogger(kermit))
 
