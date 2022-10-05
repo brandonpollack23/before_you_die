@@ -11,6 +11,7 @@ import io.kotest.matchers.result.shouldBeSuccess
 import io.kotest.matchers.shouldBe
 import org.koin.test.get
 
+// TODO(#3) TESTING make thsi run as android instrumentation test
 class SqlDelightBeforeYouDieDbTest : CommonTest() {
   private lateinit var db: BeforeYouDieStorageInterface
 
