@@ -4,6 +4,7 @@ import co.touchlab.kermit.Logger
 import co.touchlab.kermit.koin.KermitKoinLogger
 import com.arkivanov.decompose.DefaultComponentContext
 import com.arkivanov.essenty.lifecycle.LifecycleRegistry
+import com.beforeyoudie.common.applogic.BydGraphConfig
 import com.beforeyoudie.common.applogic.impl.RootDecomposeComponent
 import com.beforeyoudie.common.storage.BeforeYouDieDb
 import com.beforeyoudie.common.storage.IBydStorage
@@ -72,9 +73,10 @@ fun loadPlatformDependentSharedModules() = listOf(
     single(named(Qualifiers.DefaultComponentContext)) {
       DefaultComponentContext(get())
     }
-    single(named(Qualifiers.RootComponent)) {
-      RootDecomposeComponent(get())
-    }
+    // TODO NOW enable
+    // single(named(Qualifiers.RootComponent)) {
+    //   RootDecomposeComponent(get(), )
+    // }
   }
 )
 

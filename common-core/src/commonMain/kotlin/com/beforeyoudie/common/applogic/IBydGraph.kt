@@ -5,17 +5,18 @@ interface IBydGraph {
   val config: BydGraphConfig
 }
 
+// TODO NOW add documentation to all below
 data class BydGraphConfig(
-  val viewMode: ViewMode,
-  val visibilityMode: VisibilityMode,
+  val viewMode: ViewMode = ViewMode.List,
+  val visibilityMode: VisibilityMode = VisibilityMode.AllTasks,
 )
-
-enum class VisibilityMode {
-  AllTasks,
-  ActionableTasks,
-}
 
 enum class ViewMode {
   List,
   NodalGraph
+}
+
+enum class VisibilityMode {
+  AllTasks,
+  ActionableTasks,
 }
