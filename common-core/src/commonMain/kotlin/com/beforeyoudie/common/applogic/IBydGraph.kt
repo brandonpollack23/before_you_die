@@ -5,6 +5,8 @@ interface IBydGraph {
   val config: BydGraphConfig
 }
 
+// TODO NOW create issue to add which list for when that feature is added
+
 // TODO NOW add documentation to all below
 data class BydGraphConfig(
   val viewMode: ViewMode = ViewMode.List,
