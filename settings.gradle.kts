@@ -17,9 +17,18 @@ include(":common-ui")
 dependencyResolutionManagement {
   versionCatalogs {
     create("libs") {
+      val kotlinVersion = "1.7.10"
+      version("kotlin-compiler", kotlinVersion)
+      val kspVersion = "1.0.6"
+      version("kotlin-ksp", "$kotlinVersion-$kspVersion")
       version("androidx-compose-plugin", "1.2.0-beta02")
       version("spotless", "6.11.0")
 
+      // kotlin-inject DI
+      library("di-kotlinInject-ksp", "me.tatarka.inject:kotlin-inject-compiler-ksp:0.5.1")
+      library("di-kotlinInject-runtime", "me.tatarka.inject:kotlin-inject-runtime:0.5.1")
+
+      // Coroutines/Concurrency
       library("kotlinx-coroutines", "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
 
       // Koin DI

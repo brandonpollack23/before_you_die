@@ -5,6 +5,7 @@ plugins {
   id("com.android.library")
   id("com.squareup.sqldelight")
   id("io.kotest.multiplatform")
+  id("com.google.devtools.ksp")
 }
 
 group = "com.beforeyoudie"
@@ -27,6 +28,7 @@ kotlin {
         implementation(libs.koin.core)
         implementation(libs.kotlinx.coroutines)
         implementation(libs.uuid)
+        implementation(libs.di.kotlinInject.runtime)
       }
     }
 
@@ -68,6 +70,11 @@ kotlin {
       }
     }
   }
+}
+
+// Compiler plugin dependencies go at the project level
+dependencies {
+  ksp(libs.di.kotlinInject.ksp)
 }
 
 tasks.named<Copy>("desktopTestProcessResources") {

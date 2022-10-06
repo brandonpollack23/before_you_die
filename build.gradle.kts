@@ -2,10 +2,11 @@ import org.jetbrains.dokka.gradle.DokkaTask
 import org.jetbrains.dokka.gradle.DokkaTaskPartial
 
 plugins {
-  id("org.jetbrains.dokka") version "1.7.10"
+  id("com.diffplug.spotless") version libs.versions.spotless
+  id("com.google.devtools.ksp") version libs.versions.kotlin.ksp apply false
   id("com.squareup.sqldelight") version libs.versions.sqldelight apply false
   id("io.kotest.multiplatform") version libs.versions.kotest
-  id("com.diffplug.spotless") version libs.versions.spotless
+  id("org.jetbrains.dokka") version "1.7.10"
 }
 
 buildscript {
@@ -15,7 +16,7 @@ buildscript {
     mavenCentral()
   }
   dependencies {
-    classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.7.10")
+    classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:${libs.versions.kotlin.compiler}")
     classpath("com.android.tools.build:gradle:7.2.2")
   }
 }
