@@ -38,12 +38,14 @@ kotlin {
         implementation(libs.sqldelight.android)
         implementation(libs.requiry.sqliteandroid)
       }
+      kotlin.srcDir("build/generated/ksp/android/androidRelease/test/kotlin")
     }
 
     val desktopMain by getting {
       dependencies {
         implementation(libs.sqldelight.jvm)
       }
+      kotlin.srcDir("build/generated/ksp/desktop/desktopMain/kotlin")
     }
 
     val commonTest by getting {
@@ -69,6 +71,7 @@ kotlin {
         implementation(libs.kotest.properties)
         implementation(libs.koin.test)
       }
+      kotlin.srcDir("build/generated/ksp/desktop/desktopTest/kotlin")
     }
   }
 }
