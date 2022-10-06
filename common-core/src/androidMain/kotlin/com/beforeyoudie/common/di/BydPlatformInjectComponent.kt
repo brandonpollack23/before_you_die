@@ -51,5 +51,5 @@ class AndroidComponent(
 fun kotlinInjectCreateApp(
   databaseFileName: DatabaseFileName,
   context: Context
-): BydKotlinInjectComponent =
-  BydKotlinInjectComponent::class.create(AndroidComponent::class.create(context))
+): BydKotlinInjectAppComponent =
+  BydKotlinInjectAppComponent::class.create(AndroidComponent::class.create(context))

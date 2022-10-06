@@ -44,5 +44,5 @@ actual abstract class BydPlatformInjectComponent actual constructor(
     databaseFileName.trim('"').isEmpty()
 }
 
-fun kotlinInjectCreateApp(databaseFileName: DatabaseFileName = ""): BydKotlinInjectComponent =
-  BydKotlinInjectComponent::class.create(BydPlatformInjectComponent::class.create(databaseFileName))
+fun kotlinInjectCreateApp(databaseFileName: DatabaseFileName = ""): BydKotlinInjectAppComponent =
+  BydKotlinInjectAppComponent::class.create(BydPlatformInjectComponent::class.create(databaseFileName))

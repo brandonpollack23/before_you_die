@@ -35,11 +35,7 @@ annotation class ApplicationScope
 typealias DatabaseFileName = String
 typealias IsDbInMemory = Boolean
 
-@ApplicationScope
-@Component
-abstract class BydKotlinInjectComponent(
-  @Component val platformKotlinInjectComponent: BydPlatformInjectComponent
-) {
+interface IBydKotlinInjectAppComponent {
   abstract val rootLogic: IBydRoot
 
   // ========== Bindings =============
@@ -85,5 +81,11 @@ abstract class BydKotlinInjectComponent(
     return BeforeYouDieDb(driver)
   }
 }
+
+@ApplicationScope
+@Component
+abstract class BydKotlinInjectAppComponent(
+  @Component val platformKotlinInjectComponent: BydPlatformInjectComponent
+) : IBydKotlinInjectAppComponent
 
 expect abstract class BydPlatformInjectComponent(databaseFileName: DatabaseFileName = "")
