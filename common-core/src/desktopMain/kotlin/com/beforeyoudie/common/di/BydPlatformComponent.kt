@@ -1,5 +1,6 @@
 package com.beforeyoudie.common.di
 
+import co.touchlab.kermit.Logger
 import com.squareup.sqldelight.db.SqlDriver
 import com.squareup.sqldelight.sqlite.driver.JdbcSqliteDriver
 import me.tatarka.inject.annotations.Component
@@ -8,16 +9,15 @@ import me.tatarka.inject.annotations.Scope
 import kotlin.io.path.Path
 import kotlin.io.path.createDirectories
 
-@Scope
-@Target(AnnotationTarget.CLASS, AnnotationTarget.FUNCTION, AnnotationTarget.PROPERTY_GETTER)
-annotation class ApplicationPlatformScope
-
 @ApplicationPlatformScope
 @Component
-actual abstract class BydPlatformInjectComponent actual constructor(
+actual abstract class BydPlatformComponent(
   @get:ApplicationPlatformScope @get:Provides
   val databaseFileName: DatabaseFileName
 ) {
+  @Provides
+  inline fun <reified T> provideClassLogger(): Logger = Logger.withTag(T::class.toString())
+
   @ApplicationPlatformScope
   @Provides
   fun provideSqlDriver(databaseFileName: DatabaseFileName): SqlDriver {
@@ -44,5 +44,5 @@ actual abstract class BydPlatformInjectComponent actual constructor(
     databaseFileName.trim('"').isEmpty()
 }
 
-fun kotlinInjectCreateApp(databaseFileName: DatabaseFileName = ""): BydKotlinInjectAppComponent =
-  BydKotlinInjectAppComponent::class.create(BydPlatformInjectComponent::class.create(databaseFileName))
+fun kotlinInjectCreateApp(databaseFileName: DatabaseFileName = ""): CommonBydKotlinInjectAppComponent =
+  CommonBydKotlinInjectAppComponent::class.create(BydPlatformComponent::class.create(databaseFileName))

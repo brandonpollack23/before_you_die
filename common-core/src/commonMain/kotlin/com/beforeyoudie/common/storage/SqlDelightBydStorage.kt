@@ -9,6 +9,8 @@ import com.squareup.sqldelight.db.SqlDriver
 import me.tatarka.inject.annotations.Inject
 import com.beforeyoudie.common.di.IsDbInMemory
 
+// TODO NOW add logging
+
 /**
  * Sqlite implementation of [IBydStorage]
  */

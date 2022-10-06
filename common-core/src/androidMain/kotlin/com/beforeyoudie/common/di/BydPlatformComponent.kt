@@ -1,24 +1,29 @@
 package com.beforeyoudie.common.di
 
 import android.content.Context
+import co.touchlab.kermit.Logger
 import com.beforeyoudie.common.storage.BeforeYouDieDb
 import com.squareup.sqldelight.android.AndroidSqliteDriver
 import com.squareup.sqldelight.db.SqlDriver
 import io.requery.android.database.sqlite.RequerySQLiteOpenHelperFactory
 import me.tatarka.inject.annotations.Component
 import me.tatarka.inject.annotations.Provides
-import me.tatarka.inject.annotations.Scope
-
-@Scope
-@Target(AnnotationTarget.CLASS, AnnotationTarget.FUNCTION, AnnotationTarget.PROPERTY_GETTER)
-annotation class ApplicationPlatformScope
 
 @ApplicationPlatformScope
 @Component
-actual abstract class BydPlatformInjectComponent actual constructor(
-  @get:ApplicationPlatformScope @get:Provides
-  val databaseFileName: DatabaseFileName
+actual abstract class BydPlatformComponent(
+  @get:ApplicationPlatformScope
+  @get:Provides val
+  context: Context,
+
+  @get:ApplicationPlatformScope
+  @get:Provides
+  val databaseFileName: DatabaseFileName,
+
 ) {
+  @Provides
+  inline fun <reified T> provideClassLogger(): Logger = Logger.withTag(T::class.toString())
+
   @ApplicationPlatformScope
   @Provides
   fun provideSqlDriver(databaseFileName: DatabaseFileName, context: Context): SqlDriver {
@@ -43,13 +48,13 @@ actual abstract class BydPlatformInjectComponent actual constructor(
     databaseFileName.trim('"').isEmpty()
 }
 
-class AndroidComponent(
-  @get:Provides val context: Context,
-  databaseFileName: DatabaseFileName = ""
-) : BydPlatformInjectComponent(databaseFileName)
-
 fun kotlinInjectCreateApp(
-  databaseFileName: DatabaseFileName,
-  context: Context
-): BydKotlinInjectAppComponent =
-  BydKotlinInjectAppComponent::class.create(AndroidComponent::class.create(context))
+  context: Context,
+  databaseFileName: DatabaseFileName
+): CommonBydKotlinInjectAppComponent =
+  CommonBydKotlinInjectAppComponent::class.create(
+    BydPlatformComponent::class.create(
+      context,
+      databaseFileName,
+    )
+  )

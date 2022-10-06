@@ -14,7 +14,6 @@ import com.beforeyoudie.common.applogic.impl.TodoGraphDecomposeComponent
 import com.beforeyoudie.common.storage.BeforeYouDieDb
 import com.beforeyoudie.common.storage.IBydStorage
 import com.beforeyoudie.common.storage.SqlDelightBydStorage
-import com.beforeyoudie.common.util.getClassLogger
 import com.squareup.sqldelight.db.SqlDriver
 import me.tatarka.inject.annotations.Component
 import me.tatarka.inject.annotations.Provides
@@ -27,33 +26,38 @@ import me.tatarka.inject.annotations.Scope
 
 internal val DILogger = Logger.withTag("kotlin-inject")
 
+/** Scope of the common application component*/
 @Scope
 @Target(AnnotationTarget.CLASS, AnnotationTarget.FUNCTION, AnnotationTarget.PROPERTY_GETTER)
 annotation class ApplicationScope
+
+/** Scope used by the underlying platform component that implements [BydPlatformComponent]. */
+@Scope
+@Target(AnnotationTarget.CLASS, AnnotationTarget.FUNCTION, AnnotationTarget.PROPERTY_GETTER)
+annotation class ApplicationPlatformScope
 
 // Qualifiers
 typealias DatabaseFileName = String
 typealias IsDbInMemory = Boolean
 
-interface IBydKotlinInjectAppComponent {
-  abstract val rootLogic: IBydRoot
+/** Make this an interface so that it can be constructed differently in tests vs non tests. */
+interface ICommonBydKotlinInjectAppComponent {
+  val rootLogic: IBydRoot
 
   // ========== Bindings =============
 
   // Bind IBydRoot to the actual Decompose library implementation
-  protected val RootDecomposeComponent.bind: IBydRoot
-    @Provides get() = this
+  val RootDecomposeComponent.bind: IBydRoot
+    @ApplicationScope
+    @Provides
+    get() = this
 
-  protected val SqlDelightBydStorage.bind: IBydStorage
+  val SqlDelightBydStorage.bind: IBydStorage
     @ApplicationScope
     @Provides
     get() = this
 
   // ========== Providers =============
-
-  @Provides
-  inline fun <reified T> provideClassLogger(): Logger = getClassLogger<T>()
-
 
   @ApplicationScope
   @Provides
@@ -84,8 +88,7 @@ interface IBydKotlinInjectAppComponent {
 
 @ApplicationScope
 @Component
-abstract class BydKotlinInjectAppComponent(
-  @Component val platformKotlinInjectComponent: BydPlatformInjectComponent
-) : IBydKotlinInjectAppComponent
+abstract class CommonBydKotlinInjectAppComponent(@Component val platformComponent: BydPlatformComponent) :
+  ICommonBydKotlinInjectAppComponent
 
-expect abstract class BydPlatformInjectComponent(databaseFileName: DatabaseFileName = "")
+expect abstract class BydPlatformComponent

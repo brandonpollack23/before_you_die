@@ -3,10 +3,8 @@ package com.beforeyoudie.common
 import co.touchlab.kermit.CommonWriter
 import co.touchlab.kermit.Logger
 import com.beforeyoudie.common.di.ApplicationScope
-import com.beforeyoudie.common.di.BydKotlinInjectAppComponent
-import com.beforeyoudie.common.di.BydPlatformInjectComponent
-import com.beforeyoudie.common.di.IBydKotlinInjectAppComponent
-import com.beforeyoudie.common.di.kotlinInjectCreateApp
+import com.beforeyoudie.common.di.BydPlatformComponent
+import com.beforeyoudie.common.di.ICommonBydKotlinInjectAppComponent
 import com.beforeyoudie.common.storage.IBydStorage
 import io.kotest.core.Tuple2
 import io.kotest.core.spec.style.FunSpec
@@ -17,12 +15,13 @@ import me.tatarka.inject.annotations.Component
 // TODO NOW remove koin and move this and sqldelight test to kotlin-inject
 
 abstract class CommonTest : FunSpec() {
-  protected lateinit var app: CommonTestComponent
+  protected lateinit var app: TestBydKotlinInjectAppComponent
+  abstract fun makeTestComponent(): TestBydKotlinInjectAppComponent
 
   init {
     beforeTest {
       // TODO NOW FIX ME
-      app = TestBydKotlinInjectAppComponent()
+      app = makeTestComponent()
       Logger.setLogWriters(CommonWriter())
     }
     afterTest {}
@@ -35,7 +34,7 @@ abstract class CommonTest : FunSpec() {
 
 @ApplicationScope
 @Component
-abstract class TestBydKotlinInjectAppComponent(@Component platformInjectComponent: BydPlatformInjectComponent) :
-  IBydKotlinInjectAppComponent {
+abstract class TestBydKotlinInjectAppComponent(@Component platformComponent: BydPlatformComponent) :
+  ICommonBydKotlinInjectAppComponent {
   abstract val storage: IBydStorage
 }
