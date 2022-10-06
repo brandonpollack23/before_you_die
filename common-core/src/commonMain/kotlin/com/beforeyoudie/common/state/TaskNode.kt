@@ -28,5 +28,11 @@ data class TaskNode(
   val blockedTasks: Set<Uuid> = setOf()
 ) {
   override fun hashCode() = id.hashCode()
-  override fun equals(other: Any?) = id == other
+  override fun equals(other: Any?): Boolean {
+    if (this === other) return true
+    if (javaClass != other?.javaClass) return false
+    other as TaskNode
+    if (id != other.id) return false
+    return true
+  }
 }

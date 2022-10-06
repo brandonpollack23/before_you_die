@@ -16,10 +16,10 @@ class RootDecomposeComponent(
 ) :
   IBydRoot,
   KoinComponent,
-  ComponentContext by componentContext {
-}
+  ComponentContext by componentContext
 
 /** Function signature to create an [IBydGraph] for use by [RootDecomposeComponent] */
 typealias BydGraphConstructor = (ComponentContext) -> IBydGraph
+
 /** Function signature to create an [IBydEdit] for use by [RootDecomposeComponent] */
 typealias BydEditConstructor = (ComponentContext) -> IBydEdit

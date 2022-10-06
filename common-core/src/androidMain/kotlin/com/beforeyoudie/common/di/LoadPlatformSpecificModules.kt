@@ -2,8 +2,11 @@ package com.beforeyoudie.common.di
 
 import com.beforeyoudie.common.storage.BeforeYouDieDb
 import com.squareup.sqldelight.android.AndroidSqliteDriver
+import com.squareup.sqldelight.db.SqlDriver
 import io.requery.android.database.sqlite.RequerySQLiteOpenHelperFactory
 import org.koin.core.module.Module
+import org.koin.core.module.dsl.createdAtStart
+import org.koin.core.module.dsl.withOptions
 import org.koin.dsl.bind
 import org.koin.dsl.module
 

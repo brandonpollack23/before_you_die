@@ -20,7 +20,8 @@ annotation class ApplicationScope
 @ApplicationScope
 @Component
 abstract class BydKotlinInjectComponent(
-  @get:ApplicationScope @get:Provides val databaseFileName: DatabaseFileName = "",
+  @get:ApplicationScope @get:Provides
+  val databaseFileName: DatabaseFileName = "",
   @Component val platformKotlinInjectComponent: BydPlatformInjectComponent
 ) {
   @Provides

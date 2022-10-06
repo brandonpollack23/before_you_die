@@ -9,6 +9,4 @@ class TodoGraphDecomposeComponent(
   componentContext: ComponentContext
 ) :
   IBydGraph,
-  ComponentContext by componentContext {
-
-}
+  ComponentContext by componentContext

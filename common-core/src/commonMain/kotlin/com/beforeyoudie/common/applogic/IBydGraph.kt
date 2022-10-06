@@ -8,7 +8,7 @@ interface IBydGraph {
 // TODO NOW add documentation to all below
 data class BydGraphConfig(
   val viewMode: ViewMode = ViewMode.List,
-  val visibilityMode: VisibilityMode = VisibilityMode.AllTasks,
+  val visibilityMode: VisibilityMode = VisibilityMode.AllTasks
 )
 
 enum class ViewMode {
@@ -18,5 +18,5 @@ enum class ViewMode {
 
 enum class VisibilityMode {
   AllTasks,
-  ActionableTasks,
+  ActionableTasks
 }

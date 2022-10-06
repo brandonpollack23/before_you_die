@@ -2,7 +2,7 @@ package com.beforeyoudie.common.di
 
 import co.touchlab.kermit.Logger
 import co.touchlab.kermit.koin.KermitKoinLogger
-import com.arkivanov.decompose.DefaultComponentContext
+import com.arkivanov.essenty.lifecycle.Lifecycle
 import com.arkivanov.essenty.lifecycle.LifecycleRegistry
 import com.beforeyoudie.common.storage.BeforeYouDieDb
 import com.beforeyoudie.common.storage.IBydStorage
@@ -12,7 +12,6 @@ import org.koin.core.component.KoinComponent
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.createdAtStart
 import org.koin.core.module.dsl.withOptions
-import org.koin.core.qualifier.named
 import org.koin.dsl.bind
 import org.koin.dsl.module
 import org.koin.fileProperties
@@ -67,10 +66,10 @@ fun loadPlatformDependentSharedModules() = listOf(
   module {
     single {
       LifecycleRegistry()
-    }
-    single(named(Qualifiers.DefaultComponentContext)) {
-      DefaultComponentContext(get())
-    }
+    } bind Lifecycle::class
+    // single(named(Qualifiers.DefaultComponentContext)) {
+    //   DefaultComponentContext(get(), null, null, null)
+    // }
     // TODO NOW enable
     // single(named(Qualifiers.RootComponent)) {
     //   RootDecomposeComponent(get(), )
@@ -80,7 +79,7 @@ fun loadPlatformDependentSharedModules() = listOf(
 
 enum class Qualifiers {
   DefaultComponentContext,
-  RootComponent,
+  RootComponent
 }
 
 /** Properties to be read from configuration file koin.properties. */

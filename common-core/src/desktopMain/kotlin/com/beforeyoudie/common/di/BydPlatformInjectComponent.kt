@@ -11,10 +11,12 @@ import kotlin.io.path.createDirectories
 @Scope
 @Target(AnnotationTarget.CLASS, AnnotationTarget.FUNCTION, AnnotationTarget.PROPERTY_GETTER)
 annotation class ApplicationPlatformScope
-@Component
 
 @ApplicationPlatformScope
-actual abstract class BydPlatformInjectComponent actual constructor(databaseFileName: DatabaseFileName) {
+@Component
+actual abstract class BydPlatformInjectComponent actual constructor(
+  databaseFileName: DatabaseFileName
+) {
   @ApplicationPlatformScope
   @Provides
   fun provideSqlDriver(databaseFileName: DatabaseFileName): SqlDriver {

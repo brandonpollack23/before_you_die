@@ -48,6 +48,9 @@ kotlin {
 
     val commonTest by getting {
       dependencies {
+        implementation(libs.mockk)
+        implementation(libs.koin.test)
+        implementation(libs.kotest.koin)
       }
     }
 
@@ -55,7 +58,6 @@ kotlin {
       dependencies {
         implementation(libs.kotest.runner.junit5)
         implementation(libs.koin.core)
-        implementation(libs.koin.test)
       }
     }
 
@@ -65,9 +67,7 @@ kotlin {
         implementation(libs.kotest)
         implementation(libs.kotest.assertions)
         implementation(libs.kotest.properties)
-        implementation(libs.kotest.koin)
         implementation(libs.koin.test)
-        implementation(libs.mockk)
       }
     }
   }

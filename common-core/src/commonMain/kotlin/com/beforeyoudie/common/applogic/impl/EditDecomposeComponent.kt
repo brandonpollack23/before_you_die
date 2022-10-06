@@ -1,4 +1,3 @@
 package com.beforeyoudie.common.applogic.impl
 
-class EditDecomposeComponent {
-}
+class EditDecomposeComponent
