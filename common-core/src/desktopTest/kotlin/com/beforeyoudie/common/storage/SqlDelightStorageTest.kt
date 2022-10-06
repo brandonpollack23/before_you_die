@@ -17,11 +17,9 @@ import me.tatarka.inject.annotations.Component
 
 @Component
 abstract class SqlDelightStorageTestComponent(
-  @Component val parent: TestBydKotlinInjectAppComponent = TestBydKotlinInjectAppComponent::class.create(
-    BydPlatformComponent::class.create("")
-  )
-){
-  val storage: IBydStorage
+  @Component val parent: TestBydKotlinInjectAppComponent = TestBydKotlinInjectAppComponent::class.create()
+) {
+  abstract val storage: IBydStorage
 }
 
 class SqlDelightStorageTest : CommonTest() {
