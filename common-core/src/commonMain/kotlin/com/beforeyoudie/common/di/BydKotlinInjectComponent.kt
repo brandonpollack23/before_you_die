@@ -3,6 +3,7 @@ package com.beforeyoudie.common.di
 import co.touchlab.kermit.Logger
 import com.beforeyoudie.common.storage.IBydStorage
 import com.beforeyoudie.common.storage.SqlDelightBydStorage
+import com.beforeyoudie.common.util.getClassLogger
 import me.tatarka.inject.annotations.Component
 import me.tatarka.inject.annotations.Provides
 import me.tatarka.inject.annotations.Scope
@@ -22,6 +23,9 @@ abstract class BydKotlinInjectComponent(
   @get:ApplicationScope @get:Provides val databaseFileName: DatabaseFileName = "",
   @Component val platformKotlinInjectComponent: BydPlatformInjectComponent
 ) {
+  @Provides
+  inline fun <reified T> provideClassLogger(): Logger = getClassLogger<T>()
+
   protected val SqlDelightBydStorage.bind: IBydStorage
     @ApplicationScope
     @Provides

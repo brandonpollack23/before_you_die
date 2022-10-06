@@ -1,7 +1,6 @@
 package com.beforeyoudie.common.di
 
 import com.squareup.sqldelight.db.SqlDriver
-import com.squareup.sqldelight.sqlite.driver.JdbcSqliteDriver
 import me.tatarka.inject.annotations.Component
 import me.tatarka.inject.annotations.Provides
 import me.tatarka.inject.annotations.Scope
@@ -19,19 +18,17 @@ actual abstract class BydPlatformInjectComponent actual constructor(databaseFile
   @Provides
   fun provideSqlDriver(databaseFileName: DatabaseFileName): SqlDriver {
     if (databaseFileName.isNotBlank()) {
-      DILogger.d("opening db file with name: $databaseFileName")
+      DILogger.debug("opening db file with name: $databaseFileName")
     } else {
-      DILogger.d("Using in memory database")
+      DILogger.debug("Using in memory database")
     }
 
-    val jdbcUri =
-      if (databaseFileName.isNotBlank()) {
-        Path("./sqlite/db").createDirectories()
-        "jdbc:sqlite:./sqlite/db/$databaseFileName"
-      } else {
-        JdbcSqliteDriver.IN_MEMORY
-      }
-
-    return JdbcSqliteDriver(url = jdbcUri)
+    AndroidSqliteDriver(
+      BeforeYouDieDb.Schema,
+      get(),
+      databaseFileName,
+      // Use this to use the newest version of sqlite (not the one packaged with android).
+      factory = RequerySQLiteOpenHelperFactory()
+    )
   }
 }

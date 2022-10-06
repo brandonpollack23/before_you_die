@@ -34,6 +34,7 @@ kotlin {
 
     val androidMain by getting {
       dependencies {
+        implementation(libs.koin.android)
         implementation(libs.sqldelight.android)
         implementation(libs.requiry.sqliteandroid)
       }
@@ -74,7 +75,8 @@ kotlin {
 
 // Compiler plugin dependencies go at the project level
 dependencies {
-  ksp(libs.di.kotlinInject.ksp)
+  add("kspDesktop", libs.di.kotlinInject.ksp)
+  add("kspAndroid", libs.di.kotlinInject.ksp)
 }
 
 tasks.named<Copy>("desktopTestProcessResources") {
