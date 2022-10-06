@@ -6,11 +6,12 @@ import com.beforeyoudie.common.util.ResultExt
 import com.benasher44.uuid.Uuid
 import com.benasher44.uuid.uuidFrom
 import com.squareup.sqldelight.db.SqlDriver
+import me.tatarka.inject.annotations.Inject
 
 /**
  * Sqlite implementation of [IBydStorage]
  */
-class SqlDelightIBydStorage(
+class SqlDelightBydStorage @Inject constructor(
   private val database: BeforeYouDieDb,
   override val isInMemory: Boolean
 ) : IBydStorage {
@@ -266,8 +267,8 @@ class SqlDelightIBydStorage(
   }
 }
 
-fun createDatabase(driver: SqlDriver, isInMemory: Boolean): SqlDelightIBydStorage {
-  return SqlDelightIBydStorage(BeforeYouDieDb(driver), isInMemory)
+fun createDatabase(driver: SqlDriver, isInMemory: Boolean): SqlDelightBydStorage {
+  return SqlDelightBydStorage(BeforeYouDieDb(driver), isInMemory)
 }
 
 fun expandUuidList(s: String?) = expandDelimitedList(s, mapper = ::uuidFrom)

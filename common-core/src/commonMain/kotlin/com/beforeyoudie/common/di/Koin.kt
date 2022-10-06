@@ -4,11 +4,9 @@ import co.touchlab.kermit.Logger
 import co.touchlab.kermit.koin.KermitKoinLogger
 import com.arkivanov.decompose.DefaultComponentContext
 import com.arkivanov.essenty.lifecycle.LifecycleRegistry
-import com.beforeyoudie.common.applogic.BydGraphConfig
-import com.beforeyoudie.common.applogic.impl.RootDecomposeComponent
 import com.beforeyoudie.common.storage.BeforeYouDieDb
 import com.beforeyoudie.common.storage.IBydStorage
-import com.beforeyoudie.common.storage.SqlDelightIBydStorage
+import com.beforeyoudie.common.storage.SqlDelightBydStorage
 import com.squareup.sqldelight.db.SqlDriver
 import org.koin.core.component.KoinComponent
 import org.koin.core.module.Module
@@ -57,7 +55,7 @@ fun loadPlatformDependentSharedModules() = listOf(
       BeforeYouDieDb.Schema.create(driver)
 
       val dbFileName = getProperty<String>(Properties.LOCAL_DATABASE_FILENAME.name).trim('"')
-      SqlDelightIBydStorage(
+      SqlDelightBydStorage(
         database = BeforeYouDieDb(driver),
         isInMemory = dbFileName.isBlank()
       )
