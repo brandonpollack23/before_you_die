@@ -5,9 +5,12 @@ interface IBydGraph {
   val config: BydGraphConfig
 }
 
-// TODO NOW create issue to add which list for when that feature is added
-
-// TODO NOW add documentation to all below
+/**
+ * Task Graph CoreLogic configuration.
+ *
+ * @property viewMode is it a list or a graph view (when supported)
+ * @property visibilityMode Are all tasks visible or only non-blocked ones?
+ */
 data class BydGraphConfig(
   val viewMode: ViewMode = ViewMode.List,
   val visibilityMode: VisibilityMode = VisibilityMode.AllTasks

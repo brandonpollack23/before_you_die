@@ -7,11 +7,9 @@ import com.beforeyoudie.common.App
 import com.beforeyoudie.common.di.kotlinInjectCreateApp
 
 fun main() {
-  // TODO NOW create issue to have configurable stuff, including log severity + db file,  with config file/command line args.
+  // TODO(#6) PRIORITY create issue to have configurable stuff, including log severity + db file,  with config file/command line args.
   Logger.setMinSeverity(Severity.Verbose)
   val app = kotlinInjectCreateApp("beforeyoudie.db")
-  // TODO NOW placeholder
-  val rootLogic = app.rootLogic
 
   application {
     Window(onCloseRequest = ::exitApplication) {

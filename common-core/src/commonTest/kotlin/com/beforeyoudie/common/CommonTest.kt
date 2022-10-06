@@ -2,26 +2,18 @@ package com.beforeyoudie.common
 
 import co.touchlab.kermit.CommonWriter
 import co.touchlab.kermit.Logger
-import com.beforeyoudie.common.di.startKoin
 import io.kotest.core.Tuple2
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.core.test.TestCase
 import io.kotest.core.test.TestResult
-import io.mockk.mockkClass
 import org.koin.core.context.stopKoin
-import org.koin.test.KoinTest
-import org.koin.test.mock.MockProvider
 
 // TODO now remove koin and move this and sqldelight test to kotlin-inject
 
-abstract class CommonTest : FunSpec(), KoinTest {
+abstract class CommonTest : FunSpec() {
   init {
-    MockProvider.register { mockkClass(it) }
-
     beforeTest {
       Logger.setLogWriters(CommonWriter())
-      startKoin()
-      declareMocksForPlatform()
     }
     afterTest {
       stopKoin()
@@ -33,4 +25,4 @@ abstract class CommonTest : FunSpec(), KoinTest {
   final override fun beforeTest(f: suspend (TestCase) -> Unit) = super.beforeTest(f)
 }
 
-expect fun KoinTest.declareMocksForPlatform()
+expect fun createTestApp()

@@ -20,3 +20,4 @@
 
 # Stretches
 * [ ] spellfix1 integration in order to have fuzzy text search
+* [ ] Inline markdown in the description field
