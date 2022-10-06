@@ -13,7 +13,7 @@ import kotlin.io.path.createDirectories
 @Component
 actual abstract class BydPlatformComponent(
   @get:ApplicationPlatformScope @get:Provides
-  val databaseFileName: DatabaseFileName
+  val databaseFileName: DatabaseFileName = ""
 ) {
   @Provides
   inline fun <reified T> provideClassLogger(): Logger = Logger.withTag(T::class.toString())
@@ -24,7 +24,7 @@ actual abstract class BydPlatformComponent(
     if (databaseFileName.isNotBlank()) {
       DILogger.d("opening db file with name: $databaseFileName")
     } else {
-      DILogger.d("Using in memory database")
+      DILogger.w("Using in memory database")
     }
 
     val jdbcUri =

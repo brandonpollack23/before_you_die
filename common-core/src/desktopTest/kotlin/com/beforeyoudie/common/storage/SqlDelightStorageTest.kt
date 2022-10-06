@@ -1,6 +1,8 @@
 package com.beforeyoudie.common.storage
 
-import com.beforeyoudie.common.CommonTest
+import com.beforeyoudie.CommonTest
+import com.beforeyoudie.TestBydKotlinInjectAppComponent
+import com.beforeyoudie.common.di.BydPlatformComponent
 import com.beforeyoudie.common.state.TaskNode
 import com.beforeyoudie.common.util.BYDFailure
 import com.benasher44.uuid.uuidFrom
@@ -9,13 +11,24 @@ import io.kotest.matchers.collections.shouldHaveAtMostSize
 import io.kotest.matchers.result.shouldBeFailure
 import io.kotest.matchers.result.shouldBeSuccess
 import io.kotest.matchers.shouldBe
+import me.tatarka.inject.annotations.Component
 
-// TODO(#3) TESTING make thsi run as android instrumentation test
+// TODO(#3) TESTING make also make run as android instrumentation test
+
+@Component
+abstract class SqlDelightStorageTestComponent(
+  @Component val parent: TestBydKotlinInjectAppComponent = TestBydKotlinInjectAppComponent::class.create(
+    BydPlatformComponent::class.create("")
+  )
+){
+  val storage: IBydStorage
+}
+
 class SqlDelightStorageTest : CommonTest() {
   lateinit var storage: IBydStorage
   init {
     beforeTest {
-      storage = app.storage
+      storage = SqlDelightStorageTestComponent::class.create().storage
     }
 
     test("database is in memory for test") {

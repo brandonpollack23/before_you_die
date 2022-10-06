@@ -76,7 +76,9 @@ kotlin {
 // Compiler plugin dependencies go at the project level
 dependencies {
   add("kspDesktop", libs.di.kotlinInject.ksp)
+  add("kspDesktopTest", libs.di.kotlinInject.ksp)
   add("kspAndroid", libs.di.kotlinInject.ksp)
+  add("kspAndroidTest", libs.di.kotlinInject.ksp)
 }
 
 tasks.named<Copy>("desktopTestProcessResources") {
