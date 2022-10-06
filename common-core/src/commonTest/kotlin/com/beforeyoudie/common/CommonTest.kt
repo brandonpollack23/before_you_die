@@ -12,6 +12,8 @@ import org.koin.core.context.stopKoin
 import org.koin.test.KoinTest
 import org.koin.test.mock.MockProvider
 
+// TODO now remove koin and move this and sqldelight test to kotlin-inject
+
 abstract class CommonTest : FunSpec(), KoinTest {
   init {
     MockProvider.register { mockkClass(it) }

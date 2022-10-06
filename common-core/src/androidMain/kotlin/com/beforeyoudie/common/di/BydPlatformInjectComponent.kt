@@ -16,7 +16,8 @@ annotation class ApplicationPlatformScope
 @ApplicationPlatformScope
 @Component
 actual abstract class BydPlatformInjectComponent actual constructor(
-  databaseFileName: DatabaseFileName
+  @get:ApplicationPlatformScope @get:Provides
+  val databaseFileName: DatabaseFileName
 ) {
   @ApplicationPlatformScope
   @Provides
@@ -35,9 +36,20 @@ actual abstract class BydPlatformInjectComponent actual constructor(
       factory = RequerySQLiteOpenHelperFactory()
     )
   }
+
+  @ApplicationPlatformScope
+  @Provides
+  fun provideIsInDbInMemory(databaseFileName: DatabaseFileName): IsDbInMemory =
+    databaseFileName.trim('"').isEmpty()
 }
 
 class AndroidComponent(
   @get:Provides val context: Context,
   databaseFileName: DatabaseFileName = ""
 ) : BydPlatformInjectComponent(databaseFileName)
+
+fun kotlinInjectCreateApp(
+  databaseFileName: DatabaseFileName,
+  context: Context
+): BydKotlinInjectComponent =
+  BydKotlinInjectComponent::class.create(AndroidComponent::class.create(context))

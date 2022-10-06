@@ -15,7 +15,8 @@ annotation class ApplicationPlatformScope
 @ApplicationPlatformScope
 @Component
 actual abstract class BydPlatformInjectComponent actual constructor(
-  databaseFileName: DatabaseFileName
+  @get:ApplicationPlatformScope @get:Provides
+  val databaseFileName: DatabaseFileName
 ) {
   @ApplicationPlatformScope
   @Provides
@@ -36,4 +37,12 @@ actual abstract class BydPlatformInjectComponent actual constructor(
 
     return JdbcSqliteDriver(url = jdbcUri)
   }
+
+  @ApplicationPlatformScope
+  @Provides
+  fun provideIsInDbInMemory(databaseFileName: DatabaseFileName): IsDbInMemory =
+    databaseFileName.trim('"').isEmpty()
 }
+
+fun kotlinInjectCreateApp(databaseFileName: DatabaseFileName): BydKotlinInjectComponent =
+  BydKotlinInjectComponent::class.create(BydPlatformInjectComponent::class.create(databaseFileName))

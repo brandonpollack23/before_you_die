@@ -6,6 +6,7 @@ import com.beforeyoudie.common.applogic.BydGraphConfig
 import com.beforeyoudie.common.applogic.IBydEdit
 import com.beforeyoudie.common.applogic.IBydGraph
 import com.beforeyoudie.common.applogic.IBydRoot
+import com.beforeyoudie.common.storage.IBydStorage
 import me.tatarka.inject.annotations.Inject
 
 // TODO NOW DOC, make sure to mention how only root is injected, others are construced on demand
@@ -15,11 +16,17 @@ import me.tatarka.inject.annotations.Inject
 @Inject
 class RootDecomposeComponent(
   componentContext: ComponentContext,
+  private val storage: IBydStorage,
   private val bydGraphConstructor: BydGraphConstructor,
   private val bydEditConstructor: BydEditConstructor
 ) :
   IBydRoot,
-  ComponentContext by componentContext
+  ComponentContext by componentContext {
+  init {
+    // TODO NOW placeholder, remove
+    storage.selectAllTaskNodeInformation()
+  }
+}
 
 /** Function signature to create an [IBydGraph] for use by [RootDecomposeComponent] */
 typealias BydGraphConstructor = (BydGraphConfig, ComponentContext) -> IBydGraph

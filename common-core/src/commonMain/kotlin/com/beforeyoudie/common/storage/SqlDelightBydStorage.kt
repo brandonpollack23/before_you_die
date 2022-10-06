@@ -7,13 +7,15 @@ import com.benasher44.uuid.Uuid
 import com.benasher44.uuid.uuidFrom
 import com.squareup.sqldelight.db.SqlDriver
 import me.tatarka.inject.annotations.Inject
+import com.beforeyoudie.common.di.IsDbInMemory
 
 /**
  * Sqlite implementation of [IBydStorage]
  */
-class SqlDelightBydStorage @Inject constructor(
+@Inject
+class SqlDelightBydStorage(
   private val database: BeforeYouDieDb,
-  override val isInMemory: Boolean
+  override val isInMemory: IsDbInMemory
 ) : IBydStorage {
   override fun selectAllTaskNodeInformation() =
     database.taskNodeQueries.selectAllTaskNodesWithDependentAndChildData().executeAsList().map {
