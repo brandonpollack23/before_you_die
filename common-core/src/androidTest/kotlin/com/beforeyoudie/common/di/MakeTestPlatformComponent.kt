@@ -1,8 +1,6 @@
-package com.beforeyoudie
+package com.beforeyoudie.common.di
 
 import android.content.Context
-import com.beforeyoudie.common.di.BydPlatformComponent
-import com.beforeyoudie.common.di.DatabaseFileName
 import io.mockk.mockkClass
 
 actual fun makeTestPlatformComponent(): BydPlatformComponent =

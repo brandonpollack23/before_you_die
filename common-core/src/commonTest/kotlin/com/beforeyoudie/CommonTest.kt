@@ -5,7 +5,6 @@ import co.touchlab.kermit.Logger
 import com.beforeyoudie.common.di.ApplicationScope
 import com.beforeyoudie.common.di.BydPlatformComponent
 import com.beforeyoudie.common.di.ICommonBydKotlinInjectAppComponent
-import com.beforeyoudie.common.storage.IBydStorage
 import io.kotest.core.Tuple2
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.core.test.TestCase
@@ -24,10 +23,3 @@ abstract class CommonTest : FunSpec() {
     super.afterTest(f)
   final override fun beforeTest(f: suspend (TestCase) -> Unit) = super.beforeTest(f)
 }
-
-@ApplicationScope
-@Component
-abstract class TestBydKotlinInjectAppComponent(@Component val platformComponent: BydPlatformComponent = makeTestPlatformComponent()) :
-  ICommonBydKotlinInjectAppComponent
-
-expect fun makeTestPlatformComponent(): BydPlatformComponent
