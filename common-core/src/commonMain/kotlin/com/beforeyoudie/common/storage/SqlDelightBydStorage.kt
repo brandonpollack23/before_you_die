@@ -122,9 +122,12 @@ class SqlDelightBydStorage @Inject constructor(
         result = Result.failure(BYDFailure.ChildHasNoParent(child))
         rollback()
       }
-
       val newParentTaskDbEntry =
         database.taskNodeQueries.selectTaskNode(newParent.toString()).executeAsOneOrNull()
+      if (newParentTaskDbEntry == null) {
+        result = Result.failure(BYDFailure.NonExistentNodeId(newParent))
+      }
+
       if (isParentAncestorOf(newParent, child)) {
         result =
           Result.failure(BYDFailure.OperationWouldIntroduceCycle(newParent, child))
