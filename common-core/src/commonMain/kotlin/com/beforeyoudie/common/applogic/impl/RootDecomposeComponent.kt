@@ -34,11 +34,21 @@ class RootDecomposeComponent(
   IBydRoot,
   ComponentContext by componentContext
 
-// TODO NOW document and explain why factory, including overridable for tests
+/**
+ * Interface for constructing [IAppLogicTaskGraph].
+ *
+ * Factory is helpful because it allows construction to be overridden and changed in the future and in tests.
+ */
 interface AppLogicTaskGraphFactory {
-  fun createTaskGraph(config: AppLogicTaskGraphConfig, componentContext: ComponentContext): IAppLogicTaskGraph
+  fun createTaskGraph(
+    config: AppLogicTaskGraphConfig,
+    componentContext: ComponentContext
+  ): IAppLogicTaskGraph
 }
 
+/**
+ * Main implementation of [AppLogicTaskGraphFactory] that constructs Decompose components.
+ */
 @Inject
 class AppLogicTaskGraphFactoryImpl : AppLogicTaskGraphFactory {
   override fun createTaskGraph(
@@ -47,15 +57,22 @@ class AppLogicTaskGraphFactoryImpl : AppLogicTaskGraphFactory {
   ): IAppLogicTaskGraph = TaskGraphDecomposeComponent(config, componentContext)
 }
 
+/**
+ * Interface for constructing [IAppLogicEdit].
+ *
+ * Factory is helpful because it allows construction to be overridden and changed in the future and in tests.
+ */
 interface AppLogicEditFactory {
   fun createEdit(config: AppLogicEditConfig, componentContext: ComponentContext): IAppLogicEdit
 }
 
+/**
+ * Main implementation of [AppLogicEditFactory] that constructs Decompose components.
+ */
 @Inject
 class AppLogicEditFactoryImpl : AppLogicEditFactory {
   override fun createEdit(
     config: AppLogicEditConfig,
     componentContext: ComponentContext
   ) = EditDecomposeComponent(config, componentContext)
-
 }

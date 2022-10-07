@@ -1,3 +1,5 @@
 package com.beforeyoudie.common.di
 
-actual fun makeTestPlatformComponent(): BydPlatformComponent = BydPlatformComponent::class.create(DatabaseFileName())
+actual fun makeTestPlatformComponent(): BydPlatformComponent = BydPlatformComponent::class.create(
+  DatabaseFileName()
+)

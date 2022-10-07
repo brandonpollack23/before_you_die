@@ -1,14 +1,11 @@
 package com.beforeyoudie.common.di
 
-import co.touchlab.kermit.Logger
 import com.squareup.sqldelight.db.SqlDriver
 import com.squareup.sqldelight.sqlite.driver.JdbcSqliteDriver
 import me.tatarka.inject.annotations.Component
 import me.tatarka.inject.annotations.Provides
-import me.tatarka.inject.annotations.Scope
 import kotlin.io.path.Path
 import kotlin.io.path.createDirectories
-import kotlin.reflect.KClass
 
 @ApplicationPlatformScope
 @Component
@@ -42,7 +39,9 @@ actual abstract class BydPlatformComponent(
     databaseFileName.trim('"').isEmpty()
 }
 
-fun kotlinInjectCreateApp(databaseFileName: DatabaseFileName = ""): CommonBydKotlinInjectAppComponent =
+fun kotlinInjectCreateApp(
+  databaseFileName: DatabaseFileName = ""
+): CommonBydKotlinInjectAppComponent =
   CommonBydKotlinInjectAppComponent::class.create(
     BydPlatformComponent::class.create(
       databaseFileName

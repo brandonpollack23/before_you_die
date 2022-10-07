@@ -13,14 +13,15 @@ import me.tatarka.inject.annotations.Provides
 @Component
 actual abstract class BydPlatformComponent(
   @get:ApplicationPlatformScope
-  @get:Provides val
+  @get:Provides
+  val
   context: Context,
 
   @get:ApplicationPlatformScope
   @get:Provides
-  val databaseFileName: DatabaseFileName,
+  val databaseFileName: DatabaseFileName
 
-  ) {
+) {
   @Provides
   inline fun <reified T> provideClassLogger(): Logger = Logger.withTag(T::class.toString())
 
@@ -55,6 +56,6 @@ fun kotlinInjectCreateApp(
   CommonBydKotlinInjectAppComponent::class.create(
     BydPlatformComponent::class.create(
       context,
-      databaseFileName,
+      databaseFileName
     )
   )

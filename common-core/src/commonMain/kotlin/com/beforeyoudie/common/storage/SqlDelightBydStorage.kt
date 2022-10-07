@@ -1,14 +1,14 @@
 package com.beforeyoudie.common.storage
 
 import co.touchlab.kermit.Logger
+import com.beforeyoudie.common.di.IsDbInMemory
 import com.beforeyoudie.common.state.TaskNode
 import com.beforeyoudie.common.util.BYDFailure
 import com.beforeyoudie.common.util.ResultExt
+import com.beforeyoudie.common.util.getClassLogger
 import com.benasher44.uuid.Uuid
 import com.benasher44.uuid.uuidFrom
 import me.tatarka.inject.annotations.Inject
-import com.beforeyoudie.common.di.IsDbInMemory
-import com.beforeyoudie.common.util.getClassLogger
 
 /**
  * Sqlite implementation of [IBydStorage]
@@ -22,23 +22,25 @@ class SqlDelightBydStorage(
 
   override fun selectAllTaskNodeInformation(): List<TaskNode> {
     logger.v("selecting all task nodes")
-    return database.taskNodeQueries.selectAllTaskNodesWithDependentAndChildData().executeAsList().map {
-      TaskNode(
-        id = uuidFrom(it.id),
-        title = it.title,
-        isComplete = it.complete,
-        description = it.description,
-        // TODO(#1) SQLDELIGHT_BLOCKED remove this if and the other after fixing broken correlated subqueries
-        parent = if (it.parent.isNotBlank()) uuidFrom(it.parent) else null,
-        children = expandUuidList(it.children),
-        blockingTasks = if (it.blocking_tasks.isNotEmpty()) {
-          expandUuidList(it.blocking_tasks)
-        } else {
-          emptySet()
-        },
-        blockedTasks = expandUuidList(it.blocked_tasks)
-      )
-    }
+    return database.taskNodeQueries.selectAllTaskNodesWithDependentAndChildData()
+      .executeAsList()
+      .map {
+        TaskNode(
+          id = uuidFrom(it.id),
+          title = it.title,
+          isComplete = it.complete,
+          description = it.description,
+          // TODO(#1) SQLDELIGHT_BLOCKED remove this if and the other after fixing broken correlated subqueries
+          parent = if (it.parent.isNotBlank()) uuidFrom(it.parent) else null,
+          children = expandUuidList(it.children),
+          blockingTasks = if (it.blocking_tasks.isNotEmpty()) {
+            expandUuidList(it.blocking_tasks)
+          } else {
+            emptySet()
+          },
+          blockedTasks = expandUuidList(it.blocked_tasks)
+        )
+      }
   }
 
   override fun selectAllActionableTaskNodeInformation(): List<TaskNode> {
@@ -62,8 +64,16 @@ class SqlDelightBydStorage(
     }
   }
 
-  override fun insertTaskNode(id: Uuid, title: String, description: String?, complete: Boolean): Result<Unit> {
-    logger.v("Inserting task: id: $id\n\ttitle: \"$title\"\n\tdescription: \"$description\"\n\tcomplete: $complete")
+  override fun insertTaskNode(
+    id: Uuid,
+    title: String,
+    description: String?,
+    complete: Boolean
+  ): Result<Unit> {
+    logger.v {
+      "Inserting task: id: $id\n\ttitle: \"$title\"\n\t" +
+        "description: \"$description\"\n\tcomplete: $complete"
+    }
     return ResultExt.asResult(BYDFailure::InsertionFailure) {
       database.taskNodeQueries.insertTaskNode(
         id.toString(),
@@ -179,7 +189,10 @@ class SqlDelightBydStorage(
         result = Result.failure(BYDFailure.NonExistentNodeId(blockingTask))
         rollback()
       } else if (isDependencyAncestorOf(blockingTask, blockedTask)) {
-        logger.e("blockingTask: $blockingTask blockedTask: $blockedTask relationship would introduce a cycle!")
+        logger.e {
+          "blockingTask: $blockingTask blockedTask: $blockedTask " +
+            "relationship would introduce a cycle!"
+        }
         result = Result.failure(
           BYDFailure.OperationWouldIntroduceCycle(
             blockingTask,
@@ -223,7 +236,10 @@ class SqlDelightBydStorage(
   }
 
   override fun removeDependencyRelationship(blockingTask: Uuid, blockedTask: Uuid): Result<Unit> {
-    logger.v("Removing dependency relationship blockingTask: $blockingTask -> blockedTask: $blockedTask")
+    logger.v {
+      "Removing dependency relationship blockingTask:" +
+        "$blockingTask -> blockedTask: $blockedTask"
+    }
     var result: Result<Unit> = Result.success(Unit)
     database.taskNodeQueries.transaction {
       val blockedTaskDbEntry =

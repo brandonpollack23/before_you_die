@@ -9,5 +9,3 @@ interface IBydRoot {
     data class EditTask(val component: IAppLogicEdit) : Child()
   }
 }
-
-

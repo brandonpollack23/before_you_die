@@ -35,6 +35,7 @@ annotation class ApplicationPlatformScope
 // Qualifiers
 /** Qualifier typealias for database file name String.*/
 typealias DatabaseFileName = String
+
 /** Qualifier typealias for database in memory Boolean.*/
 typealias IsDbInMemory = Boolean
 
@@ -88,7 +89,9 @@ interface ICommonBydKotlinInjectAppComponent {
 /** Common component between platforms, in tests use [TestBydKotlinInjectAppComponent] instead, which contains the ability to override etc.*/
 @ApplicationScope
 @Component
-abstract class CommonBydKotlinInjectAppComponent(@Component val platformComponent: BydPlatformComponent) :
+abstract class CommonBydKotlinInjectAppComponent(
+  @Component val platformComponent: BydPlatformComponent
+) :
   ICommonBydKotlinInjectAppComponent
 
 /** Platform subcomponent, provides things like platform specific sql driver, context, etc.*/
