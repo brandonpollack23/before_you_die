@@ -5,8 +5,8 @@ package com.beforeyoudie.common.applogic
 /** Interface representing the root applogic component. */
 interface IBydRoot {
   sealed class Child {
-    data class TaskGraph(val component: IAppLogicTaskGraph) : Child()
-    data class EditTask(val component: IAppLogicEdit) : Child()
+    data class TaskGraph(val appLogic: IAppLogicTaskGraph) : Child()
+    data class EditTask(val appLogic: IAppLogicEdit) : Child()
   }
 }
 
