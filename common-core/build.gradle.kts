@@ -38,7 +38,7 @@ kotlin {
         implementation(libs.sqldelight.android)
         implementation(libs.requiry.sqliteandroid)
       }
-      kotlin.srcDir("build/generated/ksp/android/androidRelease/test/kotlin")
+      kotlin.srcDir("build/generated/ksp/android/androidRelease/kotlin")
     }
 
     val desktopMain by getting {
