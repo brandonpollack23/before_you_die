@@ -83,6 +83,10 @@ dependencies {
   add("kspAndroidTest", libs.di.kotlinInject.ksp)
 }
 
+ksp {
+  arg("me.tatarka.inject.dumpGraph", "true")
+}
+
 tasks.named<Copy>("desktopTestProcessResources") {
   duplicatesStrategy = DuplicatesStrategy.INCLUDE
 }

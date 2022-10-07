@@ -19,9 +19,6 @@ import me.tatarka.inject.annotations.Component
 import me.tatarka.inject.annotations.Provides
 import me.tatarka.inject.annotations.Scope
 
-// TODO NOW use javax annotaitions (see readme)
-// TODO NOW use dumpGraph
-
 /** Logger used during DI process and construction. */
 internal val DILogger = Logger.withTag("kotlin-inject")
 
