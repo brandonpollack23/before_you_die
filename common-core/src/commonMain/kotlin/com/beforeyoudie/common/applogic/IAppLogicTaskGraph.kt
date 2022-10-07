@@ -1,8 +1,8 @@
 package com.beforeyoudie.common.applogic
 
 /** Interface representing any task graph app logic (this includes list, filtered lists, and graph). */
-interface IBydGraph {
-  val config: BydGraphConfig
+interface IAppLogicTaskGraph {
+  val config: AppLogicTaskGraphConfig
 }
 
 /**
@@ -11,7 +11,7 @@ interface IBydGraph {
  * @property viewMode is it a list or a graph view (when supported)
  * @property visibilityMode Are all tasks visible or only non-blocked ones?
  */
-data class BydGraphConfig(
+data class AppLogicTaskGraphConfig(
   val viewMode: ViewMode = ViewMode.List,
   val visibilityMode: VisibilityMode = VisibilityMode.AllTasks
 )

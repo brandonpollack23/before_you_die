@@ -6,8 +6,8 @@ import com.arkivanov.decompose.DefaultComponentContext
 import com.arkivanov.essenty.lifecycle.Lifecycle
 import com.arkivanov.essenty.lifecycle.LifecycleRegistry
 import com.beforeyoudie.common.applogic.IBydRoot
-import com.beforeyoudie.common.applogic.impl.BydEditConstructor
-import com.beforeyoudie.common.applogic.impl.BydGraphConstructor
+import com.beforeyoudie.common.applogic.impl.AppLogicEditConstructor
+import com.beforeyoudie.common.applogic.impl.AppLogicTaskGraphConstructor
 import com.beforeyoudie.common.applogic.impl.EditDecomposeComponent
 import com.beforeyoudie.common.applogic.impl.RootDecomposeComponent
 import com.beforeyoudie.common.applogic.impl.TodoGraphDecomposeComponent
@@ -59,12 +59,12 @@ interface ICommonBydKotlinInjectAppComponent {
 
   @ApplicationScope
   @Provides
-  fun provideBydGraphConstructor(): BydGraphConstructor =
+  fun provideBydGraphConstructor(): AppLogicTaskGraphConstructor =
     { graphConfig, componentContext -> TodoGraphDecomposeComponent(graphConfig, componentContext) }
 
   @ApplicationScope
   @Provides
-  fun provideBydEditConstructor(): BydEditConstructor =
+  fun provideBydEditConstructor(): AppLogicEditConstructor =
     { editConfig, componentContext -> EditDecomposeComponent(editConfig, componentContext) }
 
   @ApplicationScope
