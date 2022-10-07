@@ -21,3 +21,6 @@
 # Stretches
 * [ ] spellfix1 integration in order to have fuzzy text search
 * [ ] Inline markdown in the description field
+* [ ] Switch description to a more efficient data structure like a rope.
+  * For compose this might require wrapping it in a data class that keeps a version for comparison and recomposition,
+    but an internally mutable rope
