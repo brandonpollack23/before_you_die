@@ -1,15 +1,14 @@
 package com.beforeyoudie.common.storage
 
+import co.touchlab.kermit.Logger
 import com.beforeyoudie.common.state.TaskNode
 import com.beforeyoudie.common.util.BYDFailure
 import com.beforeyoudie.common.util.ResultExt
 import com.benasher44.uuid.Uuid
 import com.benasher44.uuid.uuidFrom
-import com.squareup.sqldelight.db.SqlDriver
 import me.tatarka.inject.annotations.Inject
 import com.beforeyoudie.common.di.IsDbInMemory
-
-// TODO NOW add logging
+import com.beforeyoudie.common.util.getClassLogger
 
 /**
  * Sqlite implementation of [IBydStorage]
@@ -19,8 +18,11 @@ class SqlDelightBydStorage(
   private val database: BeforeYouDieDb,
   override val isInMemory: IsDbInMemory
 ) : IBydStorage {
-  override fun selectAllTaskNodeInformation() =
-    database.taskNodeQueries.selectAllTaskNodesWithDependentAndChildData().executeAsList().map {
+  private val logger: Logger = getClassLogger()
+
+  override fun selectAllTaskNodeInformation(): List<TaskNode> {
+    logger.v("selecting all task nodes")
+    return database.taskNodeQueries.selectAllTaskNodesWithDependentAndChildData().executeAsList().map {
       TaskNode(
         id = uuidFrom(it.id),
         title = it.title,
@@ -37,9 +39,11 @@ class SqlDelightBydStorage(
         blockedTasks = expandUuidList(it.blocked_tasks)
       )
     }
+  }
 
-  override fun selectAllActionableTaskNodeInformation() =
-    database.taskNodeQueries.selectAllActionableTaskNodes().executeAsList().map {
+  override fun selectAllActionableTaskNodeInformation(): List<TaskNode> {
+    logger.v("selecting all task nodes that are not blocked")
+    return database.taskNodeQueries.selectAllActionableTaskNodes().executeAsList().map {
       TaskNode(
         id = uuidFrom(it.id),
         title = it.title,
@@ -56,9 +60,11 @@ class SqlDelightBydStorage(
         blockedTasks = expandUuidList(it.blocked_tasks)
       )
     }
+  }
 
-  override fun insertTaskNode(id: Uuid, title: String, description: String?, complete: Boolean) =
-    ResultExt.asResult(BYDFailure::InsertionFailure) {
+  override fun insertTaskNode(id: Uuid, title: String, description: String?, complete: Boolean): Result<Unit> {
+    logger.v("Inserting task: id: $id\n\ttitle: \"$title\"\n\tdescription: \"$description\"\n\tcomplete: $complete")
+    return ResultExt.asResult(BYDFailure::InsertionFailure) {
       database.taskNodeQueries.insertTaskNode(
         id.toString(),
         title,
@@ -66,14 +72,17 @@ class SqlDelightBydStorage(
         complete
       )
     }
+  }
 
   override fun markComplete(uuid: Uuid): Result<Unit> {
+    logger.v("Marking task: $uuid as complete")
     return simpleUpdate(uuid) {
       database.taskNodeQueries.markTaskComplete(true, uuid.toString())
     }
   }
 
   override fun markIncomplete(uuid: Uuid): Result<Unit> {
+    logger.v("Marking task: $uuid as incomplete")
     return simpleUpdate(uuid) {
       database.taskNodeQueries.markTaskComplete(false, uuid.toString())
     }
@@ -81,6 +90,7 @@ class SqlDelightBydStorage(
 
   override fun addChildToTaskNode(parent: Uuid, child: Uuid): Result<Unit> {
     // SQLite will throw an exception because child must be unique, I also check for cycles.
+    logger.v("Adding child parent relationship parent: $parent child: $child")
     var result: Result<Unit> = Result.success(Unit)
 
     database.taskNodeQueries.transaction {
@@ -94,6 +104,7 @@ class SqlDelightBydStorage(
           child
         )
       ) {
+        logger.e("parent: $parent child: $child relationship would introduce a cycle!")
         result =
           Result.failure(BYDFailure.OperationWouldIntroduceCycle(parent, child))
         rollback()
@@ -113,6 +124,7 @@ class SqlDelightBydStorage(
   override fun reparentChildToTaskNode(newParent: Uuid, child: Uuid): Result<Unit> {
     // SQLite will throw an exception because child must be unique, I also check for cycles and
     // that there is an existing parent.
+    logger.v("Reparenting child parent relationship newParent: $newParent child: $child")
     var result: Result<Unit> = Result.success(Unit)
 
     database.taskNodeQueries.transaction {
@@ -123,16 +135,19 @@ class SqlDelightBydStorage(
         rollback()
       }
       if (childTaskDbEntry.parent.isBlank()) {
+        logger.e("Task $child has no parent! Aborting reparent")
         result = Result.failure(BYDFailure.ChildHasNoParent(child))
         rollback()
       }
       val newParentTaskDbEntry =
         database.taskNodeQueries.selectTaskNode(newParent.toString()).executeAsOneOrNull()
       if (newParentTaskDbEntry == null) {
+        logger.e("No such node $newParent to assign as parent to $child")
         result = Result.failure(BYDFailure.NonExistentNodeId(newParent))
       }
 
       if (isParentAncestorOf(newParent, child)) {
+        logger.e("newParent: $newParent child: $child relationship would introduce a cycle!")
         result =
           Result.failure(BYDFailure.OperationWouldIntroduceCycle(newParent, child))
         rollback()
@@ -147,6 +162,7 @@ class SqlDelightBydStorage(
   }
 
   override fun addDependencyRelationship(blockingTask: Uuid, blockedTask: Uuid): Result<Unit> {
+    logger.v("Adding dependency blockingTask: $blockingTask -> blockedTask: $blockedTask")
     var result: Result<Unit> = Result.success(Unit)
     database.taskNodeQueries.transaction {
       val blockedTaskDbEntry =
@@ -155,12 +171,15 @@ class SqlDelightBydStorage(
         database.taskNodeQueries.selectTaskNode(blockingTask.toString())
           .executeAsOneOrNull()
       if (blockedTaskDbEntry == null) {
+        logger.e("No such node $blockedTask")
         result = Result.failure(BYDFailure.NonExistentNodeId(blockedTask))
         rollback()
       } else if (blockingTaskDbEntry == null) {
+        logger.e("No such node $blockingTask")
         result = Result.failure(BYDFailure.NonExistentNodeId(blockingTask))
         rollback()
       } else if (isDependencyAncestorOf(blockingTask, blockedTask)) {
+        logger.e("blockingTask: $blockingTask blockedTask: $blockedTask relationship would introduce a cycle!")
         result = Result.failure(
           BYDFailure.OperationWouldIntroduceCycle(
             blockingTask,
@@ -180,12 +199,14 @@ class SqlDelightBydStorage(
   }
 
   override fun updateTaskTitle(uuid: Uuid, title: String): Result<Unit> {
+    logger.v("Updating task $uuid with title \"$title\"")
     return simpleUpdate(uuid) {
       database.taskNodeQueries.updateTitle(nodeId = uuid.toString(), title = title)
     }
   }
 
   override fun updateTaskDescription(uuid: Uuid, description: String?): Result<Unit> {
+    logger.v("Updating task $uuid with title \"$description\"")
     return simpleUpdate(uuid) {
       database.taskNodeQueries.updateDescription(
         nodeId = uuid.toString(),
@@ -195,22 +216,14 @@ class SqlDelightBydStorage(
   }
 
   override fun removeTaskNodeAndChildren(uuid: Uuid): Result<Unit> {
-    var result: Result<Unit> = Result.success(Unit)
-    database.transaction {
-      val taskDbEntry =
-        database.taskNodeQueries.selectTaskNode(uuid.toString()).executeAsOneOrNull()
-      if (taskDbEntry == null) {
-        result = Result.failure(BYDFailure.NonExistentNodeId(uuid))
-        rollback()
-      }
-
+    logger.v("Removing task and all descendants of $uuid")
+    return simpleUpdate(uuid) {
       database.taskNodeQueries.removeTaskNodeAndChildren(uuid.toString())
     }
-
-    return result
   }
 
   override fun removeDependencyRelationship(blockingTask: Uuid, blockedTask: Uuid): Result<Unit> {
+    logger.v("Removing dependency relationship blockingTask: $blockingTask -> blockedTask: $blockedTask")
     var result: Result<Unit> = Result.success(Unit)
     database.taskNodeQueries.transaction {
       val blockedTaskDbEntry =
@@ -219,9 +232,11 @@ class SqlDelightBydStorage(
         database.taskNodeQueries.selectTaskNode(blockingTask.toString())
           .executeAsOneOrNull()
       if (blockedTaskDbEntry == null) {
+        logger.e("No such node $blockedTask")
         result = Result.failure(BYDFailure.NonExistentNodeId(blockedTask))
         rollback()
       } else if (blockingTaskDbEntry == null) {
+        logger.e("No such node $blockingTask")
         result = Result.failure(BYDFailure.NonExistentNodeId(blockingTask))
         rollback()
       }
@@ -229,6 +244,7 @@ class SqlDelightBydStorage(
       val blockedTaskList = expandUuidList(blockingTaskDbEntry.blockedTasks)
       val blockingTaskList = expandUuidList(blockedTaskDbEntry.blockingTasks)
       if (!blockedTaskList.contains(blockedTask) || !blockingTaskList.contains(blockingTask)) {
+        logger.e("No dependency blockingTask: $blockingTask -> blockedTask: $blockedTask")
         result = Result.failure(BYDFailure.NoSuchDependencyRelationship(blockingTask, blockedTask))
         rollback()
       }
@@ -263,6 +279,7 @@ class SqlDelightBydStorage(
       val taskNode =
         database.taskNodeQueries.selectTaskNode(uuid.toString()).executeAsOneOrNull()
       if (taskNode == null) {
+        logger.e("no task node $uuid exists")
         result = Result.failure(BYDFailure.NonExistentNodeId(uuid))
         rollback()
       }
@@ -272,10 +289,6 @@ class SqlDelightBydStorage(
 
     return result
   }
-}
-
-fun createDatabase(driver: SqlDriver, isInMemory: Boolean): SqlDelightBydStorage {
-  return SqlDelightBydStorage(BeforeYouDieDb(driver), isInMemory)
 }
 
 fun expandUuidList(s: String?) = expandDelimitedList(s, mapper = ::uuidFrom)

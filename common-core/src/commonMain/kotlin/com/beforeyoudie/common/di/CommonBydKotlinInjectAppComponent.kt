@@ -72,6 +72,7 @@ interface ICommonBydKotlinInjectAppComponent {
   @ApplicationScope
   @Provides
   fun provideDecomposeLifecycle(): Lifecycle = LifecycleRegistry()
+
   @ApplicationScope
   @Provides
   fun provideRootDefaultDecomposeComponentContext(lifecycle: Lifecycle): ComponentContext =

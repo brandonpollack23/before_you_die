@@ -8,6 +8,7 @@ import me.tatarka.inject.annotations.Provides
 import me.tatarka.inject.annotations.Scope
 import kotlin.io.path.Path
 import kotlin.io.path.createDirectories
+import kotlin.reflect.KClass
 
 @ApplicationPlatformScope
 @Component
@@ -15,9 +16,6 @@ actual abstract class BydPlatformComponent(
   @get:ApplicationPlatformScope @get:Provides
   val databaseFileName: DatabaseFileName = ""
 ) {
-  @Provides
-  inline fun <reified T> provideClassLogger(): Logger = Logger.withTag(T::class.toString())
-
   @ApplicationPlatformScope
   @Provides
   fun provideSqlDriver(databaseFileName: DatabaseFileName): SqlDriver {
@@ -45,4 +43,8 @@ actual abstract class BydPlatformComponent(
 }
 
 fun kotlinInjectCreateApp(databaseFileName: DatabaseFileName = ""): CommonBydKotlinInjectAppComponent =
-  CommonBydKotlinInjectAppComponent::class.create(BydPlatformComponent::class.create(databaseFileName))
+  CommonBydKotlinInjectAppComponent::class.create(
+    BydPlatformComponent::class.create(
+      databaseFileName
+    )
+  )

@@ -20,7 +20,7 @@ actual abstract class BydPlatformComponent(
   @get:Provides
   val databaseFileName: DatabaseFileName,
 
-) {
+  ) {
   @Provides
   inline fun <reified T> provideClassLogger(): Logger = Logger.withTag(T::class.toString())
 

@@ -25,6 +25,7 @@ abstract class SqlDelightStorageTestComponent(
 
 class SqlDelightStorageTest : CommonTest() {
   lateinit var storage: IBydStorage
+
   init {
     beforeTest {
       storage = SqlDelightStorageTestComponent::class.create().storage
@@ -372,7 +373,10 @@ class SqlDelightStorageTest : CommonTest() {
 
       storage.addChildToTaskNode(uuid1, uuid2) shouldBeSuccess Unit
       storage.addChildToTaskNode(uuid2, uuid3) shouldBeSuccess Unit
-      storage.addChildToTaskNode(uuid3, uuid1) shouldBeFailure BYDFailure.OperationWouldIntroduceCycle(
+      storage.addChildToTaskNode(
+        uuid3,
+        uuid1
+      ) shouldBeFailure BYDFailure.OperationWouldIntroduceCycle(
         uuid3,
         uuid1
       )
@@ -524,7 +528,9 @@ class SqlDelightStorageTest : CommonTest() {
       val uuid2 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3598")
       storage.insertTaskNode(uuid2, "uuid2", null, false)
 
-      storage.reparentChildToTaskNode(uuid2, uuid1) shouldBeFailure BYDFailure.ChildHasNoParent(uuid1)
+      storage.reparentChildToTaskNode(uuid2, uuid1) shouldBeFailure BYDFailure.ChildHasNoParent(
+        uuid1
+      )
     }
 
     test("reparenting operation fails when creates a cycle") {
