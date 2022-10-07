@@ -9,7 +9,7 @@ pluginManagement {
 rootProject.name = "before_you_die"
 
 include(":android")
-include(":desktop")
+include(":desktopJvm")
 include(":common-core")
 include(":common-ui")
 

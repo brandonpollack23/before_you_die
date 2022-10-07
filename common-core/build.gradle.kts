@@ -13,7 +13,7 @@ version = "1.0"
 
 kotlin {
   android()
-  jvm("desktop") {
+  jvm {
     compilations.all {
       kotlinOptions.jvmTarget = "11"
     }
@@ -40,11 +40,11 @@ kotlin {
       }
     }
 
-    val desktopMain by getting {
+    val jvmMain by getting {
       dependencies {
         implementation(libs.sqldelight.jvm)
       }
-      kotlin.srcDir("build/generated/ksp/desktop/desktopMain/kotlin")
+      kotlin.srcDir("build/generated/ksp/jvm/jvmMain/kotlin")
     }
 
     val commonTest by getting {
@@ -62,7 +62,7 @@ kotlin {
       }
     }
 
-    val desktopTest by getting {
+    val jvmTest by getting {
       dependencies {
         implementation(libs.kotest.runner.junit5)
         implementation(libs.kotest)
@@ -70,15 +70,15 @@ kotlin {
         implementation(libs.kotest.properties)
         implementation(libs.koin.test)
       }
-      kotlin.srcDir("build/generated/ksp/desktop/desktopTest/kotlin")
+      kotlin.srcDir("build/generated/ksp/jvm/jvmTest/kotlin")
     }
   }
 }
 
 // Compiler plugin dependencies go at the project level
 dependencies {
-  add("kspDesktop", libs.di.kotlinInject.ksp)
-  add("kspDesktopTest", libs.di.kotlinInject.ksp)
+  add("kspJvm", libs.di.kotlinInject.ksp)
+  add("kspJvmTest", libs.di.kotlinInject.ksp)
   add("kspAndroid", libs.di.kotlinInject.ksp)
   add("kspAndroidTest", libs.di.kotlinInject.ksp)
 }
@@ -87,7 +87,7 @@ ksp {
   arg("me.tatarka.inject.dumpGraph", "true")
 }
 
-tasks.named<Copy>("desktopTestProcessResources") {
+tasks.named<Copy>("jvmTestProcessResources") {
   duplicatesStrategy = DuplicatesStrategy.INCLUDE
 }
 
