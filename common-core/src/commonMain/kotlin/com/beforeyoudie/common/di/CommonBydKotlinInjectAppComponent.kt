@@ -23,7 +23,6 @@ import me.tatarka.inject.annotations.Scope
 // TODO NOW Document
 // TODO NOW use javax annotaitions (see readme)
 // TODO NOW use dumpGraph
-// TODO NOW remove koin
 
 internal val DILogger = Logger.withTag("kotlin-inject")
 

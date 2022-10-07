@@ -11,8 +11,6 @@ import io.kotest.core.test.TestCase
 import io.kotest.core.test.TestResult
 import me.tatarka.inject.annotations.Component
 
-// TODO NOW remove koin and move this and sqldelight test to kotlin-inject
-
 abstract class CommonTest : FunSpec() {
   init {
     beforeTest { Logger.setLogWriters(CommonWriter()) }
