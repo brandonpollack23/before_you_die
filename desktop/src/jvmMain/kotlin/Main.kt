@@ -8,7 +8,7 @@ import com.beforeyoudie.common.App
 import com.beforeyoudie.common.di.kotlinInjectCreateApp
 
 fun main() {
-  // TODO(#6) PRIORITY create issue to have configurable stuff, including log severity + db file,  with config file/command line args.
+  // TODO(#6) PRIORITY create issue to have configurable stuff, including log severity + db file,  with config file/command line args, screen resolution.
   Logger.setMinSeverity(Severity.Verbose)
   Logger.setLogWriters(CommonWriter())
 
