@@ -5,6 +5,7 @@ import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.DefaultComponentContext
 import com.arkivanov.essenty.lifecycle.Lifecycle
 import com.arkivanov.essenty.lifecycle.LifecycleRegistry
+import com.beforeyoudie.common.applogic.DeepLink
 import com.beforeyoudie.common.applogic.IBydRoot
 import com.beforeyoudie.common.applogic.impl.AppLogicEditFactory
 import com.beforeyoudie.common.applogic.impl.AppLogicEditFactoryImpl
@@ -90,7 +91,8 @@ interface ICommonBydKotlinInjectAppComponent {
 @ApplicationScope
 @Component
 abstract class CommonBydKotlinInjectAppComponent(
-  @Component val platformComponent: BydPlatformComponent
+  @Component val platformComponent: BydPlatformComponent,
+  @get:Provides val deepLink: DeepLink = DeepLink.None,
 ) :
   ICommonBydKotlinInjectAppComponent
 

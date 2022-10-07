@@ -9,3 +9,9 @@ interface IBydRoot {
     data class EditTask(val component: IAppLogicEdit) : Child()
   }
 }
+
+// TODO(#9) Deep links add deep link functionality
+/** Deep link types for the app. */
+sealed interface DeepLink {
+  object None: DeepLink
+}

@@ -1,12 +1,20 @@
 package com.beforeyoudie.common.applogic.impl
 
 import com.arkivanov.decompose.ComponentContext
+import com.arkivanov.decompose.router.stack.ChildStack
+import com.arkivanov.decompose.router.stack.StackNavigation
+import com.arkivanov.decompose.router.stack.childStack
+import com.arkivanov.decompose.value.Value
+import com.arkivanov.essenty.parcelable.Parcelable
+import com.arkivanov.essenty.parcelable.Parcelize
 import com.beforeyoudie.common.applogic.AppLogicEditConfig
 import com.beforeyoudie.common.applogic.AppLogicTaskGraphConfig
+import com.beforeyoudie.common.applogic.DeepLink
 import com.beforeyoudie.common.applogic.IAppLogicEdit
 import com.beforeyoudie.common.applogic.IAppLogicTaskGraph
 import com.beforeyoudie.common.applogic.IBydRoot
 import com.beforeyoudie.common.storage.IBydStorage
+import com.benasher44.uuid.Uuid
 import me.tatarka.inject.annotations.Inject
 
 // TODO NOW finish this along with other basic components using Flow and couroutines etc.
@@ -27,12 +35,58 @@ import me.tatarka.inject.annotations.Inject
 @Inject
 class RootDecomposeComponent(
   componentContext: ComponentContext,
+  private val deepLink: DeepLink = DeepLink.None,
   private val storage: IBydStorage,
   private val appLogicTaskGraphFactory: AppLogicTaskGraphFactory,
   private val appLogicEditFactory: AppLogicEditFactory
 ) :
   IBydRoot,
-  ComponentContext by componentContext
+  ComponentContext by componentContext {
+  private val navigation = StackNavigation<NavigationConfig>()
+  val childStack: Value<ChildStack<*, IBydRoot.Child>> = childStack(
+    source = navigation,
+    initialStack = { getInitialStack(deepLink)},
+    childFactory = ::createChild,
+  )
+
+  // TODO CONTINE from line: 39 https://github.com/arkivanov/Decompose/blob/master/sample/shared/shared/src/commonMain/kotlin/com/arkivanov/sample/shared/root/RootComponent.kt
+
+  private fun createChild(
+    config: NavigationConfig,
+    componentContext: ComponentContext
+  ): IBydRoot.Child =
+    when (config) {
+      is NavigationConfig.TaskGraph -> IBydRoot.Child.TaskGraph(
+        appLogicTaskGraphFactory.createTaskGraph(
+          config.taskGraphConfig,
+          componentContext
+        )
+      )
+      is NavigationConfig.Edit -> IBydRoot.Child.EditTask(
+        appLogicEditFactory.createEdit(
+          config.editConfig,
+          componentContext
+        )
+      )
+    }
+
+
+  private companion object {
+    fun getInitialStack(deepLink: DeepLink): List<NavigationConfig> = when (deepLink) {
+      DeepLink.None -> listOf(NavigationConfig.TaskGraph())
+    }
+  }
+}
+
+private sealed interface NavigationConfig : Parcelable {
+  @Parcelize
+  data class TaskGraph(
+    val taskGraphConfig: AppLogicTaskGraphConfig = AppLogicTaskGraphConfig()
+  ) : NavigationConfig
+
+  @Parcelize
+  data class Edit(val editConfig: AppLogicEditConfig) : NavigationConfig
+}
 
 /**
  * Interface for constructing [IAppLogicTaskGraph].
