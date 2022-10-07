@@ -19,11 +19,10 @@ import me.tatarka.inject.annotations.Component
 import me.tatarka.inject.annotations.Provides
 import me.tatarka.inject.annotations.Scope
 
-// TODO NOW migrate tests
-// TODO NOW Document
 // TODO NOW use javax annotaitions (see readme)
 // TODO NOW use dumpGraph
 
+/** Logger used during DI process and construction. */
 internal val DILogger = Logger.withTag("kotlin-inject")
 
 /** Scope of the common application component*/
@@ -37,7 +36,9 @@ annotation class ApplicationScope
 annotation class ApplicationPlatformScope
 
 // Qualifiers
+/** Qualifier typealias for database file name String.*/
 typealias DatabaseFileName = String
+/** Qualifier typealias for database in memory Boolean.*/
 typealias IsDbInMemory = Boolean
 
 /** Make this an interface so that it can be constructed differently in tests vs non tests. */
@@ -87,9 +88,11 @@ interface ICommonBydKotlinInjectAppComponent {
   }
 }
 
+/** Common component between platforms, in tests use [TestBydKotlinInjectAppComponent] instead, which contains the ability to override etc.*/
 @ApplicationScope
 @Component
 abstract class CommonBydKotlinInjectAppComponent(@Component val platformComponent: BydPlatformComponent) :
   ICommonBydKotlinInjectAppComponent
 
+/** Platform subcomponent, provides things like platform specific sql driver, context, etc.*/
 expect abstract class BydPlatformComponent
