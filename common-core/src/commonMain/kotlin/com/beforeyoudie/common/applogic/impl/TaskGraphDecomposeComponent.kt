@@ -4,7 +4,7 @@ import com.arkivanov.decompose.ComponentContext
 import com.beforeyoudie.common.applogic.AppLogicTaskGraphConfig
 import com.beforeyoudie.common.applogic.IAppLogicTaskGraph
 
-class TodoGraphDecomposeComponent(
+class TaskGraphDecomposeComponent(
   override val config: AppLogicTaskGraphConfig,
   componentContext: ComponentContext
 ) :

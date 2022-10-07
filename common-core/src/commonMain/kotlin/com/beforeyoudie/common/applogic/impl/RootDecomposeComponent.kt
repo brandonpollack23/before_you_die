@@ -39,6 +39,23 @@ interface AppLogicTaskGraphFactory {
   fun createTaskGraph(config: AppLogicTaskGraphConfig, componentContext: ComponentContext): IAppLogicTaskGraph
 }
 
+@Inject
+class AppLogicTaskGraphFactoryImpl : AppLogicTaskGraphFactory {
+  override fun createTaskGraph(
+    config: AppLogicTaskGraphConfig,
+    componentContext: ComponentContext
+  ): IAppLogicTaskGraph = TaskGraphDecomposeComponent(config, componentContext)
+}
+
 interface AppLogicEditFactory {
-  fun createEdit(config: AppLogicEditConfig, componentContext: ComponentContext): IAppLogicTaskGraph
+  fun createEdit(config: AppLogicEditConfig, componentContext: ComponentContext): IAppLogicEdit
+}
+
+@Inject
+class AppLogicEditFactoryImpl : AppLogicEditFactory {
+  override fun createEdit(
+    config: AppLogicEditConfig,
+    componentContext: ComponentContext
+  ) = EditDecomposeComponent(config, componentContext)
+
 }

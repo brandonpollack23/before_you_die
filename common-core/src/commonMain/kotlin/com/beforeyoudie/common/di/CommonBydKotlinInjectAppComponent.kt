@@ -6,11 +6,11 @@ import com.arkivanov.decompose.DefaultComponentContext
 import com.arkivanov.essenty.lifecycle.Lifecycle
 import com.arkivanov.essenty.lifecycle.LifecycleRegistry
 import com.beforeyoudie.common.applogic.IBydRoot
-import com.beforeyoudie.common.applogic.impl.AppLogicEditConstructor
-import com.beforeyoudie.common.applogic.impl.AppLogicTaskGraphConstructor
-import com.beforeyoudie.common.applogic.impl.EditDecomposeComponent
+import com.beforeyoudie.common.applogic.impl.AppLogicEditFactory
+import com.beforeyoudie.common.applogic.impl.AppLogicEditFactoryImpl
+import com.beforeyoudie.common.applogic.impl.AppLogicTaskGraphFactory
+import com.beforeyoudie.common.applogic.impl.AppLogicTaskGraphFactoryImpl
 import com.beforeyoudie.common.applogic.impl.RootDecomposeComponent
-import com.beforeyoudie.common.applogic.impl.TodoGraphDecomposeComponent
 import com.beforeyoudie.common.storage.BeforeYouDieDb
 import com.beforeyoudie.common.storage.IBydStorage
 import com.beforeyoudie.common.storage.SqlDelightBydStorage
@@ -50,22 +50,22 @@ interface ICommonBydKotlinInjectAppComponent {
     @Provides
     get() = this
 
+  val AppLogicEditFactoryImpl.bind: AppLogicEditFactory
+    @ApplicationScope
+    @Provides
+    get() = this
+
+  val AppLogicTaskGraphFactoryImpl.bind: AppLogicTaskGraphFactory
+    @ApplicationScope
+    @Provides
+    get() = this
+
   val SqlDelightBydStorage.bind: IBydStorage
     @ApplicationScope
     @Provides
     get() = this
 
   // ========== Providers =============
-
-  @ApplicationScope
-  @Provides
-  fun provideBydGraphConstructor(): AppLogicTaskGraphConstructor =
-    { graphConfig, componentContext -> TodoGraphDecomposeComponent(graphConfig, componentContext) }
-
-  @ApplicationScope
-  @Provides
-  fun provideBydEditConstructor(): AppLogicEditConstructor =
-    { editConfig, componentContext -> EditDecomposeComponent(editConfig, componentContext) }
 
   @ApplicationScope
   @Provides
