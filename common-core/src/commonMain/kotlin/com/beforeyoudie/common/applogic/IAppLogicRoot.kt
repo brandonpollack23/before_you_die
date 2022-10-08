@@ -1,7 +1,5 @@
 package com.beforeyoudie.common.applogic
 
-import com.arkivanov.decompose.router.stack.ChildStack
-import com.arkivanov.decompose.value.Value
 import com.beforeyoudie.common.state.TaskNode
 import kotlinx.coroutines.flow.MutableStateFlow
 
@@ -9,7 +7,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 
 /** Interface representing the root applogic component. */
 interface IAppLogicRoot {
-  val taskGraphState: MutableStateFlow<Collection<TaskNode>>
+  val appState: MutableStateFlow<AppState>
 
   sealed class Child {
     data class TaskGraph(val appLogic: IAppLogicTaskGraph) : Child()
@@ -22,3 +20,5 @@ interface IAppLogicRoot {
 sealed interface DeepLink {
   object None : DeepLink
 }
+
+data class AppState(val taskGraph: Collection<TaskNode> = emptySet())

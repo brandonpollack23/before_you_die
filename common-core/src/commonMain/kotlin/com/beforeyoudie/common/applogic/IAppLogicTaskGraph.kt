@@ -4,9 +4,7 @@ import com.arkivanov.essenty.parcelable.Parcelable
 import com.arkivanov.essenty.parcelable.Parcelize
 
 /** Interface representing any task graph app logic (this includes list, filtered lists, and graph). */
-interface IAppLogicTaskGraph {
-  val config: AppLogicTaskGraphConfig
-}
+interface IAppLogicTaskGraph
 
 /**
  * Task Graph CoreLogic configuration.

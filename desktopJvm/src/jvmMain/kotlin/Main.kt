@@ -9,6 +9,8 @@ import com.beforeyoudie.common.di.BydPlatformComponent
 import com.beforeyoudie.common.di.CommonBydKotlinInjectAppComponent
 import com.beforeyoudie.common.di.DatabaseFileName
 import com.beforeyoudie.common.di.create
+import kotlinx.coroutines.Dispatchers
+import kotlin.coroutines.CoroutineContext
 
 fun main() {
   // TODO(#6) PRIORITY create issue to have configurable stuff, including log severity + db file,  with config file/command line args, screen resolution.
@@ -18,7 +20,7 @@ fun main() {
 
   Logger.v("Test")
 
-  val app = kotlinInjectCreateApp("beforeyoudie.db")
+  val app = kotlinInjectCreateApp("beforeyoudie.db", Dispatchers.Main)
   app.rootLogic
 
   application {
@@ -31,10 +33,12 @@ fun main() {
 }
 
 fun kotlinInjectCreateApp(
-  databaseFileName: DatabaseFileName = ""
+  databaseFileName: DatabaseFileName = "",
+  applicationCoroutineContext: CoroutineContext
 ): CommonBydKotlinInjectAppComponent =
   CommonBydKotlinInjectAppComponent::class.create(
     BydPlatformComponent::class.create(
-      databaseFileName
+      databaseFileName,
+      applicationCoroutineContext
     )
   )

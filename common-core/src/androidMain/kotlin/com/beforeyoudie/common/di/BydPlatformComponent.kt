@@ -14,13 +14,14 @@ import me.tatarka.inject.annotations.Provides
 actual abstract class BydPlatformComponent(
   @get:ApplicationPlatformScope
   @get:Provides
-  val
-  context: Context,
+  val context: Context,
 
   @get:ApplicationPlatformScope
   @get:Provides
-  val databaseFileName: DatabaseFileName
+  val databaseFileName: DatabaseFileName,
 
+  @get:ApplicationPlatformScope @get:Provides
+  val applicationCoroutineContext: ApplicationCoroutineContext
 ) {
   @Provides
   inline fun <reified T> provideClassLogger(): Logger = Logger.withTag(T::class.toString())
@@ -48,14 +49,3 @@ actual abstract class BydPlatformComponent(
   fun provideIsInDbInMemory(databaseFileName: DatabaseFileName): IsDbInMemory =
     databaseFileName.trim('"').isEmpty()
 }
-
-fun kotlinInjectCreateApp(
-  context: Context,
-  databaseFileName: DatabaseFileName
-): CommonBydKotlinInjectAppComponent =
-  CommonBydKotlinInjectAppComponent::class.create(
-    BydPlatformComponent::class.create(
-      context,
-      databaseFileName
-    )
-  )

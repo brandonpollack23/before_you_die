@@ -19,6 +19,7 @@ import com.squareup.sqldelight.db.SqlDriver
 import me.tatarka.inject.annotations.Component
 import me.tatarka.inject.annotations.Provides
 import me.tatarka.inject.annotations.Scope
+import kotlin.coroutines.CoroutineContext
 
 /** Logger used during DI process and construction. */
 internal val DILogger = Logger.withTag("kotlin-inject")
@@ -39,6 +40,9 @@ typealias DatabaseFileName = String
 
 /** Qualifier typealias for database in memory Boolean.*/
 typealias IsDbInMemory = Boolean
+
+/** Qualifier for top level coroutine context provided by the platform.*/
+typealias ApplicationCoroutineContext = CoroutineContext
 
 /** Make this an interface so that it can be constructed differently in tests vs non tests. */
 interface ICommonBydKotlinInjectAppComponent {

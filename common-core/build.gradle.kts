@@ -27,7 +27,7 @@ kotlin {
         implementation(libs.kermit)
         implementation(libs.kermit.koin)
         implementation(libs.koin.core)
-        implementation(libs.kotlinx.coroutines)
+        implementation(libs.kotlinx.coroutines.core)
         implementation(libs.uuid)
         implementation(libs.di.kotlinInject.runtime)
       }
@@ -38,12 +38,14 @@ kotlin {
         implementation(libs.koin.android)
         implementation(libs.sqldelight.android)
         implementation(libs.requiry.sqliteandroid)
+        implementation(libs.kotlinx.coroutines.android)
       }
     }
 
     val jvmMain by getting {
       dependencies {
         implementation(libs.sqldelight.jvm)
+        implementation(libs.kotlinx.coroutines.swing) // Compose uses swing, this gives us access to the dispatcher
       }
       kotlin.srcDir("build/generated/ksp/jvm/jvmMain/kotlin")
     }
@@ -53,6 +55,7 @@ kotlin {
         implementation(libs.mockk)
         implementation(libs.koin.test)
         implementation(libs.kotest.koin)
+        implementation(libs.kotlinx.coroutines.test)
       }
     }
 

@@ -29,7 +29,11 @@ dependencyResolutionManagement {
       library("di-kotlinInject-runtime", "me.tatarka.inject:kotlin-inject-runtime:0.5.1")
 
       // Coroutines/Concurrency
-      library("kotlinx-coroutines", "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
+      val coroutinesVersion = "1.6.4"
+      library("kotlinx-coroutines-core", "org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutinesVersion")
+      library("kotlinx-coroutines-android", "org.jetbrains.kotlinx:kotlinx-coroutines-android:$coroutinesVersion")
+      library("kotlinx-coroutines-swing", "org.jetbrains.kotlinx:kotlinx-coroutines-swing:$coroutinesVersion")
+      library("kotlinx-coroutines-test", "org.jetbrains.kotlinx:kotlinx-coroutines-test:$coroutinesVersion")
 
       // Koin DI
       val koinVersion = "3.2.2"

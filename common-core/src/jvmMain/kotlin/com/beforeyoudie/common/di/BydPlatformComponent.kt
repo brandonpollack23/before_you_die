@@ -11,7 +11,9 @@ import kotlin.io.path.createDirectories
 @Component
 actual abstract class BydPlatformComponent(
   @get:ApplicationPlatformScope @get:Provides
-  val databaseFileName: DatabaseFileName = ""
+  val databaseFileName: DatabaseFileName = "",
+  @get:ApplicationPlatformScope @get:Provides
+  val applicationCoroutineContext: ApplicationCoroutineContext
 ) {
   @ApplicationPlatformScope
   @Provides

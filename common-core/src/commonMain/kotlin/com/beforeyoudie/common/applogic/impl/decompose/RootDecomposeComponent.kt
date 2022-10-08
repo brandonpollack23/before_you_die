@@ -10,20 +10,24 @@ import com.arkivanov.essenty.parcelable.Parcelable
 import com.arkivanov.essenty.parcelable.Parcelize
 import com.beforeyoudie.common.applogic.AppLogicEditConfig
 import com.beforeyoudie.common.applogic.AppLogicTaskGraphConfig
+import com.beforeyoudie.common.applogic.AppState
 import com.beforeyoudie.common.applogic.DeepLink
 import com.beforeyoudie.common.applogic.IAppLogicEdit
 import com.beforeyoudie.common.applogic.IAppLogicRoot
 import com.beforeyoudie.common.applogic.IAppLogicTaskGraph
+import com.beforeyoudie.common.di.ApplicationCoroutineContext
 import com.beforeyoudie.common.state.TaskNode
 import com.beforeyoudie.common.storage.IBydStorage
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.subscribe
+import kotlinx.coroutines.runBlocking
 import me.tatarka.inject.annotations.Inject
 
-// TODO NOW finish this along with other basic components using Flow and couroutines etc.
-// TODO NOW test this
-// https://github.com/JetBrains/compose-jb/blob/master/examples/todoapp/common/root/src/commonMain/kotlin/example/todo/common/root/integration/TodoRootComponent.kt
-
 // TODO NOW LAST implement children
+// TODO NOW test children?
 
 /** This is the root CoreLogic component.  While the other components in the Decompose world are
  * created dynamically by this class, this one is a singleton and is thus injected by my DI
@@ -37,6 +41,7 @@ import me.tatarka.inject.annotations.Inject
 @Inject
 class RootDecomposeComponent(
   componentContext: ComponentContext,
+  private val coroutineContext: ApplicationCoroutineContext,
   private val deepLink: DeepLink = DeepLink.None,
   private val storage: IBydStorage,
   private val appLogicTaskGraphFactory: AppLogicTaskGraphFactory,
@@ -47,13 +52,13 @@ class RootDecomposeComponent(
   init {
     lifecycle.subscribe(object : Lifecycle.Callbacks {
       override fun onCreate() {
-        taskGraphState.value = storage.selectAllTaskNodeInformation()
+        appState.value = AppState(storage.selectAllTaskNodeInformation())
       }
     })
   }
 
   // TODO NOW state preservation.
-  override val taskGraphState: MutableStateFlow<Collection<TaskNode>> = MutableStateFlow(emptySet())
+  override val appState = MutableStateFlow(AppState())
 
   private val navigation = StackNavigation<NavigationConfig>()
 
@@ -64,25 +69,33 @@ class RootDecomposeComponent(
     childFactory = ::createChild
   )
 
-  // TODO CONTINE from line: 39 https://github.com/arkivanov/Decompose/blob/master/sample/shared/shared/src/commonMain/kotlin/com/arkivanov/sample/shared/root/RootComponent.kt
-
   private fun createChild(
     config: NavigationConfig,
     componentContext: ComponentContext
   ): IAppLogicRoot.Child =
-    when (config) {
-      is NavigationConfig.TaskGraph -> IAppLogicRoot.Child.TaskGraph(
-        appLogicTaskGraphFactory.createTaskGraph(
-          config.taskGraphConfig,
-          componentContext
+    runBlocking(coroutineContext) {
+      when (config) {
+        is NavigationConfig.TaskGraph -> {
+          // Listen to updates to the task graph and apply them to the application state.
+          val taskGraph = MutableStateFlow(appState.value.taskGraph)
+          taskGraph.onEach {
+            appState.value = AppState(it)
+          }
+
+          IAppLogicRoot.Child.TaskGraph(
+            appLogicTaskGraphFactory.createTaskGraph(
+              taskGraph,
+              config.taskGraphConfig,
+              CoroutineScope(coroutineContext),
+              componentContext
+            )
+          )
+        }
+
+        is NavigationConfig.Edit -> IAppLogicRoot.Child.EditTask(
+          appLogicEditFactory.createEdit(componentContext)
         )
-      )
-      is NavigationConfig.Edit -> IAppLogicRoot.Child.EditTask(
-        appLogicEditFactory.createEdit(
-          config.editConfig,
-          componentContext
-        )
-      )
+      }
     }
 
   private companion object {
@@ -109,7 +122,9 @@ private sealed class NavigationConfig : Parcelable {
  */
 interface AppLogicTaskGraphFactory {
   fun createTaskGraph(
-    config: AppLogicTaskGraphConfig,
+    taskGraph: MutableStateFlow<Collection<TaskNode>>,
+    appLogicTaskGraphConfig: AppLogicTaskGraphConfig,
+    coroutineScope: CoroutineScope,
     componentContext: ComponentContext
   ): IAppLogicTaskGraph
 }
@@ -120,9 +135,16 @@ interface AppLogicTaskGraphFactory {
 @Inject
 class AppLogicTaskGraphFactoryImpl : AppLogicTaskGraphFactory {
   override fun createTaskGraph(
-    config: AppLogicTaskGraphConfig,
+    taskGraph: MutableStateFlow<Collection<TaskNode>>,
+    appLogicTaskGraphConfig: AppLogicTaskGraphConfig,
+    coroutineScope: CoroutineScope,
     componentContext: ComponentContext
-  ): IAppLogicTaskGraph = TaskGraphDecomposeComponent(config, componentContext)
+  ): IAppLogicTaskGraph = TaskGraphDecomposeComponent(
+    taskGraph,
+    appLogicTaskGraphConfig,
+    coroutineScope,
+    componentContext
+  )
 }
 
 /**
@@ -131,7 +153,7 @@ class AppLogicTaskGraphFactoryImpl : AppLogicTaskGraphFactory {
  * Factory is helpful because it allows construction to be overridden and changed in the future and in tests.
  */
 interface AppLogicEditFactory {
-  fun createEdit(config: AppLogicEditConfig, componentContext: ComponentContext): IAppLogicEdit
+  fun createEdit(componentContext: ComponentContext): IAppLogicEdit
 }
 
 /**
@@ -139,8 +161,6 @@ interface AppLogicEditFactory {
  */
 @Inject
 class AppLogicEditFactoryImpl : AppLogicEditFactory {
-  override fun createEdit(
-    config: AppLogicEditConfig,
-    componentContext: ComponentContext
-  ) = EditDecomposeComponent(config, componentContext)
+  override fun createEdit(componentContext: ComponentContext) =
+    EditDecomposeComponent(componentContext)
 }

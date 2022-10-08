@@ -1,5 +1,6 @@
 package com.beforeyoudie.common.di
 
+import kotlinx.coroutines.MainCoroutineDispatcher
 import me.tatarka.inject.annotations.Component
 
 /**
@@ -12,7 +13,9 @@ import me.tatarka.inject.annotations.Component
 abstract class TestBydKotlinInjectAppComponent(
   @Component val platformComponent: BydPlatformComponent = makeTestPlatformComponent()
 ) :
-  ICommonBydKotlinInjectAppComponent
+  ICommonBydKotlinInjectAppComponent {
+  abstract val coroutineDispatcher: MainCoroutineDispatcher
+}
 
 /** Construct test platform component helper, this will provide mocks etc. per platform. */
 expect fun makeTestPlatformComponent(): BydPlatformComponent
