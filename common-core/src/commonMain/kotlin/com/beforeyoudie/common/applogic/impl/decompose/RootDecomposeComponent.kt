@@ -44,8 +44,6 @@ class RootDecomposeComponent(
 ) :
   IAppLogicRoot,
   ComponentContext by componentContext {
-  // TODO NOW state preservation.
-  val taskGraphState: MutableStateFlow<Collection<TaskNode>> = MutableStateFlow(emptySet())
   init {
     lifecycle.subscribe(object : Lifecycle.Callbacks {
       override fun onCreate() {
@@ -54,7 +52,12 @@ class RootDecomposeComponent(
     })
   }
 
+  // TODO NOW state preservation.
+  override val taskGraphState: MutableStateFlow<Collection<TaskNode>> = MutableStateFlow(emptySet())
+
   private val navigation = StackNavigation<NavigationConfig>()
+
+  // In decompose based UI implementation Composable widget, just check the interface is this type, then access this directly (NOT through the interface).
   val childStack: Value<ChildStack<*, IAppLogicRoot.Child>> = childStack(
     source = navigation,
     initialStack = { getInitialStack(deepLink) },
