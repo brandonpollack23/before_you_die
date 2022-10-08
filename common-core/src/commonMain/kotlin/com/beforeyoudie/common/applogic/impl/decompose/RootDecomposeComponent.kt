@@ -101,7 +101,8 @@ class RootDecomposeComponent(
         )
       }
 
-      // TODO NOW do edit now as well
+      // TODO NOW do edit now as well, just passing UUID will be fine since its all accessible from
+      //  the higher level root and can be passed to children from there, no need to duplicate that work here
       is NavigationConfig.Edit -> IAppLogicRoot.Child.EditTask(
         appLogicEditFactory.createEdit(coroutineContext, componentContext)
       )
