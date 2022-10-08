@@ -2,6 +2,7 @@ package com.beforeyoudie.common.applogic
 
 import com.beforeyoudie.common.state.TaskNode
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.onEach
 
 /** Interface representing the root applogic component. */
 interface IAppLogicRoot {
@@ -22,4 +23,14 @@ sealed interface DeepLink {
 /**
  * The overall application state, this includes the state of the graph, any ui elements, etc.
  */
-data class AppState(val taskGraph: Collection<TaskNode> = emptySet())
+data class AppState(val taskGraph: Collection<TaskNode> = emptySet()) {
+  companion object {
+    fun createTaskGraphStateFlow(appStateFlow: MutableStateFlow<AppState>): MutableStateFlow<Collection<TaskNode>>{
+      val f = MutableStateFlow(appStateFlow.value.taskGraph)
+      f.onEach {
+        appStateFlow.value = appStateFlow.value.copy(taskGraph = it)
+      }
+      return f
+    }
+  }
+}

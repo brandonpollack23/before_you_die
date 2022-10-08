@@ -54,7 +54,8 @@ class RootDecomposeComponent(
 
   // TODO NOW state preservation.
   override val appState = MutableStateFlow(AppState())
-  private val taskGraphStateFlow = MutableStateFlow(appState.value.taskGraph)
+  // AppState lenses.
+  private val taskGraphStateFlow = AppState.createTaskGraphStateFlow(appState)
 
   init {
     // Lifecycle setup.
@@ -64,10 +65,6 @@ class RootDecomposeComponent(
       }
     })
 
-    // Stateflow lenses.
-    taskGraphStateFlow.onEach {
-      appState.value = appState.value.copy(taskGraph = it)
-    }
   }
 
   private val navigation = StackNavigation<NavigationConfig>()
