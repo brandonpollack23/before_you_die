@@ -64,7 +64,7 @@ fun createTaskGraphEventsFlow(
   events.onEach {
     when (it) {
       is TaskGraphEvent.CreateTask -> {
-        val result = storage.insertTaskNode(
+        storage.insertTaskNode(
           uuid4(),
           it.title,
           it.description,
