@@ -3,7 +3,10 @@ package com.beforeyoudie.common.state
 import com.benasher44.uuid.Uuid
 import com.benasher44.uuid.uuid4
 
-typealias TaskId = Uuid
+@JvmInline
+value class TaskId(val id: Uuid) {
+  override fun toString(): String = id.toString()
+}
 
 /**
  * The in memory representation of a task after reading it from the [com.beforeyoudie.common.storage.IBydStorage]
@@ -18,14 +21,14 @@ typealias TaskId = Uuid
  * @property blockedTasks inverse of blocking, can't be seen in actionable view.
  */
 data class TaskNode(
-  val id: TaskId = uuid4(),
+  val id: TaskId = TaskId(uuid4()),
   val title: String,
   val description: String? = null,
   val isComplete: Boolean = false,
-  val parent: Uuid? = null,
-  val children: Set<Uuid> = setOf(),
-  val blockingTasks: Set<Uuid> = setOf(),
-  val blockedTasks: Set<Uuid> = setOf()
+  val parent: TaskId? = null,
+  val children: Set<TaskId> = setOf(),
+  val blockingTasks: Set<TaskId> = setOf(),
+  val blockedTasks: Set<TaskId> = setOf()
 ) {
   override fun hashCode() = id.hashCode()
   override fun equals(other: Any?): Boolean {

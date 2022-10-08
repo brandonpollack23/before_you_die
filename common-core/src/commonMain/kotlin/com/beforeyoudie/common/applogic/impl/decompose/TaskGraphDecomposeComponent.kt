@@ -4,7 +4,7 @@ import com.arkivanov.decompose.ComponentContext
 import com.beforeyoudie.common.applogic.AppLogicTaskGraphConfig
 import com.beforeyoudie.common.applogic.IAppLogicTaskGraph
 import com.beforeyoudie.common.applogic.TaskGraphEvent
-import com.benasher44.uuid.Uuid
+import com.beforeyoudie.common.state.TaskId
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.launch
 import kotlin.coroutines.CoroutineContext
@@ -26,15 +26,20 @@ class TaskGraphDecomposeComponent(
   IAppLogicTaskGraph,
   ComponentContext by componentContext {
   private val coroutineScope = coroutineScopeWithLifecycle(coroutineContext)
-  override fun createTask(title: String, description: String?, parent: Uuid?) {
+  override fun createTask(title: String, description: String?, parent: TaskId?) {
     coroutineScope.launch {
       taskGraphEvents.emit(TaskGraphEvent.CreateTask(title, description, parent))
     }
   }
 
-  override fun deleteTaskAndChildren(uuid: Uuid) {
+  override fun deleteTaskAndChildren(uuid: TaskId) {
     coroutineScope.launch {
       taskGraphEvents.emit(TaskGraphEvent.DeleteTaskAndChildren(uuid))
     }
+  }
+
+  // TODO NOW this should open a task child node with navigation using the task graph events flow
+  override fun openEdit(uuid: TaskId) {
+    TODO("Not yet implemented")
   }
 }

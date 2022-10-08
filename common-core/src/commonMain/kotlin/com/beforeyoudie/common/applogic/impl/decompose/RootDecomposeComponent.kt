@@ -22,6 +22,7 @@ import com.beforeyoudie.common.storage.IBydStorage
 import com.beforeyoudie.common.util.getClassLogger
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import me.tatarka.inject.annotations.Inject
 import kotlin.coroutines.CoroutineContext
@@ -70,7 +71,9 @@ class RootDecomposeComponent(
     // Lifecycle setup.
     lifecycle.subscribe(object : Lifecycle.Callbacks {
       override fun onCreate() {
-        appState.value = AppState(storage.selectAllTaskNodeInformation())
+        coroutineScope.launch {
+          appState.value = AppState(storage.selectAllTaskNodeInformation())
+        }
       }
     })
   }

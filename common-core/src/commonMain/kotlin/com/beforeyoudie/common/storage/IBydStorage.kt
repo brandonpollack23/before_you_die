@@ -1,7 +1,7 @@
 package com.beforeyoudie.common.storage
 
+import com.beforeyoudie.common.state.TaskId
 import com.beforeyoudie.common.state.TaskNode
-import com.benasher44.uuid.Uuid
 
 // TODO(#2) STORAGE convenience of deleting a parent and reparenting children one level up.
 //  Could be useful for deeper lists
@@ -29,18 +29,18 @@ interface IBydStorage {
    * @returns [Result] of with fail type [com.beforeyoudie.common.util.BYDFailure.InsertionFailure]
    */
   fun insertTaskNode(
-    id: Uuid,
+    id: TaskId,
     title: String,
     description: String? = null,
-    parent: Uuid? = null,
+    parent: TaskId? = null,
     complete: Boolean = false
   ): Result<TaskNode>
 
   /** Mark a task as done, returning an error if it doesn't exist. */
-  fun markComplete(uuid: Uuid): Result<Unit>
+  fun markComplete(uuid: TaskId): Result<Unit>
 
   /** Mark a task as incomplete, returning an error if it doesn't exist. */
-  fun markIncomplete(uuid: Uuid): Result<Unit>
+  fun markIncomplete(uuid: TaskId): Result<Unit>
 
   /**
    * Add a child to a task mode, if you need to reparent use that operation instead.
@@ -49,46 +49,46 @@ interface IBydStorage {
    *
    * @returns [Result] of with fail type [com.beforeyoudie.common.util.BYDFailure.DuplicateParent]
    */
-  fun addChildToTaskNode(parent: Uuid, child: Uuid): Result<Unit>
+  fun addChildToTaskNode(parent: TaskId, child: TaskId): Result<Unit>
 
   /**
    * See [addChildToTaskNode], this is like that but only works on children that already have a
    * parent and moves them
    */
-  fun reparentChildToTaskNode(newParent: Uuid, child: Uuid): Result<Unit>
+  fun reparentChildToTaskNode(newParent: TaskId, child: TaskId): Result<Unit>
 
   /**
    * Add dependency relationship
    *
    * @returns [com.beforeyoudie.common.util.BYDFailure.NonExistentNodeId]
    */
-  fun addDependencyRelationship(blockingTask: Uuid, blockedTask: Uuid): Result<Unit>
+  fun addDependencyRelationship(blockingTask: TaskId, blockedTask: TaskId): Result<Unit>
 
   /**
    * Update title
    *
    * @returns [com.beforeyoudie.common.util.BYDFailure.NonExistentNodeId]
    */
-  fun updateTaskTitle(uuid: Uuid, title: String): Result<Unit>
+  fun updateTaskTitle(uuid: TaskId, title: String): Result<Unit>
 
   /**
    * Update description
    *
    * @returns [com.beforeyoudie.common.util.BYDFailure.NonExistentNodeId]
    */
-  fun updateTaskDescription(uuid: Uuid, description: String?): Result<Unit>
+  fun updateTaskDescription(uuid: TaskId, description: String?): Result<Unit>
 
   /**
    * Removes a given task node along with all relationships.
    *
    * @retuns [com.beforeyoudie.common.util.BYDFailure.NonExistentNodeId]
    */
-  fun removeTaskNodeAndChildren(uuid: Uuid): Result<Unit>
+  fun removeTaskNodeAndChildren(uuid: TaskId): Result<Unit>
 
   /**
    * Remove a depedency relationship between two nodes
    *
    * @retuns [com.beforeyoudie.common.util.BYDFailure.NonExistentNodeId] or [com.beforeyoudie.common.util.BYDFailure.NoSuchDependencyRelationship]
    */
-  fun removeDependencyRelationship(blockingTask: Uuid, blockedTask: Uuid): Result<Unit>
+  fun removeDependencyRelationship(blockingTask: TaskId, blockedTask: TaskId): Result<Unit>
 }

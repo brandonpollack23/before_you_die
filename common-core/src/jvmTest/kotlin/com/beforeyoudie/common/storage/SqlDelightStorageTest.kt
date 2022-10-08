@@ -3,6 +3,7 @@ package com.beforeyoudie.common.storage
 import com.beforeyoudie.CommonTest
 import com.beforeyoudie.common.di.TestBydKotlinInjectAppComponent
 import com.beforeyoudie.common.di.create
+import com.beforeyoudie.common.state.TaskId
 import com.beforeyoudie.common.state.TaskNode
 import com.beforeyoudie.common.util.BYDFailure
 import com.benasher44.uuid.uuidFrom
@@ -36,11 +37,11 @@ class SqlDelightStorageTest : CommonTest() {
     }
 
     test("basic retrieval and insertion with no deps and a child") {
-      val uuid1 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3599")
+      val uuid1 = TaskId(uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3599"))
       storage.insertTaskNode(uuid1, "uuid1", null, complete = false)
-      val uuid2 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3598")
+      val uuid2 = TaskId(uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3598"))
       storage.insertTaskNode(uuid2, "uuid2", "", complete = true)
-      val uuid3 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3588")
+      val uuid3 = TaskId(uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3588"))
       storage.insertTaskNode(
         uuid3,
         "uuid3",
@@ -57,9 +58,9 @@ class SqlDelightStorageTest : CommonTest() {
     }
 
     test("update title") {
-      val uuid1 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3599")
+      val uuid1 = TaskId(uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3599"))
       storage.insertTaskNode(uuid1, "uuid1", null, complete = false)
-      val uuid2 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3598")
+      val uuid2 = TaskId(uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3598"))
       storage.insertTaskNode(uuid2, "uuid2", null, complete = false)
 
       storage.selectAllTaskNodeInformation() shouldContainExactlyInAnyOrder setOf(
@@ -75,11 +76,11 @@ class SqlDelightStorageTest : CommonTest() {
     }
 
     test("update title fail") {
-      val uuid1 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3599")
+      val uuid1 = TaskId(uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3599"))
       storage.insertTaskNode(uuid1, "uuid1", null, complete = false)
-      val uuid2 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3598")
+      val uuid2 = TaskId(uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3598"))
       storage.insertTaskNode(uuid2, "uuid2", null, complete = false)
-      val uuid3 = uuidFrom("3d8f7dd6-c345-49a8-aa1d-404fb9ea3598")
+      val uuid3 = TaskId(uuidFrom("3d8f7dd6-c345-49a8-aa1d-404fb9ea3598"))
 
       storage.selectAllTaskNodeInformation() shouldContainExactlyInAnyOrder setOf(
         TaskNode(uuid1, "uuid1"),
@@ -91,9 +92,9 @@ class SqlDelightStorageTest : CommonTest() {
     }
 
     test("update description") {
-      val uuid1 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3599")
+      val uuid1 = TaskId(uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3599"))
       storage.insertTaskNode(uuid1, "uuid1", null, complete = false)
-      val uuid2 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3598")
+      val uuid2 = TaskId(uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3598"))
       storage.insertTaskNode(uuid2, "uuid2", null, complete = false)
 
       storage.selectAllTaskNodeInformation() shouldContainExactlyInAnyOrder setOf(
@@ -109,11 +110,11 @@ class SqlDelightStorageTest : CommonTest() {
     }
 
     test("update descprption fail") {
-      val uuid1 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3599")
+      val uuid1 = TaskId(uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3599"))
       storage.insertTaskNode(uuid1, "uuid1", null, complete = false)
-      val uuid2 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3598")
+      val uuid2 = TaskId(uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3598"))
       storage.insertTaskNode(uuid2, "uuid2", null, complete = false)
-      val uuid3 = uuidFrom("3d8f7dd6-c345-49a8-aa1d-404fb9ea3598")
+      val uuid3 = TaskId(uuidFrom("3d8f7dd6-c345-49a8-aa1d-404fb9ea3598"))
 
       storage.selectAllTaskNodeInformation() shouldContainExactlyInAnyOrder setOf(
         TaskNode(uuid1, "uuid1"),
@@ -125,11 +126,11 @@ class SqlDelightStorageTest : CommonTest() {
     }
 
     test("set mark complete should work") {
-      val uuid1 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3599")
+      val uuid1 = TaskId(uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3599"))
       storage.insertTaskNode(uuid1, "uuid1", null, complete = false)
-      val uuid2 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3598")
+      val uuid2 = TaskId(uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3598"))
       storage.insertTaskNode(uuid2, "uuid2", null, complete = false)
-      val uuid3 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3588")
+      val uuid3 = TaskId(uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3588"))
       storage.insertTaskNode(uuid3, "uuid3", null, complete = false)
 
       storage.selectAllTaskNodeInformation() shouldContainExactlyInAnyOrder setOf(
@@ -159,13 +160,13 @@ class SqlDelightStorageTest : CommonTest() {
     }
 
     test("parent child relation, including multiple children") {
-      val uuid1 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3599")
+      val uuid1 = TaskId(uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3599"))
       storage.insertTaskNode(uuid1, "uuid1", null, complete = false)
-      val uuid2 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3598")
+      val uuid2 = TaskId(uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3598"))
       storage.insertTaskNode(uuid2, "uuid2", "", complete = true)
-      val uuid3 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3597")
+      val uuid3 = TaskId(uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3597"))
       storage.insertTaskNode(uuid3, "uuid3", "captain picard baby", complete = false)
-      val uuid4 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3596")
+      val uuid4 = TaskId(uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3596"))
       storage.insertTaskNode(uuid4, "uuid4", "no love for worf", complete = false)
 
       storage.addChildToTaskNode(uuid1, uuid2)
@@ -191,13 +192,13 @@ class SqlDelightStorageTest : CommonTest() {
     }
 
     test("parent child relation, including multiple children using properties") {
-      val uuid1 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3599")
+      val uuid1 = TaskId(uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3599"))
       storage.insertTaskNode(uuid1, "uuid1", null, complete = false)
-      val uuid2 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3598")
+      val uuid2 = TaskId(uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3598"))
       storage.insertTaskNode(uuid2, "uuid2", "", complete = true)
-      val uuid3 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3597")
+      val uuid3 = TaskId(uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3597"))
       storage.insertTaskNode(uuid3, "uuid3", "captain picard baby", complete = false)
-      val uuid4 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3596")
+      val uuid4 = TaskId(uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3596"))
       storage.insertTaskNode(uuid4, "uuid4", "no love for worf", complete = false)
 
       storage.addChildToTaskNode(uuid1, uuid2)
@@ -223,11 +224,11 @@ class SqlDelightStorageTest : CommonTest() {
     }
 
     test("child can only have one parent") {
-      val uuid1 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3599")
+      val uuid1 = TaskId(uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3599"))
       storage.insertTaskNode(uuid1, "uuid1", null, complete = false)
-      val uuid2 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3598")
+      val uuid2 = TaskId(uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3598"))
       storage.insertTaskNode(uuid2, "uuid2", "", complete = true)
-      val uuid3 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3597")
+      val uuid3 = TaskId(uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3597"))
       storage.insertTaskNode(uuid3, "uuid3", "captain picard baby", complete = false)
 
       storage.addChildToTaskNode(uuid1, uuid2) shouldBeSuccess (Unit)
@@ -235,13 +236,13 @@ class SqlDelightStorageTest : CommonTest() {
     }
 
     test("dependencies work in a line") {
-      val uuid1 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3599")
+      val uuid1 = TaskId(uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3599"))
       storage.insertTaskNode(uuid1, "uuid1", null, complete = false)
-      val uuid2 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3598")
+      val uuid2 = TaskId(uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3598"))
       storage.insertTaskNode(uuid2, "uuid2", "", complete = true)
-      val uuid3 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3597")
+      val uuid3 = TaskId(uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3597"))
       storage.insertTaskNode(uuid3, "uuid3", "captain picard baby", complete = false)
-      val uuid4 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3596")
+      val uuid4 = TaskId(uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3596"))
       storage.insertTaskNode(uuid4, "uuid4", "no love for worf", complete = false)
 
       storage.addDependencyRelationship(uuid2, uuid1)
@@ -277,13 +278,13 @@ class SqlDelightStorageTest : CommonTest() {
     }
 
     test("dependencies work diamond (one to many and many to one)") {
-      val uuid1 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3599")
+      val uuid1 = TaskId(uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3599"))
       storage.insertTaskNode(uuid1, "uuid1", null, complete = false)
-      val uuid2 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3598")
+      val uuid2 = TaskId(uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3598"))
       storage.insertTaskNode(uuid2, "uuid2", "", complete = false)
-      val uuid3 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3597")
+      val uuid3 = TaskId(uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3597"))
       storage.insertTaskNode(uuid3, "uuid3", "captain picard baby", complete = false)
-      val uuid4 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3596")
+      val uuid4 = TaskId(uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3596"))
       storage.insertTaskNode(uuid4, "uuid4", "no love for worf", complete = false)
 
       // Block the deps like so:
@@ -327,9 +328,9 @@ class SqlDelightStorageTest : CommonTest() {
     }
 
     test("dependencies fail with a small loop") {
-      val uuid1 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3599")
+      val uuid1 = TaskId(uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3599"))
       storage.insertTaskNode(uuid1, "uuid1", null, complete = false)
-      val uuid2 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3598")
+      val uuid2 = TaskId(uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3598"))
       storage.insertTaskNode(uuid2, "uuid2", null, complete = false)
 
       // Block the deps like so:
@@ -344,11 +345,11 @@ class SqlDelightStorageTest : CommonTest() {
     }
 
     test("dependencies fail with a larger loop") {
-      val uuid1 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3599")
+      val uuid1 = TaskId(uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3599"))
       storage.insertTaskNode(uuid1, "uuid1", null, complete = false)
-      val uuid2 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3598")
+      val uuid2 = TaskId(uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3598"))
       storage.insertTaskNode(uuid2, "uuid2", null, complete = false)
-      val uuid3 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3597")
+      val uuid3 = TaskId(uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3597"))
       storage.insertTaskNode(uuid3, "uuid3", null, complete = false)
 
       // Block the deps like so:
@@ -363,11 +364,11 @@ class SqlDelightStorageTest : CommonTest() {
     }
 
     test("child parent relationship fail with a loop") {
-      val uuid1 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3599")
+      val uuid1 = TaskId(uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3599"))
       storage.insertTaskNode(uuid1, "uuid1", null, complete = false)
-      val uuid2 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3598")
+      val uuid2 = TaskId(uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3598"))
       storage.insertTaskNode(uuid2, "uuid2", null, complete = false)
-      val uuid3 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3597")
+      val uuid3 = TaskId(uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3597"))
       storage.insertTaskNode(uuid3, "uuid3", null, complete = false)
 
       // Parent the deps like so:
@@ -387,15 +388,15 @@ class SqlDelightStorageTest : CommonTest() {
     }
 
     test("select all actionable selects non blocked nodes and top level nodes") {
-      val uuid0 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3589")
+      val uuid0 = TaskId(uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3589"))
       storage.insertTaskNode(uuid0, "uuid0", null, complete = false)
-      val uuid1 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3599")
+      val uuid1 = TaskId(uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3599"))
       storage.insertTaskNode(uuid1, "uuid1", null, complete = false)
-      val uuid2 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3598")
+      val uuid2 = TaskId(uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3598"))
       storage.insertTaskNode(uuid2, "uuid2", "", complete = false)
-      val uuid3 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3597")
+      val uuid3 = TaskId(uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3597"))
       storage.insertTaskNode(uuid3, "uuid3", "captain picard baby", complete = false)
-      val uuid4 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3596")
+      val uuid4 = TaskId(uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3596"))
       storage.insertTaskNode(uuid4, "uuid4", "no love for worf", complete = false)
 
       storage.addDependencyRelationship(uuid1, uuid2)
@@ -458,15 +459,15 @@ class SqlDelightStorageTest : CommonTest() {
     }
 
     test("marking incomplete should force dependent tasks to no longer be visibile") {
-      val uuid0 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3589")
+      val uuid0 = TaskId(uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3589"))
       storage.insertTaskNode(uuid0, "uuid0", null, complete = false)
-      val uuid1 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3599")
+      val uuid1 = TaskId(uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3599"))
       storage.insertTaskNode(uuid1, "uuid1", null, complete = false)
-      val uuid2 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3598")
+      val uuid2 = TaskId(uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3598"))
       storage.insertTaskNode(uuid2, "uuid2", "", complete = false)
-      val uuid3 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3597")
+      val uuid3 = TaskId(uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3597"))
       storage.insertTaskNode(uuid3, "uuid3", "captain picard baby", complete = false)
-      val uuid4 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3596")
+      val uuid4 = TaskId(uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3596"))
       storage.insertTaskNode(uuid4, "uuid4", "no love for worf", complete = false)
 
       storage.addDependencyRelationship(uuid1, uuid2)
@@ -507,11 +508,11 @@ class SqlDelightStorageTest : CommonTest() {
     }
 
     test("reparenting operation completes successfully") {
-      val uuid0 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3589")
+      val uuid0 = TaskId(uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3589"))
       storage.insertTaskNode(uuid0, "uuid0", null, complete = false)
-      val uuid1 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3599")
+      val uuid1 = TaskId(uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3599"))
       storage.insertTaskNode(uuid1, "uuid1", null, complete = false)
-      val uuid2 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3598")
+      val uuid2 = TaskId(uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3598"))
       storage.insertTaskNode(uuid2, "uuid2", null, complete = false)
 
       storage.addChildToTaskNode(uuid0, uuid1) shouldBeSuccess Unit
@@ -525,11 +526,11 @@ class SqlDelightStorageTest : CommonTest() {
     }
 
     test("reparenting operation fails when there is no existing parent") {
-      val uuid0 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3589")
+      val uuid0 = TaskId(uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3589"))
       storage.insertTaskNode(uuid0, "uuid0", null, complete = false)
-      val uuid1 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3599")
+      val uuid1 = TaskId(uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3599"))
       storage.insertTaskNode(uuid1, "uuid1", null, complete = false)
-      val uuid2 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3598")
+      val uuid2 = TaskId(uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3598"))
       storage.insertTaskNode(uuid2, "uuid2", null, complete = false)
 
       storage.reparentChildToTaskNode(uuid2, uuid1) shouldBeFailure BYDFailure.ChildHasNoParent(
@@ -538,13 +539,13 @@ class SqlDelightStorageTest : CommonTest() {
     }
 
     test("reparenting operation fails when creates a cycle") {
-      val uuid0 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3589")
+      val uuid0 = TaskId(uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3589"))
       storage.insertTaskNode(uuid0, "uuid0", null, complete = false)
-      val uuid1 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3599")
+      val uuid1 = TaskId(uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3599"))
       storage.insertTaskNode(uuid1, "uuid1", null, complete = false)
-      val uuid2 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3598")
+      val uuid2 = TaskId(uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3598"))
       storage.insertTaskNode(uuid2, "uuid2", null, complete = false)
-      val uuid3 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3597")
+      val uuid3 = TaskId(uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3597"))
       storage.insertTaskNode(uuid3, "uuid3", null, complete = false)
 
       storage.addChildToTaskNode(uuid0, uuid1) shouldBeSuccess Unit
@@ -557,15 +558,15 @@ class SqlDelightStorageTest : CommonTest() {
     }
 
     test("remove task node removes task, children, and blocked/blocking info") {
-      val uuid0 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3589")
+      val uuid0 = TaskId(uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3589"))
       storage.insertTaskNode(uuid0, "uuid0", null, complete = false)
-      val uuid1 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3599")
+      val uuid1 = TaskId(uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3599"))
       storage.insertTaskNode(uuid1, "uuid1", null, complete = false)
-      val uuid2 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3598")
+      val uuid2 = TaskId(uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3598"))
       storage.insertTaskNode(uuid2, "uuid2", null, complete = false)
-      val uuid3 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3597")
+      val uuid3 = TaskId(uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3597"))
       storage.insertTaskNode(uuid3, "uuid3", null, complete = false)
-      val uuid4 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-504fb9ea3597")
+      val uuid4 = TaskId(uuidFrom("3d7f7dd6-c345-49a8-aa1d-504fb9ea3597"))
       storage.insertTaskNode(uuid4, "uuid4", null, complete = false)
 
       storage.addChildToTaskNode(uuid0, uuid1)
@@ -583,15 +584,15 @@ class SqlDelightStorageTest : CommonTest() {
     }
 
     test("remve task recursively removes all chilrdren") {
-      val uuid0 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3589")
+      val uuid0 = TaskId(uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3589"))
       storage.insertTaskNode(uuid0, "uuid0", null, complete = false)
-      val uuid1 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3599")
+      val uuid1 = TaskId(uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3599"))
       storage.insertTaskNode(uuid1, "uuid1", null, complete = false)
-      val uuid2 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3598")
+      val uuid2 = TaskId(uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3598"))
       storage.insertTaskNode(uuid2, "uuid2", null, complete = false)
-      val uuid3 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3597")
+      val uuid3 = TaskId(uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3597"))
       storage.insertTaskNode(uuid3, "uuid3", null, complete = false)
-      val uuid4 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-504fb9ea3597")
+      val uuid4 = TaskId(uuidFrom("3d7f7dd6-c345-49a8-aa1d-504fb9ea3597"))
       storage.insertTaskNode(uuid4, "uuid4", null, complete = false)
 
       storage.addChildToTaskNode(uuid0, uuid1)
@@ -604,21 +605,21 @@ class SqlDelightStorageTest : CommonTest() {
     }
 
     test("remove nonexistant node fails") {
-      val uuid0 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3589")
+      val uuid0 = TaskId(uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3589"))
       storage.insertTaskNode(uuid0, "uuid0", null, complete = false)
-      val uuid1 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3588")
+      val uuid1 = TaskId(uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3588"))
 
       storage.removeTaskNodeAndChildren(uuid1) shouldBeFailure BYDFailure.NonExistentNodeId(uuid1)
     }
 
     test("remove dependency relationship works") {
-      val uuid1 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3599")
+      val uuid1 = TaskId(uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3599"))
       storage.insertTaskNode(uuid1, "uuid1", null, complete = false)
-      val uuid2 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3598")
+      val uuid2 = TaskId(uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3598"))
       storage.insertTaskNode(uuid2, "uuid2", "", complete = false)
-      val uuid3 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3597")
+      val uuid3 = TaskId(uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3597"))
       storage.insertTaskNode(uuid3, "uuid3", "captain picard baby", complete = false)
-      val uuid4 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3596")
+      val uuid4 = TaskId(uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3596"))
       storage.insertTaskNode(uuid4, "uuid4", "no love for worf", complete = false)
 
       storage.addDependencyRelationship(uuid2, uuid1)
@@ -641,13 +642,13 @@ class SqlDelightStorageTest : CommonTest() {
     }
 
     test("fails to remove non existant dep") {
-      val uuid1 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3599")
+      val uuid1 = TaskId(uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3599"))
       storage.insertTaskNode(uuid1, "uuid1", null, complete = false)
-      val uuid2 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3598")
+      val uuid2 = TaskId(uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3598"))
       storage.insertTaskNode(uuid2, "uuid2", "", complete = false)
-      val uuid3 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3597")
+      val uuid3 = TaskId(uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3597"))
       storage.insertTaskNode(uuid3, "uuid3", "captain picard baby", complete = false)
-      val uuid4 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3596")
+      val uuid4 = TaskId(uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3596"))
       storage.insertTaskNode(uuid4, "uuid4", "no love for worf", complete = false)
 
       storage.addDependencyRelationship(uuid2, uuid1)

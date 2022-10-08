@@ -2,11 +2,11 @@ package com.beforeyoudie.common.storage
 
 import co.touchlab.kermit.Logger
 import com.beforeyoudie.common.di.IsDbInMemory
+import com.beforeyoudie.common.state.TaskId
 import com.beforeyoudie.common.state.TaskNode
 import com.beforeyoudie.common.util.BYDFailure
 import com.beforeyoudie.common.util.ResultExt
 import com.beforeyoudie.common.util.getClassLogger
-import com.benasher44.uuid.Uuid
 import com.benasher44.uuid.uuidFrom
 import me.tatarka.inject.annotations.Inject
 
@@ -28,19 +28,19 @@ class SqlDelightBydStorage(
       .executeAsList()
       .map {
         TaskNode(
-          id = uuidFrom(it.id),
+          id = TaskId(uuidFrom(it.id)),
           title = it.title,
           description = it.description,
           isComplete = it.complete,
           // TODO(#1) SQLDELIGHT_BLOCKED remove this if and the other after fixing broken correlated subqueries
-          parent = if (it.parent.isNotBlank()) uuidFrom(it.parent) else null,
-          children = expandUuidList(it.children),
+          parent = if (it.parent.isNotBlank()) TaskId(uuidFrom(it.parent)) else null,
+          children = expandTaskIdList(it.children),
           blockingTasks = if (it.blocking_tasks.isNotEmpty()) {
-            expandUuidList(it.blocking_tasks)
+            expandTaskIdList(it.blocking_tasks)
           } else {
             emptySet()
           },
-          blockedTasks = expandUuidList(it.blocked_tasks)
+          blockedTasks = expandTaskIdList(it.blocked_tasks)
         )
       }
   }
@@ -49,28 +49,28 @@ class SqlDelightBydStorage(
     logger.v("selecting all task nodes that are not blocked")
     return database.taskNodeQueries.selectAllActionableTaskNodes().executeAsList().map {
       TaskNode(
-        id = uuidFrom(it.id),
+        id = TaskId(uuidFrom(it.id)),
         title = it.title,
         description = it.description,
         isComplete = it.complete,
         // TODO(#1) SQLDELIGHT_BLOCKED remove this if and the other after fixing broken correlated subqueries
-        parent = if (it.parent.isNotBlank()) uuidFrom(it.parent) else null,
-        children = expandUuidList(it.children),
+        parent = if (it.parent.isNotBlank()) TaskId(uuidFrom(it.parent)) else null,
+        children = expandTaskIdList(it.children),
         blockingTasks = if (it.blocking_tasks.isNotEmpty()) {
-          expandUuidList(it.blocking_tasks)
+          expandTaskIdList(it.blocking_tasks)
         } else {
           emptySet()
         },
-        blockedTasks = expandUuidList(it.blocked_tasks)
+        blockedTasks = expandTaskIdList(it.blocked_tasks)
       )
     }
   }
 
   override fun insertTaskNode(
-    id: Uuid,
+    id: TaskId,
     title: String,
     description: String?,
-    parent: Uuid?,
+    parent: TaskId?,
     complete: Boolean
   ): Result<TaskNode> {
     logger.v {
@@ -109,21 +109,21 @@ class SqlDelightBydStorage(
     return result
   }
 
-  override fun markComplete(uuid: Uuid): Result<Unit> {
+  override fun markComplete(uuid: TaskId): Result<Unit> {
     logger.v("Marking task: $uuid as complete")
     return simpleUpdate(uuid) {
       database.taskNodeQueries.markTaskComplete(true, uuid.toString())
     }
   }
 
-  override fun markIncomplete(uuid: Uuid): Result<Unit> {
+  override fun markIncomplete(uuid: TaskId): Result<Unit> {
     logger.v("Marking task: $uuid as incomplete")
     return simpleUpdate(uuid) {
       database.taskNodeQueries.markTaskComplete(false, uuid.toString())
     }
   }
 
-  override fun addChildToTaskNode(parent: Uuid, child: Uuid): Result<Unit> {
+  override fun addChildToTaskNode(parent: TaskId, child: TaskId): Result<Unit> {
     // SQLite will throw an exception because child must be unique, I also check for cycles.
     logger.v("Adding child parent relationship parent: $parent child: $child")
     var result: Result<Unit> = Result.success(Unit)
@@ -156,7 +156,7 @@ class SqlDelightBydStorage(
     return result
   }
 
-  override fun reparentChildToTaskNode(newParent: Uuid, child: Uuid): Result<Unit> {
+  override fun reparentChildToTaskNode(newParent: TaskId, child: TaskId): Result<Unit> {
     // SQLite will throw an exception because child must be unique, I also check for cycles and
     // that there is an existing parent.
     logger.v("Reparenting child parent relationship newParent: $newParent child: $child")
@@ -196,7 +196,7 @@ class SqlDelightBydStorage(
     return result
   }
 
-  override fun addDependencyRelationship(blockingTask: Uuid, blockedTask: Uuid): Result<Unit> {
+  override fun addDependencyRelationship(blockingTask: TaskId, blockedTask: TaskId): Result<Unit> {
     logger.v("Adding dependency blockingTask: $blockingTask -> blockedTask: $blockedTask")
     var result: Result<Unit> = Result.success(Unit)
     database.taskNodeQueries.transaction {
@@ -236,14 +236,14 @@ class SqlDelightBydStorage(
     return result
   }
 
-  override fun updateTaskTitle(uuid: Uuid, title: String): Result<Unit> {
+  override fun updateTaskTitle(uuid: TaskId, title: String): Result<Unit> {
     logger.v("Updating task $uuid with title \"$title\"")
     return simpleUpdate(uuid) {
       database.taskNodeQueries.updateTitle(nodeId = uuid.toString(), title = title)
     }
   }
 
-  override fun updateTaskDescription(uuid: Uuid, description: String?): Result<Unit> {
+  override fun updateTaskDescription(uuid: TaskId, description: String?): Result<Unit> {
     logger.v("Updating task $uuid with title \"$description\"")
     return simpleUpdate(uuid) {
       database.taskNodeQueries.updateDescription(
@@ -253,14 +253,14 @@ class SqlDelightBydStorage(
     }
   }
 
-  override fun removeTaskNodeAndChildren(uuid: Uuid): Result<Unit> {
+  override fun removeTaskNodeAndChildren(uuid: TaskId): Result<Unit> {
     logger.v("Removing task and all descendants of $uuid")
     return simpleUpdate(uuid) {
       database.taskNodeQueries.removeTaskNodeAndChildren(uuid.toString())
     }
   }
 
-  override fun removeDependencyRelationship(blockingTask: Uuid, blockedTask: Uuid): Result<Unit> {
+  override fun removeDependencyRelationship(blockingTask: TaskId, blockedTask: TaskId): Result<Unit> {
     logger.v {
       "Removing dependency relationship blockingTask:" +
         "$blockingTask -> blockedTask: $blockedTask"
@@ -282,8 +282,8 @@ class SqlDelightBydStorage(
         rollback()
       }
 
-      val blockedTaskList = expandUuidList(blockingTaskDbEntry.blockedTasks)
-      val blockingTaskList = expandUuidList(blockedTaskDbEntry.blockingTasks)
+      val blockedTaskList = expandTaskIdList(blockingTaskDbEntry.blockedTasks)
+      val blockingTaskList = expandTaskIdList(blockedTaskDbEntry.blockingTasks)
       if (!blockedTaskList.contains(blockedTask) || !blockingTaskList.contains(blockingTask)) {
         logger.e("No dependency blockingTask: $blockingTask -> blockedTask: $blockedTask")
         result = Result.failure(BYDFailure.NoSuchDependencyRelationship(blockingTask, blockedTask))
@@ -299,21 +299,21 @@ class SqlDelightBydStorage(
     return result
   }
 
-  private fun isDependencyAncestorOf(blockingTask: Uuid, blockedTask: Uuid) =
+  private fun isDependencyAncestorOf(blockingTask: TaskId, blockedTask: TaskId) =
     database.taskNodeQueries.isDependencyAncestorOf(
       blockedTask.toString(),
       blockingTask.toString()
     ).executeAsOne() != 0L
 
-  private fun isParentAncestorOf(parentTask: Uuid, childTask: Uuid) =
+  private fun isParentAncestorOf(parentTask: TaskId, childTask: TaskId) =
     database.taskNodeQueries.isParentAncestorOf(
       childTask.toString(),
       parentTask.toString()
     ).executeAsOne() != 0L
 
   private inline fun simpleUpdate(
-    uuid: Uuid,
-    crossinline updateOperation: (Uuid) -> Unit
+    uuid: TaskId,
+    crossinline updateOperation: (TaskId) -> Unit
   ): Result<Unit> {
     var result: Result<Unit> = Result.success(Unit)
     database.transaction {
@@ -332,7 +332,7 @@ class SqlDelightBydStorage(
   }
 }
 
-fun expandUuidList(s: String?) = expandDelimitedList(s, mapper = ::uuidFrom)
+fun expandTaskIdList(s: String?) = expandDelimitedTaskIdList(s) { TaskId(uuidFrom(it)) }
 
-fun <T> expandDelimitedList(str: String?, delim: String = ",", mapper: (String) -> T) =
+fun <T> expandDelimitedTaskIdList(str: String?, delim: String = ",", mapper: (String) -> T) =
   str?.splitToSequence(delim)?.map { child -> mapper(child) }?.toSet() ?: emptySet()

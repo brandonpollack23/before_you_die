@@ -3,21 +3,25 @@ package com.beforeyoudie.common.applogic
 import co.touchlab.kermit.Logger
 import com.arkivanov.essenty.parcelable.Parcelable
 import com.arkivanov.essenty.parcelable.Parcelize
+import com.beforeyoudie.common.state.TaskId
 import com.beforeyoudie.common.state.TaskNode
 import com.beforeyoudie.common.storage.IBydStorage
-import com.benasher44.uuid.Uuid
 import com.benasher44.uuid.uuid4
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.onEach
 
+// TODO NOW doc all
+
 /** Interface representing any task graph app logic (this includes list, filtered lists, and graph). */
 interface IAppLogicTaskGraph {
   val appLogicTaskGraphConfig: AppLogicTaskGraphConfig
 
-  fun createTask(title: String, description: String?, parent: Uuid?)
+  fun createTask(title: String, description: String?, parent: TaskId?)
 
-  fun deleteTaskAndChildren(uuid: Uuid)
+  fun deleteTaskAndChildren(uuid: TaskId)
+
+  fun openEdit(uuid: TaskId)
 }
 
 /**
@@ -45,11 +49,11 @@ enum class VisibilityMode {
  */
 sealed interface TaskGraphEvent {
   /** Create a task with the specified parameters. */
-  data class CreateTask(val title: String, val description: String?, val parent: Uuid?) :
+  data class CreateTask(val title: String, val description: String?, val parent: TaskId?) :
     TaskGraphEvent
 
   /** Delete a task with the specified uuid. */
-  data class DeleteTaskAndChildren(val uuid: Uuid) : TaskGraphEvent
+  data class DeleteTaskAndChildren(val uuid: TaskId) : TaskGraphEvent
 }
 
 /**
@@ -65,7 +69,7 @@ fun createTaskGraphEventsFlow(
     when (it) {
       is TaskGraphEvent.CreateTask -> {
         storage.insertTaskNode(
-          uuid4(),
+          TaskId(uuid4()),
           it.title,
           it.description,
           complete = false

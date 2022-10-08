@@ -1,6 +1,6 @@
 package com.beforeyoudie.common.util
 
-import com.benasher44.uuid.Uuid
+import com.beforeyoudie.common.state.TaskId
 
 /**
  * Extension functions for [Result]
@@ -26,18 +26,18 @@ sealed class BYDFailure(cause: Throwable? = null) : Throwable(cause) {
   data class InsertionFailure(private val inner: Throwable) : BYDFailure(inner)
 
   /** A child can only have one parent, remove existing relationship first or use the reparent operation. */
-  data class DuplicateParent(private val uuid: Uuid) : BYDFailure()
+  data class DuplicateParent(private val uuid: TaskId) : BYDFailure()
 
   /** Moving a child to a new parent requires it already has one. */
-  data class ChildHasNoParent(val uuid: Uuid) : BYDFailure()
+  data class ChildHasNoParent(val uuid: TaskId) : BYDFailure()
 
   /** Operation tried to use a node id that didn't exist */
-  data class NonExistentNodeId(val uuid: Uuid) : BYDFailure()
+  data class NonExistentNodeId(val uuid: TaskId) : BYDFailure()
 
   /** Cycles aren't allowed, the dependency graph is a DAG */
-  data class OperationWouldIntroduceCycle(val uuid1: Uuid, val uuid2: Uuid) : BYDFailure()
+  data class OperationWouldIntroduceCycle(val uuid1: TaskId, val uuid2: TaskId) : BYDFailure()
 
   /** These two tasks don't have a dependency relationship, so nothing to remove, etc. */
-  data class NoSuchDependencyRelationship(val blockingTask: Uuid, val blockedTask: Uuid) :
+  data class NoSuchDependencyRelationship(val blockingTask: TaskId, val blockedTask: TaskId) :
     BYDFailure()
 }
