@@ -50,6 +50,13 @@ class RootDecomposeComponent(
   IAppLogicRoot,
   ComponentContext by componentContext {
   val logger = getClassLogger()
+  // The couroutine scope could come from external and the methods on the children of the root
+  // could be "suspend", but since we maintain the lifecycle of these components separately there
+  // is no reason to force the burden onto consumers of this library, we can use our own tree of
+  // coroutine scopes.
+  //
+  // In other words, the source of truth of app state is not the UI but this heirarchy, and so it is
+  // our coroutine context tree that should be used.
   private val coroutineScope = coroutineScopeWithLifecycle(applicationCoroutineContext)
 
   // TODO NOW state preservation. Also include coroutine scope: https://arkivanov.github.io/Decompose/component/scopes/#creating-a-coroutinescope-in-a-component
