@@ -25,6 +25,7 @@ sealed interface DeepLink {
  */
 data class AppState(val taskGraph: Collection<TaskNode> = emptySet()) {
   companion object {
+    // TODO NOW can i instead just create the lens launch a collect in a coroutine of some sort READ?
     fun createTaskGraphStateFlow(appStateFlow: MutableStateFlow<AppState>): MutableStateFlow<Collection<TaskNode>>{
       val f = MutableStateFlow(appStateFlow.value.taskGraph)
       f.onEach {
