@@ -6,7 +6,6 @@ import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.childStack
 import com.arkivanov.decompose.value.Value
 import com.arkivanov.essenty.lifecycle.Lifecycle
-import com.arkivanov.essenty.lifecycle.doOnDestroy
 import com.arkivanov.essenty.parcelable.Parcelable
 import com.arkivanov.essenty.parcelable.Parcelize
 import com.beforeyoudie.common.applogic.AppLogicEditConfig
@@ -21,12 +20,9 @@ import com.beforeyoudie.common.applogic.createTaskGraphEventsFlow
 import com.beforeyoudie.common.di.ApplicationCoroutineContext
 import com.beforeyoudie.common.storage.IBydStorage
 import com.beforeyoudie.common.util.getClassLogger
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.plus
 import kotlinx.coroutines.runBlocking
 import me.tatarka.inject.annotations.Inject
 import kotlin.coroutines.CoroutineContext
@@ -54,7 +50,7 @@ class RootDecomposeComponent(
   IAppLogicRoot,
   ComponentContext by componentContext {
   val logger = getClassLogger()
-  private val coroutineScope = coroutineScopeWithLifecycle(applicationCoroutineContext, lifecycle)
+  private val coroutineScope = coroutineScopeWithLifecycle(applicationCoroutineContext)
 
   // TODO NOW state preservation. Also include coroutine scope: https://arkivanov.github.io/Decompose/component/scopes/#creating-a-coroutinescope-in-a-component
   override val appState = MutableStateFlow(AppState())
@@ -91,8 +87,8 @@ class RootDecomposeComponent(
         IAppLogicRoot.Child.TaskGraph(
           appLogicTaskGraphFactory.createTaskGraph(
             config.taskGraphConfig,
-            Job(),
             events,
+            coroutineContext,
             componentContext
           )
         )
@@ -100,7 +96,7 @@ class RootDecomposeComponent(
 
       // TODO NOW do edit now as well
       is NavigationConfig.Edit -> IAppLogicRoot.Child.EditTask(
-        appLogicEditFactory.createEdit(componentContext)
+        appLogicEditFactory.createEdit(coroutineContext, componentContext)
       )
     }
   }
@@ -130,8 +126,8 @@ private sealed class NavigationConfig : Parcelable {
 interface AppLogicTaskGraphFactory {
   fun createTaskGraph(
     appLogicTaskGraphConfig: AppLogicTaskGraphConfig,
-    coroutineContext: CoroutineContext,
     taskGraphEvents: MutableSharedFlow<TaskGraphEvent>,
+    coroutineContext: CoroutineContext,
     componentContext: ComponentContext
   ): IAppLogicTaskGraph
 }
@@ -143,13 +139,13 @@ interface AppLogicTaskGraphFactory {
 class AppLogicTaskGraphFactoryImpl : AppLogicTaskGraphFactory {
   override fun createTaskGraph(
     appLogicTaskGraphConfig: AppLogicTaskGraphConfig,
-    coroutineContext: CoroutineContext,
     taskGraphEvents: MutableSharedFlow<TaskGraphEvent>,
+    coroutineContext: CoroutineContext,
     componentContext: ComponentContext
   ): IAppLogicTaskGraph = TaskGraphDecomposeComponent(
     appLogicTaskGraphConfig,
-    coroutineContext,
     taskGraphEvents,
+    coroutineContext,
     componentContext
   )
 }
@@ -160,7 +156,7 @@ class AppLogicTaskGraphFactoryImpl : AppLogicTaskGraphFactory {
  * Factory is helpful because it allows construction to be overridden and changed in the future and in tests.
  */
 interface AppLogicEditFactory {
-  fun createEdit(componentContext: ComponentContext): IAppLogicEdit
+  fun createEdit(coroutineContext: CoroutineContext, componentContext: ComponentContext): IAppLogicEdit
 }
 
 /**
@@ -168,13 +164,8 @@ interface AppLogicEditFactory {
  */
 @Inject
 class AppLogicEditFactoryImpl : AppLogicEditFactory {
-  override fun createEdit(componentContext: ComponentContext) =
+  override fun createEdit(coroutineContext: CoroutineContext, componentContext: ComponentContext) =
     EditDecomposeComponent(componentContext)
 }
 
-private fun coroutineScopeWithLifecycle(coroutineContext: CoroutineContext, lifecycle: Lifecycle): CoroutineScope {
-  val scope = CoroutineScope(coroutineContext) + Job()
-  lifecycle.doOnDestroy(scope::cancel)
-  return scope
-}
 
