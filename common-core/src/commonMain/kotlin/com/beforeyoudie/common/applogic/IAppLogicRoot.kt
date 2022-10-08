@@ -3,8 +3,6 @@ package com.beforeyoudie.common.applogic
 import com.beforeyoudie.common.state.TaskNode
 import kotlinx.coroutines.flow.MutableStateFlow
 
-// TODO NOW doc
-
 /** Interface representing the root applogic component. */
 interface IAppLogicRoot {
   val appState: MutableStateFlow<AppState>
@@ -21,4 +19,7 @@ sealed interface DeepLink {
   object None : DeepLink
 }
 
+/**
+ * The overall application state, this includes the state of the graph, any ui elements, etc.
+ */
 data class AppState(val taskGraph: Collection<TaskNode> = emptySet())

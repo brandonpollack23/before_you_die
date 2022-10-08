@@ -11,8 +11,6 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.onEach
 
-// TODO NOW doc and discuss why flows and not passing around interfaces
-
 /** Interface representing any task graph app logic (this includes list, filtered lists, and graph). */
 interface IAppLogicTaskGraph {
   val appLogicTaskGraphConfig: AppLogicTaskGraphConfig
@@ -23,7 +21,7 @@ interface IAppLogicTaskGraph {
 }
 
 /**
- * Task Graph CoreLogic configuration.
+ * Task Graph CoreLogic configuration.  This is exposed to the top level so the UI can change based on it.
  *
  * @property viewMode is it a list or a graph view (when supported)
  * @property visibilityMode Are all tasks visible or only non-blocked ones?
@@ -33,24 +31,30 @@ data class AppLogicTaskGraphConfig(
   val viewMode: ViewMode = ViewMode.List,
   val visibilityMode: VisibilityMode = VisibilityMode.AllTasks
 ) : Parcelable
-
 enum class ViewMode {
   List,
   NodalGraph
 }
-
 enum class VisibilityMode {
   AllTasks,
   ActionableTasks
 }
 
+/**
+ * These are the events emitted by the reactive stream/flow for UI constructed by [createTaskGraphEventsFlow]
+ */
 sealed interface TaskGraphEvent {
+  /** Create a task with the specified parameters. */
   data class CreateTask(val title: String, val description: String?, val parent: Uuid?) :
     TaskGraphEvent
 
+  /** Delete a task with the specified uuid. */
   data class DeleteTaskAndChildren(val uuid: Uuid) : TaskGraphEvent
 }
 
+/**
+ * Sets up a flow for the task graph CoreLogic. The constructor of this flow passes in flows (generally lenses on its own state) to be reacted to accordingly.
+ */
 fun createTaskGraphEventsFlow(
   storage: IBydStorage,
   taskNodes: MutableStateFlow<Collection<TaskNode>>,
