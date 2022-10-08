@@ -6,6 +6,7 @@ import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.childStack
 import com.arkivanov.decompose.value.Value
 import com.arkivanov.essenty.lifecycle.Lifecycle
+import com.arkivanov.essenty.lifecycle.doOnDestroy
 import com.arkivanov.essenty.parcelable.Parcelable
 import com.arkivanov.essenty.parcelable.Parcelize
 import com.beforeyoudie.common.applogic.AppLogicEditConfig
@@ -20,10 +21,12 @@ import com.beforeyoudie.common.applogic.createTaskGraphEventsFlow
 import com.beforeyoudie.common.di.ApplicationCoroutineContext
 import com.beforeyoudie.common.storage.IBydStorage
 import com.beforeyoudie.common.util.getClassLogger
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.plus
 import kotlinx.coroutines.runBlocking
 import me.tatarka.inject.annotations.Inject
 import kotlin.coroutines.CoroutineContext
@@ -51,11 +54,13 @@ class RootDecomposeComponent(
   IAppLogicRoot,
   ComponentContext by componentContext {
   val logger = getClassLogger()
+  private val coroutineScope = coroutineScopeWithLifecycle(applicationCoroutineContext, lifecycle)
 
-  // TODO NOW state preservation.
+  // TODO NOW state preservation. Also include coroutine scope: https://arkivanov.github.io/Decompose/component/scopes/#creating-a-coroutinescope-in-a-component
   override val appState = MutableStateFlow(AppState())
   // AppState lenses.
-  private val taskGraphStateFlow = AppState.createTaskGraphStateFlow(appState)
+  private val taskGraphStateFlow =
+    AppState.createTaskGraphStateFlow(coroutineScope, appState)
 
   init {
     // Lifecycle setup.
@@ -166,3 +171,10 @@ class AppLogicEditFactoryImpl : AppLogicEditFactory {
   override fun createEdit(componentContext: ComponentContext) =
     EditDecomposeComponent(componentContext)
 }
+
+private fun coroutineScopeWithLifecycle(coroutineContext: CoroutineContext, lifecycle: Lifecycle): CoroutineScope {
+  val scope = CoroutineScope(coroutineContext) + Job()
+  lifecycle.doOnDestroy(scope::cancel)
+  return scope
+}
+

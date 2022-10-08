@@ -1,8 +1,10 @@
 package com.beforeyoudie.common.applogic
 
 import com.beforeyoudie.common.state.TaskNode
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
 
 /** Interface representing the root applogic component. */
 interface IAppLogicRoot {
@@ -25,11 +27,12 @@ sealed interface DeepLink {
  */
 data class AppState(val taskGraph: Collection<TaskNode> = emptySet()) {
   companion object {
-    // TODO NOW can i instead just create the lens launch a collect in a coroutine of some sort READ?
-    fun createTaskGraphStateFlow(appStateFlow: MutableStateFlow<AppState>): MutableStateFlow<Collection<TaskNode>>{
+    fun createTaskGraphStateFlow(coroutineScope: CoroutineScope, appStateFlow: MutableStateFlow<AppState>): MutableStateFlow<Collection<TaskNode>> {
       val f = MutableStateFlow(appStateFlow.value.taskGraph)
-      f.onEach {
-        appStateFlow.value = appStateFlow.value.copy(taskGraph = it)
+      coroutineScope.launch {
+        f.collect {
+          appStateFlow.value = appStateFlow.value.copy(taskGraph = it)
+        }
       }
       return f
     }
