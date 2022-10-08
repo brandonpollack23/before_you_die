@@ -25,8 +25,6 @@ kotlin {
       dependencies {
         implementation(libs.decompose)
         implementation(libs.kermit)
-        implementation(libs.kermit.koin)
-        implementation(libs.koin.core)
         implementation(libs.kotlinx.coroutines.core)
         implementation(libs.uuid)
         implementation(libs.di.kotlinInject.runtime)
@@ -35,11 +33,11 @@ kotlin {
 
     val androidMain by getting {
       dependencies {
-        implementation(libs.koin.android)
         implementation(libs.sqldelight.android)
         implementation(libs.requiry.sqliteandroid)
         implementation(libs.kotlinx.coroutines.android)
       }
+      kotlin.srcDir("build/generated/ksp/android/androidRelease/kotlin")
     }
 
     val jvmMain by getting {
@@ -53,7 +51,6 @@ kotlin {
     val commonTest by getting {
       dependencies {
         implementation(libs.mockk)
-        implementation(libs.koin.test)
         implementation(libs.kotest.koin)
         implementation(libs.kotlinx.coroutines.test)
       }
@@ -62,7 +59,6 @@ kotlin {
     val androidTest by getting {
       dependencies {
         implementation(libs.kotest.runner.junit5)
-        implementation(libs.koin.core)
       }
     }
 
@@ -72,7 +68,6 @@ kotlin {
         implementation(libs.kotest)
         implementation(libs.kotest.assertions)
         implementation(libs.kotest.properties)
-        implementation(libs.koin.test)
       }
       kotlin.srcDir("build/generated/ksp/jvm/jvmTest/kotlin")
     }
@@ -114,12 +109,12 @@ android {
     }
   }
   sourceSets {
-    named("release") {
-      kotlin.srcDir("build/generated/ksp/android/androidRelease/kotlin")
-    }
-    named("debug") {
-      kotlin.srcDir("build/generated/ksp/android/androidDebug/kotlin")
-    }
+    // named("release") {
+      // kotlin.srcDir("build/generated/ksp/android/androidRelease/kotlin")
+    // }
+    // named("debug") {
+    //   kotlin.srcDir("build/generated/ksp/android/androidDebug/kotlin")
+    // }
   }
   dependencies {
     coreLibraryDesugaring(libs.desugar)

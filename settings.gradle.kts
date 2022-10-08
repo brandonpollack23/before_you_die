@@ -35,34 +35,6 @@ dependencyResolutionManagement {
       library("kotlinx-coroutines-swing", "org.jetbrains.kotlinx:kotlinx-coroutines-swing:$coroutinesVersion")
       library("kotlinx-coroutines-test", "org.jetbrains.kotlinx:kotlinx-coroutines-test:$coroutinesVersion")
 
-      // Koin DI
-      val koinVersion = "3.2.2"
-      val koinAndroidVersion = "3.2.2"
-      val koinAndroidComposeVersion = "3.2.1"
-      val koinKtorVersion = "3.2.2"
-      library("koin-core", "io.insert-koin:koin-core:$koinVersion")
-      library("koin-test", "io.insert-koin:koin-test:$koinVersion")
-      library("koin-test-junit5", "io.insert-koin:koin-test-junit5:$koinVersion")
-      library("koin-android", "io.insert-koin:koin-android:$koinAndroidVersion")
-      library(
-        "koin-android-javacompat",
-        "io.insert-koin:koin-android-compat:$koinAndroidVersion"
-      ) // Java Compatibility
-      library(
-        "koin-androidx-workmanager",
-        "io.insert-koin:koin-androidx-workmanager:$koinAndroidVersion"
-      ) // Jetpack WorkManager
-      library(
-        "koin-androidx-navigation",
-        "io.insert-koin:koin-androidx-navigation:$koinAndroidVersion"
-      ) // Navigation Graph
-      library(
-        "koin-androidx-compose",
-        "io.insert-koin:koin-androidx-compose:$koinAndroidComposeVersion"
-      )
-      library("koin-ktor", "io.insert-koin:koin-ktor:$koinKtorVersion")
-      library("koin-ktor-logger-slf4j", "io.insert-koin:koin-logger-slf4j:$koinKtorVersion")
-
       // Logging
       val kermitVersion = "1.1.3"
       library("kermit", "co.touchlab:kermit:$kermitVersion")
