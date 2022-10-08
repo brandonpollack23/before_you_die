@@ -35,6 +35,7 @@ class SqlDelightStorageTest : CommonTest() {
       storage.isInMemory shouldBe true
     }
 
+    // TODO NOW after changing insert interface add checking to make sure TaskNodes are returned as well.
     test("basic retrieval and insertion with no deps or children") {
       val uuid1 = uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3599")
       storage.insertTaskNode(uuid1, "uuid1", null, false)

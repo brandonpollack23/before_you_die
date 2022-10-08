@@ -15,17 +15,21 @@ import com.beforeyoudie.common.applogic.DeepLink
 import com.beforeyoudie.common.applogic.IAppLogicEdit
 import com.beforeyoudie.common.applogic.IAppLogicRoot
 import com.beforeyoudie.common.applogic.IAppLogicTaskGraph
-import com.beforeyoudie.common.applogic.TaskGraphOperations
+import com.beforeyoudie.common.applogic.TaskGraphEvent
+import com.beforeyoudie.common.applogic.createTaskGraphEventsFlow
 import com.beforeyoudie.common.di.ApplicationCoroutineContext
 import com.beforeyoudie.common.storage.IBydStorage
-import com.benasher44.uuid.Uuid
-import com.benasher44.uuid.uuid4
-import kotlinx.coroutines.CoroutineScope
+import com.beforeyoudie.common.util.getClassLogger
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.runBlocking
 import me.tatarka.inject.annotations.Inject
+import kotlin.coroutines.CoroutineContext
 
 // TODO NOW LAST implement children
-// TODO NOW test children?
+// TODO NOW test children
 
 /** This is the root CoreLogic component.  While the other components in the Decompose world are
  * created dynamically by this class, this one is a singleton and is thus injected by my DI
@@ -39,7 +43,7 @@ import me.tatarka.inject.annotations.Inject
 @Inject
 class RootDecomposeComponent(
   componentContext: ComponentContext,
-  private val coroutineContext: ApplicationCoroutineContext,
+  private val applicationCoroutineContext: ApplicationCoroutineContext,
   private val deepLink: DeepLink = DeepLink.None,
   private val storage: IBydStorage,
   private val appLogicTaskGraphFactory: AppLogicTaskGraphFactory,
@@ -47,16 +51,25 @@ class RootDecomposeComponent(
 ) :
   IAppLogicRoot,
   ComponentContext by componentContext {
+  val logger = getClassLogger()
+
+  // TODO NOW state preservation.
+  override val appState = MutableStateFlow(AppState())
+  private val taskGraphStateFlow = MutableStateFlow(appState.value.taskGraph)
+
   init {
+    // Lifecycle setup.
     lifecycle.subscribe(object : Lifecycle.Callbacks {
       override fun onCreate() {
         appState.value = AppState(storage.selectAllTaskNodeInformation())
       }
     })
-  }
 
-  // TODO NOW state preservation.
-  override val appState = MutableStateFlow(AppState())
+    // Stateflow lenses.
+    taskGraphStateFlow.onEach {
+      appState.value = appState.value.copy(taskGraph = it)
+    }
+  }
 
   private val navigation = StackNavigation<NavigationConfig>()
 
@@ -70,38 +83,24 @@ class RootDecomposeComponent(
   private fun createChild(
     config: NavigationConfig,
     componentContext: ComponentContext
-  ): IAppLogicRoot.Child =
+  ): IAppLogicRoot.Child = runBlocking(applicationCoroutineContext) {
     when (config) {
       is NavigationConfig.TaskGraph -> {
-        // Listen to updates to the task graph and apply them to the application state.
+        val events = createTaskGraphEventsFlow(storage, taskGraphStateFlow, logger)
         IAppLogicRoot.Child.TaskGraph(
           appLogicTaskGraphFactory.createTaskGraph(
-            taskGraphOperations,
             config.taskGraphConfig,
-            CoroutineScope(coroutineContext),
+            Job(),
+            events,
             componentContext
           )
         )
       }
 
-      // TODO NOW make an edit corelogic impl
+      // TODO NOW do edit now as well
       is NavigationConfig.Edit -> IAppLogicRoot.Child.EditTask(
         appLogicEditFactory.createEdit(componentContext)
       )
-    }
-
-  private val taskGraphOperations = object : TaskGraphOperations {
-    override fun addTask(
-      title: String,
-      description: String?,
-      parent: Uuid?
-    ) {
-      // TODO NOW remove complete, add parent.
-      storage.insertTaskNode(uuid4(), title, description, false)
-    }
-
-    override fun deleteTaskAndChildren(uuid: Uuid) {
-      storage.removeTaskNodeAndChildren(uuid)
     }
   }
 
@@ -129,9 +128,9 @@ private sealed class NavigationConfig : Parcelable {
  */
 interface AppLogicTaskGraphFactory {
   fun createTaskGraph(
-    taskGraphOperations: TaskGraphOperations,
     appLogicTaskGraphConfig: AppLogicTaskGraphConfig,
-    coroutineScope: CoroutineScope,
+    coroutineContext: CoroutineContext,
+    taskGraphEvents: MutableSharedFlow<TaskGraphEvent>,
     componentContext: ComponentContext
   ): IAppLogicTaskGraph
 }
@@ -142,14 +141,14 @@ interface AppLogicTaskGraphFactory {
 @Inject
 class AppLogicTaskGraphFactoryImpl : AppLogicTaskGraphFactory {
   override fun createTaskGraph(
-    taskGraphOperations: TaskGraphOperations,
     appLogicTaskGraphConfig: AppLogicTaskGraphConfig,
-    coroutineScope: CoroutineScope,
+    coroutineContext: CoroutineContext,
+    taskGraphEvents: MutableSharedFlow<TaskGraphEvent>,
     componentContext: ComponentContext
   ): IAppLogicTaskGraph = TaskGraphDecomposeComponent(
     appLogicTaskGraphConfig,
-    coroutineScope,
-    taskGraphOperations,
+    coroutineContext,
+    taskGraphEvents,
     componentContext
   )
 }

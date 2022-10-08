@@ -28,12 +28,13 @@ interface IBydStorage {
    *
    * @returns [Result] of with fail type [com.beforeyoudie.common.util.BYDFailure.InsertionFailure]
    */
+  // TODO NOW remove complete, add parent.
   fun insertTaskNode(
     id: Uuid,
     title: String,
     description: String?,
     complete: Boolean
-  ): Result<Unit>
+  ): Result<TaskNode>
 
   /** Mark a task as done, returning an error if it doesn't exist. */
   fun markComplete(uuid: Uuid): Result<Unit>

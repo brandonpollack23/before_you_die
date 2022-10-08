@@ -69,7 +69,7 @@ class SqlDelightBydStorage(
     title: String,
     description: String?,
     complete: Boolean
-  ): Result<Unit> {
+  ): Result<TaskNode> {
     logger.v {
       "Inserting task: id: $id\n\ttitle: \"$title\"\n\t" +
         "description: \"$description\"\n\tcomplete: $complete"
@@ -81,6 +81,8 @@ class SqlDelightBydStorage(
         description,
         complete
       )
+
+      TaskNode(id, title, complete, description)
     }
   }
 
