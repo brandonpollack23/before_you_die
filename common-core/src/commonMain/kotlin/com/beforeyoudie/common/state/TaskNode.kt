@@ -20,8 +20,8 @@ typealias TaskId = Uuid
 data class TaskNode(
   val id: TaskId = uuid4(),
   val title: String,
-  val isComplete: Boolean = false,
   val description: String? = null,
+  val isComplete: Boolean = false,
   val parent: Uuid? = null,
   val children: Set<Uuid> = setOf(),
   val blockingTasks: Set<Uuid> = setOf(),

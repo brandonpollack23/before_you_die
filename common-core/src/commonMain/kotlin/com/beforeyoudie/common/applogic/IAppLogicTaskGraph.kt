@@ -68,7 +68,7 @@ fun createTaskGraphEventsFlow(
           uuid4(),
           it.title,
           it.description,
-          false
+          complete = false
         ).onFailure { error ->
           // TODO ERRORS add failure state (flow) and handle failures?
           logger.e("Failed to insert node! $error")

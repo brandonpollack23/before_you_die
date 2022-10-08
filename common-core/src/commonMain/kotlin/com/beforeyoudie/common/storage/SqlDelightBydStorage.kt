@@ -10,6 +10,8 @@ import com.benasher44.uuid.Uuid
 import com.benasher44.uuid.uuidFrom
 import me.tatarka.inject.annotations.Inject
 
+// TODO(#11) STORAGE use the result type transaction to cleanup some of the mutation style code here.
+
 /**
  * Sqlite implementation of [IBydStorage]
  */
@@ -28,8 +30,8 @@ class SqlDelightBydStorage(
         TaskNode(
           id = uuidFrom(it.id),
           title = it.title,
-          isComplete = it.complete,
           description = it.description,
+          isComplete = it.complete,
           // TODO(#1) SQLDELIGHT_BLOCKED remove this if and the other after fixing broken correlated subqueries
           parent = if (it.parent.isNotBlank()) uuidFrom(it.parent) else null,
           children = expandUuidList(it.children),
@@ -49,8 +51,8 @@ class SqlDelightBydStorage(
       TaskNode(
         id = uuidFrom(it.id),
         title = it.title,
-        isComplete = it.complete,
         description = it.description,
+        isComplete = it.complete,
         // TODO(#1) SQLDELIGHT_BLOCKED remove this if and the other after fixing broken correlated subqueries
         parent = if (it.parent.isNotBlank()) uuidFrom(it.parent) else null,
         children = expandUuidList(it.children),
@@ -68,22 +70,43 @@ class SqlDelightBydStorage(
     id: Uuid,
     title: String,
     description: String?,
+    parent: Uuid?,
     complete: Boolean
   ): Result<TaskNode> {
     logger.v {
       "Inserting task: id: $id\n\ttitle: \"$title\"\n\t" +
-        "description: \"$description\"\n\tcomplete: $complete"
+        "description: \"$description\"\n\tcomplete: $complete" +
+        "parent: $parent"
     }
-    return ResultExt.asResult(BYDFailure::InsertionFailure) {
+
+    var result = Result.success(TaskNode(id, title, description, complete, parent))
+    database.transaction {
+      if (parent != null) {
+        if (database.taskNodeQueries.selectTaskNode(parent.toString())
+            .executeAsOneOrNull() == null
+        ) {
+          result = Result.failure(BYDFailure.NonExistentNodeId(parent))
+          rollback()
+        }
+
+        // This shouldnt even be possible. It isnt possible with a brand new node, no one can point to it. (assuming it isnt a weird undeleted state, but I check for that elsewhere).
+        if (isParentAncestorOf(parent, id)) {
+          logger.a("parent: $parent child: $id relationship would introduce a cycle!")
+          result = Result.failure(BYDFailure.OperationWouldIntroduceCycle(parent, id))
+        }
+
+        database.taskNodeQueries.addChildToTaskNode(parent.toString(), id.toString())
+      }
+
       database.taskNodeQueries.insertTaskNode(
         id.toString(),
         title,
         description,
         complete
       )
-
-      TaskNode(id, title, complete, description)
     }
+
+    return result
   }
 
   override fun markComplete(uuid: Uuid): Result<Unit> {
