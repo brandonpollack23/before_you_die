@@ -4,6 +4,7 @@ import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.router.stack.ChildStack
 import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.childStack
+import com.arkivanov.decompose.router.stack.push
 import com.arkivanov.decompose.value.Value
 import com.arkivanov.essenty.lifecycle.Lifecycle
 import com.arkivanov.essenty.parcelable.Parcelable
@@ -18,6 +19,7 @@ import com.beforeyoudie.common.applogic.IAppLogicTaskGraph
 import com.beforeyoudie.common.applogic.TaskGraphEvent
 import com.beforeyoudie.common.applogic.createTaskGraphEventsFlow
 import com.beforeyoudie.common.di.ApplicationCoroutineContext
+import com.beforeyoudie.common.state.TaskId
 import com.beforeyoudie.common.storage.IBydStorage
 import com.beforeyoudie.common.util.getClassLogger
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -27,7 +29,7 @@ import kotlinx.coroutines.runBlocking
 import me.tatarka.inject.annotations.Inject
 import kotlin.coroutines.CoroutineContext
 
-// TODO NOW test children
+// TODO NOW test this (navigation) and children
 
 /** This is the root CoreLogic component.  While the other components in the Decompose world are
  * created dynamically by this class, this one is a singleton and is thus injected by my DI
@@ -93,7 +95,12 @@ class RootDecomposeComponent(
   ): IAppLogicRoot.Child = runBlocking(applicationCoroutineContext) {
     when (config) {
       is NavigationConfig.TaskGraph -> {
-        val events = createTaskGraphEventsFlow(storage, taskGraphStateFlow, logger)
+        val events = createTaskGraphEventsFlow(
+          storage,
+          taskGraphStateFlow,
+          ::onOpenEdit,
+          logger
+        )
         IAppLogicRoot.Child.TaskGraph(
           appLogicTaskGraphFactory.createTaskGraph(
             config.taskGraphConfig,
@@ -110,6 +117,10 @@ class RootDecomposeComponent(
         appLogicEditFactory.createEdit(coroutineContext, componentContext)
       )
     }
+  }
+
+  private fun onOpenEdit(taskId: TaskId) {
+    navigation.push(NavigationConfig.Edit(AppLogicEditConfig(taskId)))
   }
 
   private companion object {

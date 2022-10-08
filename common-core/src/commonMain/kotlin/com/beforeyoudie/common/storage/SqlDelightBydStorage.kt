@@ -260,7 +260,10 @@ class SqlDelightBydStorage(
     }
   }
 
-  override fun removeDependencyRelationship(blockingTask: TaskId, blockedTask: TaskId): Result<Unit> {
+  override fun removeDependencyRelationship(
+    blockingTask: TaskId,
+    blockedTask: TaskId
+  ): Result<Unit> {
     logger.v {
       "Removing dependency relationship blockingTask:" +
         "$blockingTask -> blockedTask: $blockedTask"

@@ -2,7 +2,7 @@ package com.beforeyoudie.common.applogic
 
 import com.arkivanov.essenty.parcelable.Parcelable
 import com.arkivanov.essenty.parcelable.Parcelize
-import com.benasher44.uuid.Uuid
+import com.beforeyoudie.common.state.TaskId
 
 /** Interface representing the editor logic for a task. */
 interface IAppLogicEdit
@@ -12,4 +12,4 @@ interface IAppLogicEdit
  * enabled ().
 */
 @Parcelize
-data class AppLogicEditConfig(val taskNodeId: Uuid) : Parcelable
+data class AppLogicEditConfig(val taskNodeId: TaskId) : Parcelable

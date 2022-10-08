@@ -53,7 +53,9 @@ sealed interface TaskGraphEvent {
     TaskGraphEvent
 
   /** Delete a task with the specified uuid. */
-  data class DeleteTaskAndChildren(val uuid: TaskId) : TaskGraphEvent
+  data class DeleteTaskAndChildren(val taskId: TaskId) : TaskGraphEvent
+
+  data class OpenEdit(val taskId: TaskId) : TaskGraphEvent
 }
 
 /**
@@ -61,7 +63,8 @@ sealed interface TaskGraphEvent {
  */
 fun createTaskGraphEventsFlow(
   storage: IBydStorage,
-  taskNodes: MutableStateFlow<Collection<TaskNode>>,
+  taskGraphStateFlow: MutableStateFlow<Collection<TaskNode>>,
+  onOpenEdit: (TaskId) -> Unit,
   logger: Logger
 ): MutableSharedFlow<TaskGraphEvent> {
   val events = MutableSharedFlow<TaskGraphEvent>()
@@ -77,11 +80,12 @@ fun createTaskGraphEventsFlow(
           // TODO ERRORS add failure state (flow) and handle failures?
           logger.e("Failed to insert node! $error")
         }.onSuccess { task ->
-          taskNodes.value += task
+          taskGraphStateFlow.value += task
         }
       }
 
-      is TaskGraphEvent.DeleteTaskAndChildren -> storage.removeTaskNodeAndChildren(it.uuid)
+      is TaskGraphEvent.DeleteTaskAndChildren -> storage.removeTaskNodeAndChildren(it.taskId)
+      is TaskGraphEvent.OpenEdit -> onOpenEdit(it.taskId)
     }
   }
   return events
