@@ -20,7 +20,6 @@ import com.beforeyoudie.common.applogic.createTaskGraphEventsFlow
 import com.beforeyoudie.common.di.ApplicationCoroutineContext
 import com.beforeyoudie.common.storage.IBydStorage
 import com.beforeyoudie.common.util.getClassLogger
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.runBlocking
@@ -50,6 +49,7 @@ class RootDecomposeComponent(
   IAppLogicRoot,
   ComponentContext by componentContext {
   val logger = getClassLogger()
+
   // The couroutine scope could come from external and the methods on the children of the root
   // could be "suspend", but since we maintain the lifecycle of these components separately there
   // is no reason to force the burden onto consumers of this library, we can use our own tree of
@@ -61,6 +61,7 @@ class RootDecomposeComponent(
 
   // TODO NOW state preservation. Also include coroutine scope: https://arkivanov.github.io/Decompose/component/scopes/#creating-a-coroutinescope-in-a-component
   override val appState = MutableStateFlow(AppState())
+
   // AppState lenses.
   private val taskGraphStateFlow =
     AppState.createTaskGraphStateFlow(coroutineScope, appState)
@@ -72,7 +73,6 @@ class RootDecomposeComponent(
         appState.value = AppState(storage.selectAllTaskNodeInformation())
       }
     })
-
   }
 
   private val navigation = StackNavigation<NavigationConfig>()
@@ -164,7 +164,10 @@ class AppLogicTaskGraphFactoryImpl : AppLogicTaskGraphFactory {
  * Factory is helpful because it allows construction to be overridden and changed in the future and in tests.
  */
 interface AppLogicEditFactory {
-  fun createEdit(coroutineContext: CoroutineContext, componentContext: ComponentContext): IAppLogicEdit
+  fun createEdit(
+    coroutineContext: CoroutineContext,
+    componentContext: ComponentContext
+  ): IAppLogicEdit
 }
 
 /**
@@ -175,5 +178,3 @@ class AppLogicEditFactoryImpl : AppLogicEditFactory {
   override fun createEdit(coroutineContext: CoroutineContext, componentContext: ComponentContext) =
     EditDecomposeComponent(componentContext)
 }
-
-

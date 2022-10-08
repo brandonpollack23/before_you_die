@@ -37,7 +37,6 @@ kotlin {
         implementation(libs.requiry.sqliteandroid)
         implementation(libs.kotlinx.coroutines.android)
       }
-      kotlin.srcDir("build/generated/ksp/android/androidRelease/kotlin")
     }
 
     val jvmMain by getting {
@@ -109,12 +108,12 @@ android {
     }
   }
   sourceSets {
-    // named("release") {
-      // kotlin.srcDir("build/generated/ksp/android/androidRelease/kotlin")
-    // }
-    // named("debug") {
-    //   kotlin.srcDir("build/generated/ksp/android/androidDebug/kotlin")
-    // }
+    named("release") {
+      kotlin.srcDir("build/generated/ksp/android/androidRelease/kotlin")
+    }
+    named("debug") {
+      kotlin.srcDir("build/generated/ksp/android/androidDebug/kotlin")
+    }
   }
   dependencies {
     coreLibraryDesugaring(libs.desugar)

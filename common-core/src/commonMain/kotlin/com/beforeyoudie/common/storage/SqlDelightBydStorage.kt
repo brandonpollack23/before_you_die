@@ -83,7 +83,7 @@ class SqlDelightBydStorage(
     database.transaction {
       if (parent != null) {
         if (database.taskNodeQueries.selectTaskNode(parent.toString())
-            .executeAsOneOrNull() == null
+          .executeAsOneOrNull() == null
         ) {
           result = Result.failure(BYDFailure.NonExistentNodeId(parent))
           rollback()

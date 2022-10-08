@@ -26,6 +26,7 @@ kotlin {
 
         implementation(compose.desktop.currentOs)
         implementation(libs.kermit)
+        implementation(libs.decompose)
         implementation(libs.decompose.extensions.jetbrains)
       }
     }
