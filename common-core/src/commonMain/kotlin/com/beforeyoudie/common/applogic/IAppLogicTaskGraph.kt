@@ -2,6 +2,7 @@ package com.beforeyoudie.common.applogic
 
 import com.arkivanov.essenty.parcelable.Parcelable
 import com.arkivanov.essenty.parcelable.Parcelize
+import com.benasher44.uuid.Uuid
 
 /** Interface representing any task graph app logic (this includes list, filtered lists, and graph). */
 interface IAppLogicTaskGraph
@@ -27,3 +28,15 @@ enum class VisibilityMode {
   AllTasks,
   ActionableTasks
 }
+
+/** The state changing operations a TaskGraph coreLogic can do.  I decided on this instead of updating a state on a flow because it makes it easier to manipulate storage all from [IAppLogicRoot]'s implementation. */
+interface TaskGraphOperations {
+  fun addTask(
+    title: String,
+    description: String? = null,
+    parent: Uuid? = null
+  )
+
+  fun deleteTaskAndChildren(uuid: Uuid)
+}
+

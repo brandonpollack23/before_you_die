@@ -15,15 +15,13 @@ import com.beforeyoudie.common.applogic.DeepLink
 import com.beforeyoudie.common.applogic.IAppLogicEdit
 import com.beforeyoudie.common.applogic.IAppLogicRoot
 import com.beforeyoudie.common.applogic.IAppLogicTaskGraph
+import com.beforeyoudie.common.applogic.TaskGraphOperations
 import com.beforeyoudie.common.di.ApplicationCoroutineContext
-import com.beforeyoudie.common.state.TaskNode
 import com.beforeyoudie.common.storage.IBydStorage
+import com.benasher44.uuid.Uuid
+import com.benasher44.uuid.uuid4
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.subscribe
-import kotlinx.coroutines.runBlocking
 import me.tatarka.inject.annotations.Inject
 
 // TODO NOW LAST implement children
@@ -73,30 +71,39 @@ class RootDecomposeComponent(
     config: NavigationConfig,
     componentContext: ComponentContext
   ): IAppLogicRoot.Child =
-    runBlocking(coroutineContext) {
-      when (config) {
-        is NavigationConfig.TaskGraph -> {
-          // Listen to updates to the task graph and apply them to the application state.
-          val taskGraph = MutableStateFlow(appState.value.taskGraph)
-          taskGraph.onEach {
-            appState.value = AppState(it)
-          }
-
-          IAppLogicRoot.Child.TaskGraph(
-            appLogicTaskGraphFactory.createTaskGraph(
-              taskGraph,
-              config.taskGraphConfig,
-              CoroutineScope(coroutineContext),
-              componentContext
-            )
+    when (config) {
+      is NavigationConfig.TaskGraph -> {
+        // Listen to updates to the task graph and apply them to the application state.
+        IAppLogicRoot.Child.TaskGraph(
+          appLogicTaskGraphFactory.createTaskGraph(
+            taskGraphOperations,
+            config.taskGraphConfig,
+            CoroutineScope(coroutineContext),
+            componentContext
           )
-        }
-
-        is NavigationConfig.Edit -> IAppLogicRoot.Child.EditTask(
-          appLogicEditFactory.createEdit(componentContext)
         )
       }
+
+      // TODO NOW make an edit corelogic impl
+      is NavigationConfig.Edit -> IAppLogicRoot.Child.EditTask(
+        appLogicEditFactory.createEdit(componentContext)
+      )
     }
+
+  private val taskGraphOperations = object : TaskGraphOperations {
+    override fun addTask(
+      title: String,
+      description: String?,
+      parent: Uuid?
+    ) {
+      // TODO NOW remove complete, add parent.
+      storage.insertTaskNode(uuid4(), title, description, false)
+    }
+
+    override fun deleteTaskAndChildren(uuid: Uuid) {
+      storage.removeTaskNodeAndChildren(uuid)
+    }
+  }
 
   private companion object {
     fun getInitialStack(deepLink: DeepLink): List<NavigationConfig> = when (deepLink) {
@@ -122,7 +129,7 @@ private sealed class NavigationConfig : Parcelable {
  */
 interface AppLogicTaskGraphFactory {
   fun createTaskGraph(
-    taskGraph: MutableStateFlow<Collection<TaskNode>>,
+    taskGraphOperations: TaskGraphOperations,
     appLogicTaskGraphConfig: AppLogicTaskGraphConfig,
     coroutineScope: CoroutineScope,
     componentContext: ComponentContext
@@ -135,14 +142,14 @@ interface AppLogicTaskGraphFactory {
 @Inject
 class AppLogicTaskGraphFactoryImpl : AppLogicTaskGraphFactory {
   override fun createTaskGraph(
-    taskGraph: MutableStateFlow<Collection<TaskNode>>,
+    taskGraphOperations: TaskGraphOperations,
     appLogicTaskGraphConfig: AppLogicTaskGraphConfig,
     coroutineScope: CoroutineScope,
     componentContext: ComponentContext
   ): IAppLogicTaskGraph = TaskGraphDecomposeComponent(
-    taskGraph,
     appLogicTaskGraphConfig,
     coroutineScope,
+    taskGraphOperations,
     componentContext
   )
 }

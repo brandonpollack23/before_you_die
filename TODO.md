@@ -22,6 +22,8 @@
 * [ ] Periodic database backup
   * Snapshots
   * File copy
+* [ ] Undo functionality, can use the "modify" table that is used for syncing, always keep it a minimum lenght dont drop after syncing.
+  * Might necessitate a "redo" table as well that is the mirror of undo.
 * [ ] spellfix1 integration in order to have fuzzy text search
 * [ ] Inline markdown in the description field
 * [ ] Switch description to a more efficient data structure like a rope.
