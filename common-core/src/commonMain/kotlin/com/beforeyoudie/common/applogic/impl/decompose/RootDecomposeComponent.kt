@@ -5,6 +5,7 @@ import com.arkivanov.decompose.router.stack.ChildStack
 import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.childStack
 import com.arkivanov.decompose.value.Value
+import com.arkivanov.essenty.lifecycle.Lifecycle
 import com.arkivanov.essenty.parcelable.Parcelable
 import com.arkivanov.essenty.parcelable.Parcelize
 import com.beforeyoudie.common.applogic.AppLogicEditConfig
@@ -13,7 +14,9 @@ import com.beforeyoudie.common.applogic.DeepLink
 import com.beforeyoudie.common.applogic.IAppLogicEdit
 import com.beforeyoudie.common.applogic.IAppLogicRoot
 import com.beforeyoudie.common.applogic.IAppLogicTaskGraph
+import com.beforeyoudie.common.state.TaskNode
 import com.beforeyoudie.common.storage.IBydStorage
+import kotlinx.coroutines.flow.MutableStateFlow
 import me.tatarka.inject.annotations.Inject
 
 // TODO NOW finish this along with other basic components using Flow and couroutines etc.
@@ -41,6 +44,16 @@ class RootDecomposeComponent(
 ) :
   IAppLogicRoot,
   ComponentContext by componentContext {
+  // TODO NOW state preservation.
+  val taskGraphState: MutableStateFlow<Collection<TaskNode>> = MutableStateFlow(emptySet())
+  init {
+    lifecycle.subscribe(object : Lifecycle.Callbacks {
+      override fun onCreate() {
+        taskGraphState.value = storage.selectAllTaskNodeInformation()
+      }
+    })
+  }
+
   private val navigation = StackNavigation<NavigationConfig>()
   val childStack: Value<ChildStack<*, IAppLogicRoot.Child>> = childStack(
     source = navigation,

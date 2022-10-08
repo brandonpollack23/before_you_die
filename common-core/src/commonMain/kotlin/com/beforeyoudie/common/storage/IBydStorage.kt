@@ -16,12 +16,12 @@ interface IBydStorage {
   /**
    * Get all the task nodes from the database.
    */
-  fun selectAllTaskNodeInformation(): List<TaskNode>
+  fun selectAllTaskNodeInformation(): Collection<TaskNode>
 
   /**
    * Returns only task nodes who's direct blockers are complete
    */
-  fun selectAllActionableTaskNodeInformation(): List<TaskNode>
+  fun selectAllActionableTaskNodeInformation(): Collection<TaskNode>
 
   /**
    * Insert a task node with the given information into the database.

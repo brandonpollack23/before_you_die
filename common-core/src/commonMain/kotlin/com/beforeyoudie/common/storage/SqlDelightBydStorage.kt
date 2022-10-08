@@ -20,7 +20,7 @@ class SqlDelightBydStorage(
 ) : IBydStorage {
   private val logger: Logger = getClassLogger()
 
-  override fun selectAllTaskNodeInformation(): List<TaskNode> {
+  override fun selectAllTaskNodeInformation(): Collection<TaskNode> {
     logger.v("selecting all task nodes")
     return database.taskNodeQueries.selectAllTaskNodesWithDependentAndChildData()
       .executeAsList()
@@ -43,7 +43,7 @@ class SqlDelightBydStorage(
       }
   }
 
-  override fun selectAllActionableTaskNodeInformation(): List<TaskNode> {
+  override fun selectAllActionableTaskNodeInformation(): Collection<TaskNode> {
     logger.v("selecting all task nodes that are not blocked")
     return database.taskNodeQueries.selectAllActionableTaskNodes().executeAsList().map {
       TaskNode(
