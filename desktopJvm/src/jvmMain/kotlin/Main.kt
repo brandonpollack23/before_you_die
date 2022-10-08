@@ -5,10 +5,14 @@ import co.touchlab.kermit.CommonWriter
 import co.touchlab.kermit.Logger
 import co.touchlab.kermit.Severity
 import com.beforeyoudie.common.App
-import com.beforeyoudie.common.di.kotlinInjectCreateApp
+import com.beforeyoudie.common.di.BydPlatformComponent
+import com.beforeyoudie.common.di.CommonBydKotlinInjectAppComponent
+import com.beforeyoudie.common.di.DatabaseFileName
+import com.beforeyoudie.common.di.create
 
 fun main() {
   // TODO(#6) PRIORITY create issue to have configurable stuff, including log severity + db file,  with config file/command line args, screen resolution.
+  // This should also include selections for implementation (eg sqldelight, firebase storage, etc).
   Logger.setMinSeverity(Severity.Verbose)
   Logger.setLogWriters(CommonWriter())
 
@@ -25,3 +29,12 @@ fun main() {
     }
   }
 }
+
+fun kotlinInjectCreateApp(
+  databaseFileName: DatabaseFileName = ""
+): CommonBydKotlinInjectAppComponent =
+  CommonBydKotlinInjectAppComponent::class.create(
+    BydPlatformComponent::class.create(
+      databaseFileName
+    )
+  )

@@ -38,12 +38,3 @@ actual abstract class BydPlatformComponent(
   fun provideIsInDbInMemory(databaseFileName: DatabaseFileName): IsDbInMemory =
     databaseFileName.trim('"').isEmpty()
 }
-
-fun kotlinInjectCreateApp(
-  databaseFileName: DatabaseFileName = ""
-): CommonBydKotlinInjectAppComponent =
-  CommonBydKotlinInjectAppComponent::class.create(
-    BydPlatformComponent::class.create(
-      databaseFileName
-    )
-  )

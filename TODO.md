@@ -19,6 +19,9 @@
 * [ ] A better graph structure example in the readme, perhaps a screenshot
 
 # Stretches
+* [ ] Periodic database backup
+  * Snapshots
+  * File copy
 * [ ] spellfix1 integration in order to have fuzzy text search
 * [ ] Inline markdown in the description field
 * [ ] Switch description to a more efficient data structure like a rope.

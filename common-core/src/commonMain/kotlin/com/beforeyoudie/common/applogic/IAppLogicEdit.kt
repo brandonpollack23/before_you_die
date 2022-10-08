@@ -1,6 +1,8 @@
 package com.beforeyoudie.common.applogic
 
-import com.beforeyoudie.common.state.TaskNode
+import com.arkivanov.essenty.parcelable.Parcelable
+import com.arkivanov.essenty.parcelable.Parcelize
+import com.benasher44.uuid.Uuid
 
 /** Interface representing the editor logic for a task. */
 interface IAppLogicEdit
@@ -9,4 +11,5 @@ interface IAppLogicEdit
  * Configuration for the edit CoreLogic, such as waht task node to edit, if certain options are
  * enabled (markdown stretch goal for example).
 */
-data class AppLogicEditConfig(val taskNode: TaskNode)
+@Parcelize
+data class AppLogicEditConfig(val taskNodeId: Uuid) : Parcelable

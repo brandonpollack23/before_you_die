@@ -6,6 +6,7 @@ plugins {
   id("com.squareup.sqldelight")
   id("io.kotest.multiplatform")
   id("com.google.devtools.ksp")
+  id("kotlin-parcelize")
 }
 
 group = "com.beforeyoudie"
