@@ -7,7 +7,6 @@ import co.touchlab.kermit.Severity
 import com.beforeyoudie.common.di.BydPlatformComponent
 import com.beforeyoudie.common.di.CommonBydKotlinInjectAppComponent
 import com.beforeyoudie.common.di.DatabaseFileName
-import com.beforeyoudie.common.di.kotlinInjectCreateApp
 import kotlinx.coroutines.Dispatchers
 import kotlin.coroutines.CoroutineContext
 
@@ -18,6 +17,8 @@ class MainApp : Application() {
     Logger.setMinSeverity(Severity.Verbose)
 
     val app = kotlinInjectCreateApp(this, "beforeyoudie.db", Dispatchers.Main)
+
+    // TODO(#12) Set up decompose lifecycle (in the case that is the library chosen in config).
   }
 }
 

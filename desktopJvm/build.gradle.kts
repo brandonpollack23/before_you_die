@@ -26,7 +26,7 @@ kotlin {
 
         implementation(compose.desktop.currentOs)
         implementation(libs.kermit)
-        implementation(libs.koin.core)
+        implementation(libs.decompose.extensions.jetbrains)
       }
     }
     val jvmTest by getting

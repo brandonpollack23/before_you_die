@@ -47,6 +47,7 @@ typealias ApplicationCoroutineContext = CoroutineContext
 /** Make this an interface so that it can be constructed differently in tests vs non tests. */
 interface ICommonBydKotlinInjectAppComponent {
   val rootLogic: IAppLogicRoot
+  val lifecycle: LifecycleRegistry
 
   // ========== Bindings =============
 
@@ -71,11 +72,16 @@ interface ICommonBydKotlinInjectAppComponent {
     @Provides
     get() = this
 
+  val LifecycleRegistry.bind: Lifecycle
+    @ApplicationScope
+    @Provides
+    get() = this
+
   // ========== Providers =============
 
   @ApplicationScope
   @Provides
-  fun provideDecomposeLifecycle(): Lifecycle = LifecycleRegistry()
+  fun provideDecomposeLifecycle(): LifecycleRegistry = LifecycleRegistry()
 
   @ApplicationScope
   @Provides
