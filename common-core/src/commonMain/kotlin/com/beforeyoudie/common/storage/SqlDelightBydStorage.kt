@@ -271,8 +271,8 @@ class SqlDelightBydStorage(
         database.taskNodeQueries.selectTaskselectTaskNodeAndDescendentIds(uuid.toString())
           .executeAsList()
 
-      database.taskNodeQueries.removeTaskNodeAndChildren(taskIdsToRemove.map { it.id!! })
-      Result.success(taskIdsToRemove.asSequence().map { TaskId(uuidFrom(it.id!!)) }.toSet())
+      database.taskNodeQueries.removeTaskNodeAndChildren(taskIdsToRemove.map { it })
+      Result.success(taskIdsToRemove.asSequence().map { TaskId(uuidFrom(it)) }.toSet())
     }
   }
 
