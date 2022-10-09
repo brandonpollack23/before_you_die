@@ -38,9 +38,10 @@ abstract class AppLogicTaskGraph(
     }
   }
 
-  // TODO NOW this should open a task child node with navigation using the task graph events flow
   fun openEdit(uuid: TaskId) {
-    TODO()
+    coroutineScope.launch {
+      _taskGraphEvents.emit(TaskGraphEvent.OpenEdit(uuid))
+    }
   }
 }
 
