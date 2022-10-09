@@ -41,7 +41,7 @@ dependencyResolutionManagement {
       library("kermit-koin", "co.touchlab:kermit-koin:$kermitVersion")
 
       // Storage/SQLite
-      val sqlDelightVersion = "1.5.3"
+      val sqlDelightVersion = "1.5.4"
       version("sqldelight", sqlDelightVersion)
       library("sqldelight-android", "com.squareup.sqldelight:android-driver:$sqlDelightVersion")
       library("sqldelight-native", "com.squareup.sqldelight:native-driver:$sqlDelightVersion")
