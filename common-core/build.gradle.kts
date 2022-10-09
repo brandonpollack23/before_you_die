@@ -125,6 +125,7 @@ sqldelight {
     packageName = "com.beforeyoudie.common.storage"
     sourceFolders = listOf("sql")
     dialect = "sqlite:3.24"
+    verifyMigrations = true
   }
 }
 

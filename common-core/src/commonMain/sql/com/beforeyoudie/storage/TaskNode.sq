@@ -73,6 +73,7 @@ WITH RECURSIVE descendents(parent) AS (
   SELECT child FROM TaskChildren, descendents
   WHERE TaskChildren.parent = descendents.parent
 )
+-- TODO NOW fix trim and just return string?
 SELECT trim(parent) AS id FROM descendents;
 
 -- Modification operations
