@@ -49,6 +49,7 @@ abstract class AppLogicRoot(private val storage: IBydStorage) {
               // TODO ERRORS add failure state (flow) and handle failures?
               logger.e("Failed to insert node! $error")
             }.onSuccess { task ->
+              logger.i("Node ${task.id} inserted, updating in memory state")
               taskGraphStateFlow.value += task
             }
           }

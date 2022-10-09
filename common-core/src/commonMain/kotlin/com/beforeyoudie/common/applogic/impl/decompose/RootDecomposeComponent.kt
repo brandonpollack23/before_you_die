@@ -28,6 +28,7 @@ import kotlinx.coroutines.runBlocking
 import me.tatarka.inject.annotations.Inject
 import kotlin.coroutines.CoroutineContext
 
+// TODO NOW add logging
 // TODO NOW test this (navigation) and children
 
 /** This is the root CoreLogic component.  While the other components in the Decompose world are
