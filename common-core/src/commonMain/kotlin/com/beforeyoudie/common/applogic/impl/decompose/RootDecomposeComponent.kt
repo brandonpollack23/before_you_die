@@ -6,6 +6,8 @@ import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.childStack
 import com.arkivanov.decompose.router.stack.push
 import com.arkivanov.decompose.value.Value
+import com.arkivanov.essenty.instancekeeper.InstanceKeeper
+import com.arkivanov.essenty.instancekeeper.getOrCreate
 import com.arkivanov.essenty.lifecycle.Lifecycle
 import com.arkivanov.essenty.parcelable.Parcelable
 import com.arkivanov.essenty.parcelable.Parcelize
@@ -19,6 +21,7 @@ import com.beforeyoudie.common.applogic.DeepLink
 import com.beforeyoudie.common.di.ApplicationCoroutineContext
 import com.beforeyoudie.common.state.TaskId
 import com.beforeyoudie.common.storage.IBydStorage
+import com.beforeyoudie.common.util.getClassLogger
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -56,15 +59,24 @@ class RootDecomposeComponent(
   // our coroutine context tree that should be used.
   override val coroutineScope = coroutineScopeWithLifecycle(applicationCoroutineContext)
 
-  // TODO NOW state preservation. Also include coroutine scope: https://arkivanov.github.io/Decompose/component/scopes/#creating-a-coroutinescope-in-a-component
-  override val appState = MutableStateFlow(AppState())
+
+  private val appStateInstanceKeeper = instanceKeeper.getOrCreate { RetainedAppState() }
+  override val _appState: MutableStateFlow<AppState> = appStateInstanceKeeper.appState
+
+  class RetainedAppState : InstanceKeeper.Instance {
+    private val logger = getClassLogger()
+    val appState =  MutableStateFlow(AppState())
+    override fun onDestroy() {
+      logger.i { "destroying app state, app must be exiting" }
+    }
+  }
 
   init {
     // Lifecycle setup.
     lifecycle.subscribe(object : Lifecycle.Callbacks {
       override fun onCreate() {
         coroutineScope.launch {
-          appState.value = AppState(storage.selectAllTaskNodeInformation())
+          _appState.value = AppState(storage.selectAllTaskNodeInformation())
         }
       }
     })

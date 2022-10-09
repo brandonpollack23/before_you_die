@@ -7,23 +7,30 @@ import com.beforeyoudie.common.util.getClassLogger
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 
 /** Interface representing the root applogic component. */
 abstract class AppLogicRoot(private val storage: IBydStorage) {
-  val logger = getClassLogger()
+  protected val logger = getClassLogger()
   abstract val coroutineScope: CoroutineScope
 
-  abstract val appState: MutableStateFlow<AppState>
-  // AppState lenses.
-  private val taskGraphStateFlow = run {
-    val f = MutableStateFlow(appState.value.taskGraph)
-    coroutineScope.launch {
-      f.collect {
-        appState.value = appState.value.copy(taskGraph = it)
+  abstract val _appState: MutableStateFlow<AppState>
+
+  // AppState and lenses. They are lazy initialized because this class's coroutine scope and state may not yet be initialized.
+  val appState by lazy { _appState.asStateFlow() }
+  private val taskGraphStateFlow by lazy {
+    run {
+      val f = MutableStateFlow(_appState.value.taskGraph)
+      coroutineScope.launch {
+        f.collect {
+          _appState.value = _appState.value.copy(taskGraph = it)
+        }
       }
+      f
     }
-    f
   }
 
   abstract fun onOpenEdit(taskId: TaskId)
