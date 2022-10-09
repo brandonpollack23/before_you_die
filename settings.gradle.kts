@@ -21,7 +21,7 @@ dependencyResolutionManagement {
       version("kotlin-compiler", kotlinVersion)
       val kspVersion = "1.0.6"
       version("kotlin-ksp", "$kotlinVersion-$kspVersion")
-      version("androidx-compose-plugin", "1.2.0-beta02")
+      version("jetbrains-compose", "1.2.0-beta02")
       version("spotless", "6.11.0")
 
       // kotlin-inject DI

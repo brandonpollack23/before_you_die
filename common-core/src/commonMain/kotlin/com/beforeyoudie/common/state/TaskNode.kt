@@ -1,10 +1,13 @@
 package com.beforeyoudie.common.state
 
+import com.arkivanov.essenty.parcelable.Parcelable
+import com.arkivanov.essenty.parcelable.Parcelize
 import com.benasher44.uuid.Uuid
 import com.benasher44.uuid.uuid4
 
+@Parcelize
 @JvmInline
-value class TaskId(val id: Uuid = uuid4()) {
+value class TaskId(val id: Uuid = uuid4()) : Parcelable {
   override fun toString(): String = id.toString()
 }
 

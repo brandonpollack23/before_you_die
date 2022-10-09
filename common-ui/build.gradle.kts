@@ -1,6 +1,6 @@
 plugins {
   kotlin("multiplatform")
-  id("org.jetbrains.compose") version libs.versions.androidx.compose.plugin.get()
+  id("org.jetbrains.compose")
   id("com.android.library")
 }
 
