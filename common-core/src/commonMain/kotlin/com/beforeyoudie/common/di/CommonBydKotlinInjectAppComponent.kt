@@ -14,7 +14,7 @@ import com.beforeyoudie.common.applogic.impl.decompose.AppLogicTaskGraphFactoryI
 import com.beforeyoudie.common.applogic.impl.decompose.RootDecomposeComponent
 import com.beforeyoudie.common.storage.BeforeYouDieDb
 import com.beforeyoudie.common.storage.IBydStorage
-import com.beforeyoudie.common.storage.SqlDelightBydStorage
+import com.beforeyoudie.common.storage.impl.SqlDelightBydStorage
 import com.squareup.sqldelight.db.SqlDriver
 import me.tatarka.inject.annotations.Component
 import me.tatarka.inject.annotations.Provides

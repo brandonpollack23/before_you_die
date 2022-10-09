@@ -103,7 +103,10 @@ abstract class AppLogicRoot(private val storage: IBydStorage) {
 /**
  * The overall application state, this includes the state of the graph, any ui elements, etc.
  */
-data class AppState(val taskGraph: Collection<TaskNode> = emptySet())
+data class AppState(
+  val taskGraph: Collection<TaskNode> = emptySet(),
+  val isLoading: Boolean = true,
+)
 
 // TODO(#9) Deep links add deep link functionality
 /** Deep link types for the app. */

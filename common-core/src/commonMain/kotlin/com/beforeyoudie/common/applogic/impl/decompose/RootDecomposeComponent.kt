@@ -22,9 +22,11 @@ import com.beforeyoudie.common.di.ApplicationCoroutineContext
 import com.beforeyoudie.common.state.TaskId
 import com.beforeyoudie.common.storage.IBydStorage
 import com.beforeyoudie.common.util.getClassLogger
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 import me.tatarka.inject.annotations.Inject
 import kotlin.coroutines.CoroutineContext
 
@@ -75,8 +77,12 @@ class RootDecomposeComponent(
     lifecycle.subscribe(object : Lifecycle.Callbacks {
       override fun onCreate() {
         coroutineScope.launch {
-          logger.v { "Loading initial state from the storage" }
-          _appState.value = AppState(storage.selectAllTaskNodeInformation())
+          val initialTaskGraph = withContext(Dispatchers.IO) {
+            logger.v { "Loading initial state from the storage" }
+            storage.selectAllTaskNodeInformation()
+          }
+
+          _appState.value = appState.value.copy(taskGraph = initialTaskGraph, isLoading = false)
         }
       }
     })
@@ -117,6 +123,14 @@ class RootDecomposeComponent(
   }
 
   override fun onOpenEdit(taskId: TaskId) {
+    if (appState.value.isLoading) {
+      logger.e(
+        "Open edit called while loading, this shouldn't be possible! " +
+          "Returning and doing nothing"
+      )
+      return
+    }
+
     logger.v("Open edit triggered for task $taskId")
     navigation.push(NavigationConfig.Edit(AppLogicEditConfig(taskId)))
   }
