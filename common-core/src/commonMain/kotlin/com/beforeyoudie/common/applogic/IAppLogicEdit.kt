@@ -5,7 +5,7 @@ import com.arkivanov.essenty.parcelable.Parcelize
 import com.beforeyoudie.common.state.TaskId
 
 /** Interface representing the editor logic for a task. */
-interface IAppLogicEdit
+abstract class AppLogicEdit
 
 /**
  * Configuration for the edit CoreLogic, such as waht task node to edit, if certain options are

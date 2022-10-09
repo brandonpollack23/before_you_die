@@ -15,15 +15,16 @@ import com.beforeyoudie.common.applogic.AppState
 import com.beforeyoudie.common.applogic.DeepLink
 import com.beforeyoudie.common.applogic.IAppLogicEdit
 import com.beforeyoudie.common.applogic.IAppLogicRoot
-import com.beforeyoudie.common.applogic.IAppLogicTaskGraph
+import com.beforeyoudie.common.applogic.AppLogicTaskGraph
 import com.beforeyoudie.common.applogic.TaskGraphEvent
-import com.beforeyoudie.common.applogic.createTaskGraphEventsFlow
 import com.beforeyoudie.common.di.ApplicationCoroutineContext
 import com.beforeyoudie.common.state.TaskId
 import com.beforeyoudie.common.storage.IBydStorage
 import com.beforeyoudie.common.util.getClassLogger
+import com.benasher44.uuid.uuid4
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import me.tatarka.inject.annotations.Inject
@@ -95,20 +96,14 @@ class RootDecomposeComponent(
   ): IAppLogicRoot.Child = runBlocking(applicationCoroutineContext) {
     when (config) {
       is NavigationConfig.TaskGraph -> {
-        val events = createTaskGraphEventsFlow(
-          storage,
-          taskGraphStateFlow,
-          ::onOpenEdit,
-          logger
+        val taskGraph = appLogicTaskGraphFactory.createTaskGraph(
+          config.taskGraphConfig,
+          coroutineContext,
+          componentContext
         )
-        IAppLogicRoot.Child.TaskGraph(
-          appLogicTaskGraphFactory.createTaskGraph(
-            config.taskGraphConfig,
-            events,
-            coroutineContext,
-            componentContext
-          )
-        )
+
+        subscribeToTaskGraphEvents(taskGraph.taskGraphEvents)
+        IAppLogicRoot.Child.TaskGraph(taskGraph)
       }
 
       // TODO NOW do edit now as well, just passing UUID will be fine since its all accessible from
@@ -121,6 +116,31 @@ class RootDecomposeComponent(
 
   private fun onOpenEdit(taskId: TaskId) {
     navigation.push(NavigationConfig.Edit(AppLogicEditConfig(taskId)))
+  }
+
+  private fun subscribeToTaskGraphEvents(taskGraphEvents: SharedFlow<TaskGraphEvent>) {
+    coroutineScope.launch {
+      taskGraphEvents.collect {
+        when (it) {
+          is TaskGraphEvent.CreateTask -> {
+            storage.insertTaskNode(
+              TaskId(uuid4()),
+              it.title,
+              it.description,
+              complete = false
+            ).onFailure { error ->
+              // TODO ERRORS add failure state (flow) and handle failures?
+              logger.e("Failed to insert node! $error")
+            }.onSuccess { task ->
+              taskGraphStateFlow.value += task
+            }
+          }
+
+          is TaskGraphEvent.DeleteTaskAndChildren -> storage.removeTaskNodeAndChildren(it.taskId)
+          is TaskGraphEvent.OpenEdit -> onOpenEdit(it.taskId)
+        }
+      }
+    }
   }
 
   private companion object {
@@ -141,17 +161,16 @@ private sealed class NavigationConfig : Parcelable {
 }
 
 /**
- * Interface for constructing [IAppLogicTaskGraph].
+ * Interface for constructing [AppLogicTaskGraph].
  *
  * Factory is helpful because it allows construction to be overridden and changed in the future and in tests.
  */
 interface AppLogicTaskGraphFactory {
   fun createTaskGraph(
-    appLogicTaskGraphConfig: AppLogicTaskGraphConfig,
-    taskGraphEvents: MutableSharedFlow<TaskGraphEvent>,
-    coroutineContext: CoroutineContext,
-    componentContext: ComponentContext
-  ): IAppLogicTaskGraph
+  appLogicTaskGraphConfig: AppLogicTaskGraphConfig,
+  coroutineContext: CoroutineContext,
+  componentContext: ComponentContext
+  ): AppLogicTaskGraph
 }
 
 /**
@@ -160,13 +179,11 @@ interface AppLogicTaskGraphFactory {
 @Inject
 class AppLogicTaskGraphFactoryImpl : AppLogicTaskGraphFactory {
   override fun createTaskGraph(
-    appLogicTaskGraphConfig: AppLogicTaskGraphConfig,
-    taskGraphEvents: MutableSharedFlow<TaskGraphEvent>,
-    coroutineContext: CoroutineContext,
-    componentContext: ComponentContext
-  ): IAppLogicTaskGraph = TaskGraphDecomposeComponent(
+  appLogicTaskGraphConfig: AppLogicTaskGraphConfig,
+  coroutineContext: CoroutineContext,
+  componentContext: ComponentContext
+  ): AppLogicTaskGraph = TaskGraphDecomposeComponent(
     appLogicTaskGraphConfig,
-    taskGraphEvents,
     coroutineContext,
     componentContext
   )

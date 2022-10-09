@@ -10,7 +10,7 @@ interface IAppLogicRoot {
   val appState: MutableStateFlow<AppState>
 
   sealed class Child {
-    data class TaskGraph(val appLogic: IAppLogicTaskGraph) : Child()
+    data class TaskGraph(val appLogic: AppLogicTaskGraph) : Child()
     data class EditTask(val appLogic: IAppLogicEdit) : Child()
   }
 }
