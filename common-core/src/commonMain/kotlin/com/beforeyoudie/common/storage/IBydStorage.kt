@@ -81,14 +81,14 @@ interface IBydStorage {
   /**
    * Removes a given task node along with all relationships.
    *
-   * @retuns [com.beforeyoudie.common.util.BYDFailure.NonExistentNodeId]
+   * @returns the node ids removed or [com.beforeyoudie.common.util.BYDFailure.NonExistentNodeId]
    */
-  fun removeTaskNodeAndChildren(uuid: TaskId): Result<Unit>
+  fun removeTaskNodeAndChildren(uuid: TaskId): Result<Collection<TaskId>>
 
   /**
    * Remove a depedency relationship between two nodes
    *
-   * @retuns [com.beforeyoudie.common.util.BYDFailure.NonExistentNodeId] or [com.beforeyoudie.common.util.BYDFailure.NoSuchDependencyRelationship]
+   * @returns [com.beforeyoudie.common.util.BYDFailure.NonExistentNodeId] or [com.beforeyoudie.common.util.BYDFailure.NoSuchDependencyRelationship]
    */
   fun removeDependencyRelationship(blockingTask: TaskId, blockedTask: TaskId): Result<Unit>
 }

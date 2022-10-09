@@ -52,7 +52,16 @@ abstract class AppLogicRoot(private val storage: IBydStorage) {
             }
           }
 
-          is TaskGraphEvent.DeleteTaskAndChildren -> storage.removeTaskNodeAndChildren(it.taskId)
+          is TaskGraphEvent.DeleteTaskAndChildren -> {
+            storage.removeTaskNodeAndChildren(it.taskId).onFailure {error ->
+              logger.e("Failed to remove tasks and children! $error")
+            }.onSuccess { removedNodes ->
+              logger.i("Node ${it.taskId} and children (total of ${removedNodes.size}) " +
+                "removed, updating in memory state")
+              taskGraphStateFlow.value =
+                taskGraphStateFlow.value.filter { taskNode -> !removedNodes.contains(taskNode.id) }
+            }
+          }
           is TaskGraphEvent.OpenEdit -> onOpenEdit(it.taskId)
         }
       }

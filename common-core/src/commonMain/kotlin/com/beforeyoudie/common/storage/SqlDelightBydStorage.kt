@@ -253,11 +253,23 @@ class SqlDelightBydStorage(
     }
   }
 
-  override fun removeTaskNodeAndChildren(uuid: TaskId): Result<Unit> {
+  override fun removeTaskNodeAndChildren(uuid: TaskId): Result<Collection<TaskId>> {
     logger.v("Removing task and all descendants of $uuid")
-    return simpleUpdate(uuid) {
-      database.taskNodeQueries.removeTaskNodeAndChildren(uuid.toString())
+    var result: Result<Collection<TaskId>> = Result.success(emptyList())
+    database.transactionWithResult {
+      val taskIdsToRemove =
+        database.taskNodeQueries.selectTaskselectTaskNodeAndDescendentIds(uuid.toString())
+          .executeAsList()
+      if (taskIdsToRemove.isEmpty()) {
+        logger.e("No descendents found for $uuid")
+        result = Result.failure(BYDFailure.NoDescendentsFor(uuid))
+      }
+
+      database.taskNodeQueries.removeTaskNodeAndChildren(taskIdsToRemove.map { it.id!! })
+      result = Result.success(taskIdsToRemove.asSequence().map { TaskId(uuidFrom(it.id!!)) }.toSet())
     }
+
+    return result
   }
 
   override fun removeDependencyRelationship(

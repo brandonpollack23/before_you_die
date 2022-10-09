@@ -40,4 +40,6 @@ sealed class BYDFailure(cause: Throwable? = null) : Throwable(cause) {
   /** These two tasks don't have a dependency relationship, so nothing to remove, etc. */
   data class NoSuchDependencyRelationship(val blockingTask: TaskId, val blockedTask: TaskId) :
     BYDFailure()
+
+  data class NoDescendentsFor(val uuid: TaskId) : BYDFailure()
 }

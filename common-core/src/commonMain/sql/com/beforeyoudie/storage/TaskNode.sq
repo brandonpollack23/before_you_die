@@ -66,6 +66,15 @@ GROUP BY n.id;
 selectAllChildren:
 SELECT child FROM TaskChildren WHERE parent = :parentId;
 
+selectTaskselectTaskNodeAndDescendentIds:
+WITH RECURSIVE descendents(parent) AS (
+  VALUES (:uuid)
+  UNION ALL
+  SELECT child FROM TaskChildren, descendents
+  WHERE TaskChildren.parent = descendents.parent
+)
+SELECT trim(parent) AS id FROM descendents;
+
 -- Modification operations
 insertTaskNode:
 INSERT OR REPLACE INTO
@@ -111,32 +120,14 @@ WHERE NOT EXISTS (SELECT * FROM TaskDependency WHERE blockedTask = :blockedTask 
 
 -- Removal Operations
 removeTaskNodeAndChildren {
-  WITH RECURSIVE nodesToRemove(parent) AS (
-    VALUES (:uuid)
-    UNION ALL
-    SELECT child FROM TaskChildren, nodesToRemove
-    WHERE TaskChildren.parent = nodesToRemove.parent
-  )
   DELETE FROM TaskDependency
-  WHERE blockedTask IN nodesToRemove OR blockingTask IN nodesToRemove;
+  WHERE blockedTask IN :nodesToRemove OR blockingTask IN :nodesToRemove;
 
-  WITH RECURSIVE nodesToRemove(parent) AS (
-    VALUES (:uuid)
-    UNION ALL
-    SELECT child FROM TaskChildren, nodesToRemove
-    WHERE TaskChildren.parent = nodesToRemove.parent
-  )
   DELETE FROM TaskNode
-  WHERE id IN nodesToRemove;
+  WHERE id IN :nodesToRemove;
 
-  WITH RECURSIVE nodesToRemove(parent) AS (
-    VALUES (:uuid)
-    UNION ALL
-    SELECT child FROM TaskChildren, nodesToRemove
-    WHERE TaskChildren.parent = nodesToRemove.parent
-  )
   DELETE FROM TaskChildren
-  WHERE child IN nodesToRemove OR parent IN nodesToRemove;
+  WHERE child IN :nodesToRemove OR parent IN :nodesToRemove;
 }
 
 removeDependencyRelationship:
