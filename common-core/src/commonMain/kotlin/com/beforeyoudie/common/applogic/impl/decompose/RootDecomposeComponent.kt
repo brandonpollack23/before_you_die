@@ -28,7 +28,6 @@ import kotlinx.coroutines.runBlocking
 import me.tatarka.inject.annotations.Inject
 import kotlin.coroutines.CoroutineContext
 
-// TODO NOW add logging
 // TODO NOW test this (navigation) and children
 
 /** This is the root CoreLogic component.  While the other components in the Decompose world are
@@ -76,6 +75,7 @@ class RootDecomposeComponent(
     lifecycle.subscribe(object : Lifecycle.Callbacks {
       override fun onCreate() {
         coroutineScope.launch {
+          logger.v { "Loading initial state from the storage" }
           _appState.value = AppState(storage.selectAllTaskNodeInformation())
         }
       }
@@ -95,6 +95,7 @@ class RootDecomposeComponent(
     config: NavigationConfig,
     componentContext: ComponentContext
   ): Child = runBlocking(applicationCoroutineContext) {
+    logger.v("Creating a child with config $config")
     when (config) {
       is NavigationConfig.TaskGraph -> {
         val taskGraph = appLogicTaskGraphFactory.createTaskGraph(
@@ -107,7 +108,7 @@ class RootDecomposeComponent(
         Child.TaskGraph(taskGraph)
       }
 
-      // TODO NOW do edit now as well, just passing UUID will be fine since its all accessible from
+      // TODO NOW implement edit now as well, just passing UUID will be fine since its all accessible from
       //  the higher level root and can be passed to children from there, no need to duplicate that work here
       is NavigationConfig.Edit -> Child.EditTask(
         appLogicEditFactory.createEdit(coroutineContext, componentContext)
@@ -116,6 +117,7 @@ class RootDecomposeComponent(
   }
 
   override fun onOpenEdit(taskId: TaskId) {
+    logger.v("Open edit triggered for task $taskId")
     navigation.push(NavigationConfig.Edit(AppLogicEditConfig(taskId)))
   }
 
