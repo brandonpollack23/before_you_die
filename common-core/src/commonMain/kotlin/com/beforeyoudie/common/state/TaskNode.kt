@@ -4,7 +4,7 @@ import com.benasher44.uuid.Uuid
 import com.benasher44.uuid.uuid4
 
 @JvmInline
-value class TaskId(val id: Uuid) {
+value class TaskId(val id: Uuid = uuid4()) {
   override fun toString(): String = id.toString()
 }
 
@@ -21,7 +21,7 @@ value class TaskId(val id: Uuid) {
  * @property blockedTasks inverse of blocking, can't be seen in actionable view.
  */
 data class TaskNode(
-  val id: TaskId = TaskId(uuid4()),
+  val id: TaskId = TaskId(),
   val title: String,
   val description: String? = null,
   val isComplete: Boolean = false,

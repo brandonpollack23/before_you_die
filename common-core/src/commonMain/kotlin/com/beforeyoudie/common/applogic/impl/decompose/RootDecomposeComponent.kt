@@ -9,22 +9,17 @@ import com.arkivanov.decompose.value.Value
 import com.arkivanov.essenty.lifecycle.Lifecycle
 import com.arkivanov.essenty.parcelable.Parcelable
 import com.arkivanov.essenty.parcelable.Parcelize
+import com.beforeyoudie.common.applogic.AppLogicEdit
 import com.beforeyoudie.common.applogic.AppLogicEditConfig
+import com.beforeyoudie.common.applogic.AppLogicRoot
+import com.beforeyoudie.common.applogic.AppLogicTaskGraph
 import com.beforeyoudie.common.applogic.AppLogicTaskGraphConfig
 import com.beforeyoudie.common.applogic.AppState
 import com.beforeyoudie.common.applogic.DeepLink
-import com.beforeyoudie.common.applogic.IAppLogicEdit
-import com.beforeyoudie.common.applogic.IAppLogicRoot
-import com.beforeyoudie.common.applogic.AppLogicTaskGraph
-import com.beforeyoudie.common.applogic.TaskGraphEvent
 import com.beforeyoudie.common.di.ApplicationCoroutineContext
 import com.beforeyoudie.common.state.TaskId
 import com.beforeyoudie.common.storage.IBydStorage
-import com.beforeyoudie.common.util.getClassLogger
-import com.benasher44.uuid.uuid4
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import me.tatarka.inject.annotations.Inject
@@ -43,17 +38,15 @@ import kotlin.coroutines.CoroutineContext
  */
 @Inject
 class RootDecomposeComponent(
-  componentContext: ComponentContext,
-  private val applicationCoroutineContext: ApplicationCoroutineContext,
-  private val deepLink: DeepLink = DeepLink.None,
   private val storage: IBydStorage,
+  private val deepLink: DeepLink = DeepLink.None,
   private val appLogicTaskGraphFactory: AppLogicTaskGraphFactory,
-  private val appLogicEditFactory: AppLogicEditFactory
+  private val appLogicEditFactory: AppLogicEditFactory,
+  private val applicationCoroutineContext: ApplicationCoroutineContext,
+  componentContext: ComponentContext
 ) :
-  IAppLogicRoot,
+  AppLogicRoot(storage),
   ComponentContext by componentContext {
-  val logger = getClassLogger()
-
   // The couroutine scope could come from external and the methods on the children of the root
   // could be "suspend", but since we maintain the lifecycle of these components separately there
   // is no reason to force the burden onto consumers of this library, we can use our own tree of
@@ -61,14 +54,10 @@ class RootDecomposeComponent(
   //
   // In other words, the source of truth of app state is not the UI but this heirarchy, and so it is
   // our coroutine context tree that should be used.
-  private val coroutineScope = coroutineScopeWithLifecycle(applicationCoroutineContext)
+  override val coroutineScope = coroutineScopeWithLifecycle(applicationCoroutineContext)
 
   // TODO NOW state preservation. Also include coroutine scope: https://arkivanov.github.io/Decompose/component/scopes/#creating-a-coroutinescope-in-a-component
   override val appState = MutableStateFlow(AppState())
-
-  // AppState lenses.
-  private val taskGraphStateFlow =
-    AppState.createTaskGraphStateFlow(coroutineScope, appState)
 
   init {
     // Lifecycle setup.
@@ -84,7 +73,7 @@ class RootDecomposeComponent(
   private val navigation = StackNavigation<NavigationConfig>()
 
   // In decompose based UI implementation Composable widget, just check the interface is this type, then access this directly (NOT through the interface).
-  val childStack: Value<ChildStack<*, IAppLogicRoot.Child>> = childStack(
+  val childStack: Value<ChildStack<*, Child>> = childStack(
     source = navigation,
     initialStack = { getInitialStack(deepLink) },
     childFactory = ::createChild
@@ -93,7 +82,7 @@ class RootDecomposeComponent(
   private fun createChild(
     config: NavigationConfig,
     componentContext: ComponentContext
-  ): IAppLogicRoot.Child = runBlocking(applicationCoroutineContext) {
+  ): Child = runBlocking(applicationCoroutineContext) {
     when (config) {
       is NavigationConfig.TaskGraph -> {
         val taskGraph = appLogicTaskGraphFactory.createTaskGraph(
@@ -103,44 +92,19 @@ class RootDecomposeComponent(
         )
 
         subscribeToTaskGraphEvents(taskGraph.taskGraphEvents)
-        IAppLogicRoot.Child.TaskGraph(taskGraph)
+        Child.TaskGraph(taskGraph)
       }
 
       // TODO NOW do edit now as well, just passing UUID will be fine since its all accessible from
       //  the higher level root and can be passed to children from there, no need to duplicate that work here
-      is NavigationConfig.Edit -> IAppLogicRoot.Child.EditTask(
+      is NavigationConfig.Edit -> Child.EditTask(
         appLogicEditFactory.createEdit(coroutineContext, componentContext)
       )
     }
   }
 
-  private fun onOpenEdit(taskId: TaskId) {
+  override fun onOpenEdit(taskId: TaskId) {
     navigation.push(NavigationConfig.Edit(AppLogicEditConfig(taskId)))
-  }
-
-  private fun subscribeToTaskGraphEvents(taskGraphEvents: SharedFlow<TaskGraphEvent>) {
-    coroutineScope.launch {
-      taskGraphEvents.collect {
-        when (it) {
-          is TaskGraphEvent.CreateTask -> {
-            storage.insertTaskNode(
-              TaskId(uuid4()),
-              it.title,
-              it.description,
-              complete = false
-            ).onFailure { error ->
-              // TODO ERRORS add failure state (flow) and handle failures?
-              logger.e("Failed to insert node! $error")
-            }.onSuccess { task ->
-              taskGraphStateFlow.value += task
-            }
-          }
-
-          is TaskGraphEvent.DeleteTaskAndChildren -> storage.removeTaskNodeAndChildren(it.taskId)
-          is TaskGraphEvent.OpenEdit -> onOpenEdit(it.taskId)
-        }
-      }
-    }
   }
 
   private companion object {
@@ -198,7 +162,7 @@ interface AppLogicEditFactory {
   fun createEdit(
     coroutineContext: CoroutineContext,
     componentContext: ComponentContext
-  ): IAppLogicEdit
+  ): AppLogicEdit
 }
 
 /**

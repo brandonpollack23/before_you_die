@@ -6,7 +6,7 @@ import com.arkivanov.decompose.DefaultComponentContext
 import com.arkivanov.essenty.lifecycle.Lifecycle
 import com.arkivanov.essenty.lifecycle.LifecycleRegistry
 import com.beforeyoudie.common.applogic.DeepLink
-import com.beforeyoudie.common.applogic.IAppLogicRoot
+import com.beforeyoudie.common.applogic.AppLogicRoot
 import com.beforeyoudie.common.applogic.impl.decompose.AppLogicEditFactory
 import com.beforeyoudie.common.applogic.impl.decompose.AppLogicEditFactoryImpl
 import com.beforeyoudie.common.applogic.impl.decompose.AppLogicTaskGraphFactory
@@ -46,13 +46,13 @@ typealias ApplicationCoroutineContext = CoroutineContext
 
 /** Make this an interface so that it can be constructed differently in tests vs non tests. */
 interface ICommonBydKotlinInjectAppComponent {
-  val rootLogic: IAppLogicRoot
+  val rootLogic: AppLogicRoot
   val lifecycle: LifecycleRegistry
 
   // ========== Bindings =============
 
   // Bind IBydRoot to the actual Decompose library implementation
-  val RootDecomposeComponent.bind: IAppLogicRoot
+  val RootDecomposeComponent.bind: AppLogicRoot
     @ApplicationScope
     @Provides
     get() = this
