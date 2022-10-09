@@ -13,12 +13,29 @@ import kotlinx.coroutines.launch
 /** Interface representing the root applogic component. */
 abstract class AppLogicRoot(private val storage: IBydStorage) {
   protected val logger = getClassLogger()
-  abstract val coroutineScope: CoroutineScope
 
+  /**
+   * The coroutine scope for this root task.  It should be tied to the lifecycle in some way.
+   * In Decompose this is done with the Lifecycle, in raw android it is the ViewModelScope, etc.
+   *
+   * The same is true for all children.
+   */
+  protected abstract val coroutineScope: CoroutineScope
+
+  /**
+   * This is the mutable version of the state.  It is internally mutable only since we are not
+   * allowing consumers of the system to mutate it.  All the logic is contained within the
+   * [com.beforeyoudie.common.applogic] package and methods on the classes within should be used to
+   * manipulate the state of the application.
+   */
   abstract val _appState: MutableStateFlow<AppState>
 
-  // AppState and lenses. They are lazy initialized because this class's coroutine scope and state may not yet be initialized.
+  /**
+   * Immutable view onto AppState. They are lazy initialized because this class's coroutine scope and state
+   * may not yet be initialized.
+   */
   val appState by lazy { _appState.asStateFlow() }
+  /** Lenses on the appstate.  These make it easier to change subtrees of the overall app state.*/
   private val taskGraphStateFlow by lazy {
     run {
       val f = MutableStateFlow(_appState.value.taskGraph)
@@ -31,8 +48,10 @@ abstract class AppLogicRoot(private val storage: IBydStorage) {
     }
   }
 
+  /** Function to be called when an edit view is requested from the task graph. */
   abstract fun onOpenEdit(taskId: TaskId)
 
+  /** Use this to subscribe to a child navigable view on task graph events after creation.*/
   protected fun subscribeToTaskGraphEvents(taskGraphEvents: SharedFlow<TaskGraphEvent>) {
     coroutineScope.launch {
       taskGraphEvents.collect {
@@ -71,8 +90,12 @@ abstract class AppLogicRoot(private val storage: IBydStorage) {
     }
   }
 
+  /** All possible children and their configurations, to be used on navigation for construction.*/
   sealed class Child {
+    /** A taskgraph/list view.*/
     data class TaskGraph(val appLogic: AppLogicTaskGraph) : Child()
+
+    /** A task edit view.*/
     data class EditTask(val appLogic: AppLogicEdit) : Child()
   }
 }

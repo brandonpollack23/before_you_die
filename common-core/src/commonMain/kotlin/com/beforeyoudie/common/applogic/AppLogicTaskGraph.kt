@@ -9,8 +9,6 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 
-// TODO NOW doc all
-
 /**
  * TaskGraph CoreLogic.  This includes the graph view, the list view, etc.
  * [AppLogicTaskGraphConfig] controls how it should be rendered.
@@ -18,13 +16,13 @@ import kotlinx.coroutines.launch
 abstract class AppLogicTaskGraph(
   val appLogicTaskGraphConfig: AppLogicTaskGraphConfig
 ) {
+  /** See [AppLogicRoot] */
   abstract val coroutineScope: CoroutineScope
 
   private val _taskGraphEvents: MutableSharedFlow<TaskGraphEvent> =
     MutableSharedFlow(replay = 1, onBufferOverflow = BufferOverflow.DROP_OLDEST)
+  /** The immutable view on the state of the application as a whole. */
   val taskGraphEvents = _taskGraphEvents.asSharedFlow()
-  init {
-  }
 
   fun createTask(title: String, description: String?, parent: TaskId?) {
     coroutineScope.launch {
