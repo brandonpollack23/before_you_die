@@ -7,6 +7,7 @@ import com.beforeyoudie.common.state.TaskNode
 import com.beforeyoudie.common.util.BYDFailure
 import com.beforeyoudie.common.util.ResultExt
 import com.beforeyoudie.common.util.getClassLogger
+import com.beforeyoudie.storage.TaskNodeQueries
 import com.benasher44.uuid.uuidFrom
 import me.tatarka.inject.annotations.Inject
 
@@ -253,23 +254,26 @@ class SqlDelightBydStorage(
     }
   }
 
+  // TODO(#1) Dirty hack because of sqldelight bug in generating causing conflicting declarations for the separate delete tasks.
+  private fun TaskNodeQueries.removeTaskNodeAndChildren(tasks: Collection<String>) =
+    removeTaskNodeAndChildren(tasks, tasks, tasks)
+
   override fun removeTaskNodeAndChildren(uuid: TaskId): Result<Collection<TaskId>> {
     logger.v("Removing task and all descendants of $uuid")
-    var result: Result<Collection<TaskId>> = Result.success(emptyList())
-    database.transactionWithResult {
+    return database.transactionWithResult {
+      val root = database.taskNodeQueries.selectTaskNode(uuid.toString()).executeAsOneOrNull()
+      if (root == null) {
+        logger.e("No such task $uuid")
+        rollback(Result.failure(BYDFailure.NonExistentNodeId(uuid)))
+      }
+
       val taskIdsToRemove =
         database.taskNodeQueries.selectTaskselectTaskNodeAndDescendentIds(uuid.toString())
           .executeAsList()
-      if (taskIdsToRemove.isEmpty()) {
-        logger.e("No descendents found for $uuid")
-        result = Result.failure(BYDFailure.NoDescendentsFor(uuid))
-      }
 
       database.taskNodeQueries.removeTaskNodeAndChildren(taskIdsToRemove.map { it.id!! })
-      result = Result.success(taskIdsToRemove.asSequence().map { TaskId(uuidFrom(it.id!!)) }.toSet())
+      Result.success(taskIdsToRemove.asSequence().map { TaskId(uuidFrom(it.id!!)) }.toSet())
     }
-
-    return result
   }
 
   override fun removeDependencyRelationship(

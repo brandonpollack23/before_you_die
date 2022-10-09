@@ -122,13 +122,13 @@ WHERE NOT EXISTS (SELECT * FROM TaskDependency WHERE blockedTask = :blockedTask 
 -- Removal Operations
 removeTaskNodeAndChildren {
   DELETE FROM TaskDependency
-  WHERE blockedTask IN :nodesToRemove OR blockingTask IN :nodesToRemove;
+  WHERE blockedTask IN :nodesToRemove1 OR blockingTask IN :nodesToRemove1;
 
   DELETE FROM TaskNode
-  WHERE id IN :nodesToRemove;
+  WHERE id IN :nodesToRemove2;
 
   DELETE FROM TaskChildren
-  WHERE child IN :nodesToRemove OR parent IN :nodesToRemove;
+  WHERE child IN :nodesToRemove3 OR parent IN :nodesToRemove3;
 }
 
 removeDependencyRelationship:
