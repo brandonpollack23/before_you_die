@@ -60,13 +60,12 @@ class RootDecomposeComponent(
   // our coroutine context tree that should be used.
   override val coroutineScope = coroutineScopeWithLifecycle(applicationCoroutineContext)
 
-
   private val appStateInstanceKeeper = instanceKeeper.getOrCreate { RetainedAppState() }
   override val _appState: MutableStateFlow<AppState> = appStateInstanceKeeper.appState
 
   class RetainedAppState : InstanceKeeper.Instance {
     private val logger = getClassLogger()
-    val appState =  MutableStateFlow(AppState())
+    val appState = MutableStateFlow(AppState())
     override fun onDestroy() {
       logger.i { "destroying app state, app must be exiting" }
     }
@@ -144,9 +143,9 @@ private sealed class NavigationConfig : Parcelable {
  */
 interface AppLogicTaskGraphFactory {
   fun createTaskGraph(
-  appLogicTaskGraphConfig: AppLogicTaskGraphConfig,
-  coroutineContext: CoroutineContext,
-  componentContext: ComponentContext
+    appLogicTaskGraphConfig: AppLogicTaskGraphConfig,
+    coroutineContext: CoroutineContext,
+    componentContext: ComponentContext
   ): AppLogicTaskGraph
 }
 
@@ -156,9 +155,9 @@ interface AppLogicTaskGraphFactory {
 @Inject
 class AppLogicTaskGraphFactoryImpl : AppLogicTaskGraphFactory {
   override fun createTaskGraph(
-  appLogicTaskGraphConfig: AppLogicTaskGraphConfig,
-  coroutineContext: CoroutineContext,
-  componentContext: ComponentContext
+    appLogicTaskGraphConfig: AppLogicTaskGraphConfig,
+    coroutineContext: CoroutineContext,
+    componentContext: ComponentContext
   ): AppLogicTaskGraph = TaskGraphDecomposeComponent(
     appLogicTaskGraphConfig,
     coroutineContext,

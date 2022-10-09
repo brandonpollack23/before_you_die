@@ -3,11 +3,9 @@ package com.beforeyoudie.common.applogic
 import com.arkivanov.essenty.parcelable.Parcelable
 import com.arkivanov.essenty.parcelable.Parcelize
 import com.beforeyoudie.common.state.TaskId
-import com.beforeyoudie.common.state.TaskNode
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 
@@ -18,7 +16,7 @@ import kotlinx.coroutines.launch
  * [AppLogicTaskGraphConfig] controls how it should be rendered.
  */
 abstract class AppLogicTaskGraph(
-  val appLogicTaskGraphConfig: AppLogicTaskGraphConfig,
+  val appLogicTaskGraphConfig: AppLogicTaskGraphConfig
 ) {
   abstract val coroutineScope: CoroutineScope
 
@@ -26,7 +24,6 @@ abstract class AppLogicTaskGraph(
     MutableSharedFlow(replay = 1, onBufferOverflow = BufferOverflow.DROP_OLDEST)
   val taskGraphEvents = _taskGraphEvents.asSharedFlow()
   init {
-
   }
 
   fun createTask(title: String, description: String?, parent: TaskId?) {
@@ -80,4 +77,3 @@ sealed interface TaskGraphEvent {
 
   data class OpenEdit(val taskId: TaskId) : TaskGraphEvent
 }
-
