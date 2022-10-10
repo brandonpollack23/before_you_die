@@ -55,12 +55,12 @@ kotlin {
         implementation(libs.kotest.properties)
         implementation(libs.kotlinx.coroutines.test)
       }
-      kotlin.srcDir("build/generated/ksp/jvm/jvmTest/kotlin")
     }
 
     val androidTest by getting {
       dependencies {
         implementation(libs.kotest.runner.junit5)
+        implementation(libs.sqldelight.jvm) // USE JDBC DRIVER IN UNIT TESTS
       }
     }
 
@@ -68,6 +68,7 @@ kotlin {
       dependencies {
         implementation(libs.kotest.runner.junit5)
       }
+      kotlin.srcDir("build/generated/ksp/jvm/jvmTest/kotlin")
     }
   }
 }

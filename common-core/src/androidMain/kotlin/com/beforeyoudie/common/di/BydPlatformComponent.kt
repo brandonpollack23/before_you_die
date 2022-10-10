@@ -29,7 +29,7 @@ actual abstract class BydPlatformComponent(
 
   @ApplicationPlatformScope
   @Provides
-  fun provideSqlDriver(
+  open fun provideSqlDriver(
     databaseFileName: DatabaseFileName,
     isDbInMemory: IsDbInMemory,
     context: Context

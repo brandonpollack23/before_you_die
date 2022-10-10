@@ -2,7 +2,6 @@ package com.beforeyoudie.common.applogic.impl.decompose
 
 import com.beforeyoudie.CommonTest
 import com.beforeyoudie.common.applogic.AppLogicRoot
-import com.beforeyoudie.common.applogic.AppLogicTaskGraph
 import com.beforeyoudie.common.di.ApplicationCoroutineContext
 import com.beforeyoudie.common.di.TestBydKotlinInjectAppComponent
 import com.beforeyoudie.common.di.create
@@ -16,8 +15,6 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestDispatcher
 import me.tatarka.inject.annotations.Component
 import me.tatarka.inject.annotations.Provides
-
-// TODO NOW test navigation, streams, etc
 
 // TODO NOW seperate Decompose into it's own component provider that binds to AppLogic implementations (for being configurable)
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -67,6 +64,8 @@ class AppLogicRootDecomposeComponentTest : CommonTest() {
       appLogicRootDecomposeComponent.childStack.value.active.instance::class shouldBe
         AppLogicRoot.Child.TaskGraph::class
     }
+
+    // TODO NOW test navigation, streams, etc
   }
 
   private fun setupMocks() {

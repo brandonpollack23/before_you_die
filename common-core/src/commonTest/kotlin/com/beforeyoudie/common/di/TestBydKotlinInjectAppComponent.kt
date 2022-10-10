@@ -12,9 +12,7 @@ import me.tatarka.inject.annotations.Component
 abstract class TestBydKotlinInjectAppComponent(
   @Component val platformComponent: BydPlatformComponent = makeTestPlatformComponent()
 ) :
-  ICommonBydKotlinInjectAppComponent {
-  abstract val coroutineDispatcher: ApplicationCoroutineContext
-}
+  ICommonBydKotlinInjectAppComponent
 
 /** Construct test platform component helper, this will provide mocks etc. per platform. */
 expect fun makeTestPlatformComponent(): BydPlatformComponent
