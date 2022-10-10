@@ -9,9 +9,11 @@ import co.touchlab.kermit.Severity
 import com.arkivanov.decompose.ExperimentalDecomposeApi
 import com.arkivanov.decompose.extensions.compose.jetbrains.lifecycle.LifecycleController
 import com.beforeyoudie.common.App
-import com.beforeyoudie.common.di.BydPlatformComponent
+import com.beforeyoudie.common.applogic.DeepLink
 import com.beforeyoudie.common.di.CommonBydKotlinInjectAppComponent
 import com.beforeyoudie.common.di.DatabaseFileName
+import com.beforeyoudie.common.di.JvmDesktopPlatformComponent
+import com.beforeyoudie.common.di.JvmDesktopPlatformSqlDelightStorageComponent
 import com.beforeyoudie.common.di.create
 import kotlinx.coroutines.Dispatchers
 import kotlin.coroutines.CoroutineContext
@@ -28,7 +30,8 @@ fun main() {
 
   application {
     val coroutineScope = rememberCoroutineScope()
-    val app = kotlinInjectCreateApp("beforeyoudie.db", coroutineScope.coroutineContext)
+    val app =
+      kotlinInjectCreateApp("beforeyoudie.db", coroutineScope.coroutineContext, DeepLink.None)
 
     val windowState = rememberWindowState()
     LifecycleController(app.lifecycle, windowState)
@@ -44,12 +47,14 @@ fun main() {
 
 fun kotlinInjectCreateApp(
   databaseFileName: DatabaseFileName = "",
-  applicationCoroutineContext: CoroutineContext
+  applicationCoroutineContext: CoroutineContext,
+  deepLink: DeepLink,
 ): CommonBydKotlinInjectAppComponent =
   CommonBydKotlinInjectAppComponent::class.create(
-    BydPlatformComponent::class.create(
-      databaseFileName,
+    JvmDesktopPlatformComponent::class.create(
       applicationCoroutineContext,
       Dispatchers.IO
-    )
+    ),
+    JvmDesktopPlatformSqlDelightStorageComponent::class.create(databaseFileName),
+    deepLink,
   )

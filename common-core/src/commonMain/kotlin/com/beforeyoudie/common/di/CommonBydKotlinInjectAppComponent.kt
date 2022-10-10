@@ -30,21 +30,13 @@ internal val DILogger = Logger.withTag("kotlin-inject")
 @Target(AnnotationTarget.CLASS, AnnotationTarget.FUNCTION, AnnotationTarget.PROPERTY_GETTER)
 annotation class ApplicationScope
 
-/** Scope used by the underlying platform component that implements [BydPlatformComponent]. */
-@Scope
-@Target(AnnotationTarget.CLASS, AnnotationTarget.FUNCTION, AnnotationTarget.PROPERTY_GETTER)
-annotation class ApplicationPlatformScope
-
 // Qualifiers
 /** Qualifier typealias for database file name String.*/
 typealias DatabaseFileName = String
-
 /** Qualifier typealias for database in memory Boolean.*/
 typealias IsDbInMemory = Boolean
-
 /** Qualifier for top level coroutine context provided by the platform.*/
 typealias ApplicationCoroutineContext = CoroutineContext
-
 /** Qualifier for the IO dispatcher to be injected.*/
 typealias IOCoroutineContext = CoroutineDispatcher
 
@@ -52,34 +44,6 @@ typealias IOCoroutineContext = CoroutineDispatcher
 interface ICommonBydKotlinInjectAppComponent {
   val rootLogic: AppLogicRoot
   val lifecycle: LifecycleRegistry
-
-  // ========== Bindings =============
-
-  // Bind IBydRoot to the actual Decompose library implementation
-  val AppLogicRootDecomposeComponent.bind: AppLogicRoot
-    @ApplicationScope
-    @Provides
-    get() = this
-
-  val AppLogicEditFactoryImpl.bind: AppLogicEditFactory
-    @ApplicationScope
-    @Provides
-    get() = this
-
-  val AppLogicTaskGraphFactoryImpl.bind: AppLogicTaskGraphFactory
-    @ApplicationScope
-    @Provides
-    get() = this
-
-  val SqlDelightBydStorage.bind: IBydStorage
-    @ApplicationScope
-    @Provides
-    get() = this
-
-  val LifecycleRegistry.bind: Lifecycle
-    @ApplicationScope
-    @Provides
-    get() = this
 
   // ========== Providers =============
 
@@ -101,14 +65,81 @@ interface ICommonBydKotlinInjectAppComponent {
   }
 }
 
-/** Common component between platforms, in tests use [TestBydKotlinInjectAppComponent] instead, which contains the ability to override etc.*/
+@Scope
+@Target(
+  AnnotationTarget.CLASS,
+  AnnotationTarget.FUNCTION,
+  AnnotationTarget.PROPERTY_GETTER,
+  AnnotationTarget.PROPERTY
+)
+annotation class ApplicationPlatformScope
+
+/** Platform subcomponent, provides things like platform specific sql driver, context, etc.*/
+@ApplicationPlatformScope
+interface BydPlatformComponent {
+  @get:ApplicationPlatformScope
+  val applicationCoroutineContext: ApplicationCoroutineContext
+
+  @get:ApplicationPlatformScope
+  val ioCoroutineContext: IOCoroutineContext
+}
+
+@Scope
+@Target(
+  AnnotationTarget.CLASS,
+  AnnotationTarget.FUNCTION,
+  AnnotationTarget.PROPERTY_GETTER,
+  AnnotationTarget.PROPERTY
+)
+annotation class ApplicationStoragePlatformScope
+
+// TODO NOW seperate no platform and platform storage
+@ApplicationStoragePlatformScope
+interface ApplicationStoragePlatformComponent {
+  @get:ApplicationStoragePlatformScope
+  val databaseFileName: DatabaseFileName
+
+  @get:ApplicationStoragePlatformScope
+  val sqlDriver: SqlDriver
+
+  @ApplicationStoragePlatformScope
+  @Provides
+  fun provideIsInDbInMemory(databaseFileName: DatabaseFileName): IsDbInMemory
+}
+
+/** Component used by real implementations.*/
 @ApplicationScope
 @Component
 abstract class CommonBydKotlinInjectAppComponent(
   @Component val platformComponent: BydPlatformComponent,
+  @Component val storageComponent: ApplicationStoragePlatformComponent,
   @get:Provides val deepLink: DeepLink = DeepLink.None
 ) :
-  ICommonBydKotlinInjectAppComponent
+  ICommonBydKotlinInjectAppComponent {
 
-/** Platform subcomponent, provides things like platform specific sql driver, context, etc.*/
-expect abstract class BydPlatformComponent
+  // TODO NOW move to decompose component
+  val AppLogicRootDecomposeComponent.bind: AppLogicRoot
+    @ApplicationScope
+    @Provides
+    get() = this
+
+  val AppLogicEditFactoryImpl.bind: AppLogicEditFactory
+    @ApplicationScope
+    @Provides
+    get() = this
+
+  val AppLogicTaskGraphFactoryImpl.bind: AppLogicTaskGraphFactory
+    @ApplicationScope
+    @Provides
+    get() = this
+
+  val LifecycleRegistry.bind: Lifecycle
+    @ApplicationScope
+    @Provides
+    get() = this
+
+  val SqlDelightBydStorage.bind: IBydStorage
+    @ApplicationScope
+    @Provides
+    get() = this
+  }

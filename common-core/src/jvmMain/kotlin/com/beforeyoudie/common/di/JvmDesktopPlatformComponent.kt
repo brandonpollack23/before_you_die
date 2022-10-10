@@ -1,5 +1,7 @@
 package com.beforeyoudie.common.di
 
+import com.beforeyoudie.common.storage.IBydStorage
+import com.beforeyoudie.common.storage.impl.SqlDelightBydStorage
 import com.squareup.sqldelight.db.SqlDriver
 import com.squareup.sqldelight.sqlite.driver.JdbcSqliteDriver
 import me.tatarka.inject.annotations.Component
@@ -7,17 +9,18 @@ import me.tatarka.inject.annotations.Provides
 import kotlin.io.path.Path
 import kotlin.io.path.createDirectories
 
-@ApplicationPlatformScope
 @Component
-actual abstract class BydPlatformComponent(
-  @get:ApplicationPlatformScope @get:Provides
-  val databaseFileName: DatabaseFileName = "",
-  @get:ApplicationPlatformScope @get:Provides
-  val applicationCoroutineContext: ApplicationCoroutineContext,
-  @get:ApplicationPlatformScope @get:Provides
-  val ioCoroutineContext: IOCoroutineContext
-) {
-  @ApplicationPlatformScope
+abstract class JvmDesktopPlatformComponent(
+  @get:Provides override val applicationCoroutineContext: ApplicationCoroutineContext,
+  @get:Provides override val ioCoroutineContext: IOCoroutineContext
+) : BydPlatformComponent
+
+@Component
+abstract class JvmDesktopPlatformSqlDelightStorageComponent(
+  @get:Provides override val databaseFileName: DatabaseFileName = ""
+) : ApplicationStoragePlatformComponent {
+
+  @ApplicationStoragePlatformScope
   @Provides
   fun provideSqlDriver(databaseFileName: DatabaseFileName, isDbInMemory: IsDbInMemory): SqlDriver {
     if (isDbInMemory) {
@@ -36,9 +39,7 @@ actual abstract class BydPlatformComponent(
     return JdbcSqliteDriver(url = jdbcUri)
   }
 
-  @ApplicationPlatformScope
-  @Provides
-  fun provideIsInDbInMemory(databaseFileName: DatabaseFileName): IsDbInMemory =
+  override fun provideIsInDbInMemory(databaseFileName: DatabaseFileName): IsDbInMemory =
     databaseFileName.trim('"').isEmpty() ||
       databaseFileName == JdbcSqliteDriver.IN_MEMORY
 }
