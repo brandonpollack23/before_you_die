@@ -28,7 +28,7 @@ abstract class AppLogicRoot(private val storage: IBydStorage) {
    * [com.beforeyoudie.common.applogic] package and methods on the classes within should be used to
    * manipulate the state of the application.
    */
-  abstract val _appState: MutableStateFlow<AppState>
+  protected abstract val _appState: MutableStateFlow<AppState>
 
   /**
    * Immutable view onto AppState. They are lazy initialized because this class's coroutine scope and state

@@ -62,8 +62,7 @@ class AppLogicRootDecomposeComponent(
 
   private val appStateInstanceKeeper = instanceKeeper.getOrCreate { RetainedAppState() }
   override val _appState: MutableStateFlow<AppState> = appStateInstanceKeeper.appState
-
-  class RetainedAppState : InstanceKeeper.Instance {
+  private class RetainedAppState : InstanceKeeper.Instance {
     private val logger = getClassLogger()
     val appState = MutableStateFlow(AppState())
     override fun onDestroy() {

@@ -2,6 +2,7 @@ package com.beforeyoudie.common.applogic.impl.decompose
 
 import com.beforeyoudie.CommonTest
 import com.beforeyoudie.common.applogic.AppLogicRoot
+import com.beforeyoudie.common.applogic.AppLogicTaskGraph
 import com.beforeyoudie.common.di.ApplicationCoroutineContext
 import com.beforeyoudie.common.di.TestBydKotlinInjectAppComponent
 import com.beforeyoudie.common.di.create
@@ -39,7 +40,9 @@ abstract class AppLogicRootDecomposeTestComponent(
 @OptIn(ExperimentalCoroutinesApi::class)
 class AppLogicRootDecomposeComponentTest : CommonTest() {
   private lateinit var testDispatcher: TestDispatcher
-  private lateinit var rootDecomposeComponent: AppLogicRoot
+  private lateinit var appLogicRoot: AppLogicRoot
+  private val appLogicRootDecomposeComponent
+    get() = appLogicRoot as AppLogicRootDecomposeComponent
   private lateinit var mockStorage: IBydStorage
 
   private val picardTaskId = randomTaskId()
@@ -50,18 +53,19 @@ class AppLogicRootDecomposeComponentTest : CommonTest() {
     beforeTest {
       val injectComponent = AppLogicRootDecomposeTestComponent::class.create()
       testDispatcher = injectComponent.testDispatcher
-      rootDecomposeComponent = injectComponent.rootDecomposeComponent
+      appLogicRoot = injectComponent.rootDecomposeComponent
       mockStorage = injectComponent.storage
 
       setupMocks()
     }
 
     test("Is Correct Instance Implementation") {
-      rootDecomposeComponent::class shouldBe AppLogicRootDecomposeComponent::class
+      appLogicRoot::class shouldBe AppLogicRootDecomposeComponent::class
     }
 
     test("Initial child is a task graph") {
-      // TODO NOW
+      appLogicRootDecomposeComponent.childStack.value.active.instance::class shouldBe
+        AppLogicRoot.Child.TaskGraph::class
     }
   }
 
