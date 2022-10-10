@@ -17,20 +17,19 @@ actual abstract class BydPlatformComponent(
 ) {
   @ApplicationPlatformScope
   @Provides
-  fun provideSqlDriver(databaseFileName: DatabaseFileName): SqlDriver {
-    if (databaseFileName.isNotBlank()) {
+  fun provideSqlDriver(databaseFileName: DatabaseFileName, isDbInMemory: IsDbInMemory): SqlDriver {
+    if (isDbInMemory) {
       DILogger.d("opening db file with name: $databaseFileName")
     } else {
       DILogger.w("Using in memory database")
     }
 
-    val jdbcUri =
-      if (databaseFileName.isNotBlank()) {
-        Path("./sqlite/db").createDirectories()
-        "jdbc:sqlite:./sqlite/db/$databaseFileName"
-      } else {
-        JdbcSqliteDriver.IN_MEMORY
-      }
+    val jdbcUri = if (!isDbInMemory) {
+      Path("./sqlite/db").createDirectories()
+      "jdbc:sqlite:./sqlite/db/$databaseFileName"
+    } else {
+      JdbcSqliteDriver.IN_MEMORY
+    }
 
     return JdbcSqliteDriver(url = jdbcUri)
   }
@@ -38,5 +37,6 @@ actual abstract class BydPlatformComponent(
   @ApplicationPlatformScope
   @Provides
   fun provideIsInDbInMemory(databaseFileName: DatabaseFileName): IsDbInMemory =
-    databaseFileName.trim('"').isEmpty()
+    databaseFileName.trim('"').isEmpty() ||
+      databaseFileName == JdbcSqliteDriver.IN_MEMORY
 }

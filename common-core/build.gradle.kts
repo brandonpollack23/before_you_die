@@ -50,9 +50,12 @@ kotlin {
     val commonTest by getting {
       dependencies {
         implementation(libs.mockk)
-        implementation(libs.kotest.koin)
+        implementation(libs.kotest)
+        implementation(libs.kotest.assertions)
+        implementation(libs.kotest.properties)
         implementation(libs.kotlinx.coroutines.test)
       }
+      kotlin.srcDir("build/generated/ksp/common/commonTest/kotlin")
     }
 
     val androidTest by getting {
@@ -64,9 +67,6 @@ kotlin {
     val jvmTest by getting {
       dependencies {
         implementation(libs.kotest.runner.junit5)
-        implementation(libs.kotest)
-        implementation(libs.kotest.assertions)
-        implementation(libs.kotest.properties)
       }
       kotlin.srcDir("build/generated/ksp/jvm/jvmTest/kotlin")
     }

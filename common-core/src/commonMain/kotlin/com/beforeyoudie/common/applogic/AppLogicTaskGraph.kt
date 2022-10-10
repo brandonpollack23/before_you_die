@@ -21,6 +21,7 @@ abstract class AppLogicTaskGraph(
 
   private val _taskGraphEvents: MutableSharedFlow<TaskGraphEvent> =
     MutableSharedFlow(replay = 1, onBufferOverflow = BufferOverflow.DROP_OLDEST)
+
   /** The immutable view on the state of the application as a whole. */
   val taskGraphEvents = _taskGraphEvents.asSharedFlow()
 

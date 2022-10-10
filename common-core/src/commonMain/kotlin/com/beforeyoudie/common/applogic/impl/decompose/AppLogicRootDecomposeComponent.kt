@@ -25,12 +25,11 @@ import com.beforeyoudie.common.util.getClassLogger
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import me.tatarka.inject.annotations.Inject
 import kotlin.coroutines.CoroutineContext
 
-// TODO NOW test this (navigation) and children
+// TODO NOW test children
 
 /** This is the root CoreLogic component.  While the other components in the Decompose world are
  * created dynamically by this class, this one is a singleton and is thus injected by my DI
@@ -42,7 +41,7 @@ import kotlin.coroutines.CoroutineContext
  * @property appLogicEditFactory factory for creating a new note edit AppLogic
  */
 @Inject
-class RootDecomposeComponent(
+class AppLogicRootDecomposeComponent(
   private val storage: IBydStorage,
   private val deepLink: DeepLink = DeepLink.None,
   private val appLogicTaskGraphFactory: AppLogicTaskGraphFactory,
@@ -94,19 +93,20 @@ class RootDecomposeComponent(
   val childStack: Value<ChildStack<*, Child>> = childStack(
     source = navigation,
     initialStack = { getInitialStack(deepLink) },
-    childFactory = ::createChild
+    childFactory = ::createChild,
+    handleBackButton = true
   )
 
   private fun createChild(
     config: NavigationConfig,
     componentContext: ComponentContext
-  ): Child = runBlocking(applicationCoroutineContext) {
+  ): Child {
     logger.v("Creating a child with config $config")
-    when (config) {
+    return when (config) {
       is NavigationConfig.TaskGraph -> {
         val taskGraph = appLogicTaskGraphFactory.createTaskGraph(
           config.taskGraphConfig,
-          coroutineContext,
+          applicationCoroutineContext,
           componentContext
         )
 
@@ -117,7 +117,7 @@ class RootDecomposeComponent(
       // TODO NOW implement edit now as well, just passing UUID will be fine since its all accessible from
       //  the higher level root and can be passed to children from there, no need to duplicate that work here
       is NavigationConfig.Edit -> Child.EditTask(
-        appLogicEditFactory.createEdit(coroutineContext, componentContext)
+        appLogicEditFactory.createEdit(applicationCoroutineContext, componentContext)
       )
     }
   }
@@ -160,7 +160,7 @@ private sealed class NavigationConfig : Parcelable {
 interface AppLogicTaskGraphFactory {
   fun createTaskGraph(
     appLogicTaskGraphConfig: AppLogicTaskGraphConfig,
-    coroutineContext: CoroutineContext,
+    parentCoroutineContext: CoroutineContext,
     componentContext: ComponentContext
   ): AppLogicTaskGraph
 }
@@ -172,11 +172,11 @@ interface AppLogicTaskGraphFactory {
 class AppLogicTaskGraphFactoryImpl : AppLogicTaskGraphFactory {
   override fun createTaskGraph(
     appLogicTaskGraphConfig: AppLogicTaskGraphConfig,
-    coroutineContext: CoroutineContext,
+    parentCoroutineContext: CoroutineContext,
     componentContext: ComponentContext
   ): AppLogicTaskGraph = TaskGraphDecomposeComponent(
     appLogicTaskGraphConfig,
-    coroutineContext,
+    parentCoroutineContext,
     componentContext
   )
 }
@@ -188,7 +188,7 @@ class AppLogicTaskGraphFactoryImpl : AppLogicTaskGraphFactory {
  */
 interface AppLogicEditFactory {
   fun createEdit(
-    coroutineContext: CoroutineContext,
+    parentCoroutineContext: CoroutineContext,
     componentContext: ComponentContext
   ): AppLogicEdit
 }
@@ -198,6 +198,9 @@ interface AppLogicEditFactory {
  */
 @Inject
 class AppLogicEditFactoryImpl : AppLogicEditFactory {
-  override fun createEdit(coroutineContext: CoroutineContext, componentContext: ComponentContext) =
+  override fun createEdit(
+    parentCoroutineContext: CoroutineContext,
+    componentContext: ComponentContext
+  ) =
     EditDecomposeComponent(componentContext)
 }

@@ -6,6 +6,7 @@ import com.beforeyoudie.common.storage.BeforeYouDieDb
 import com.squareup.sqldelight.android.AndroidSqliteDriver
 import com.squareup.sqldelight.db.SqlDriver
 import io.requery.android.database.sqlite.RequerySQLiteOpenHelperFactory
+import io.requery.android.database.sqlite.SQLiteDatabaseConfiguration
 import me.tatarka.inject.annotations.Component
 import me.tatarka.inject.annotations.Provides
 
@@ -28,8 +29,12 @@ actual abstract class BydPlatformComponent(
 
   @ApplicationPlatformScope
   @Provides
-  fun provideSqlDriver(databaseFileName: DatabaseFileName, context: Context): SqlDriver {
-    if (databaseFileName.isNotBlank()) {
+  fun provideSqlDriver(
+    databaseFileName: DatabaseFileName,
+    isDbInMemory: IsDbInMemory,
+    context: Context
+  ): SqlDriver {
+    if (isDbInMemory) {
       DILogger.d("opening db file with name: $databaseFileName")
     } else {
       DILogger.d("Using in memory database")
@@ -47,5 +52,6 @@ actual abstract class BydPlatformComponent(
   @ApplicationPlatformScope
   @Provides
   fun provideIsInDbInMemory(databaseFileName: DatabaseFileName): IsDbInMemory =
-    databaseFileName.trim('"').isEmpty()
+    databaseFileName.trim('"').isEmpty() ||
+      databaseFileName == SQLiteDatabaseConfiguration.MEMORY_DB_PATH
 }

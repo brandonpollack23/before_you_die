@@ -9,9 +9,9 @@ import com.beforeyoudie.common.applogic.AppLogicRoot
 import com.beforeyoudie.common.applogic.DeepLink
 import com.beforeyoudie.common.applogic.impl.decompose.AppLogicEditFactory
 import com.beforeyoudie.common.applogic.impl.decompose.AppLogicEditFactoryImpl
+import com.beforeyoudie.common.applogic.impl.decompose.AppLogicRootDecomposeComponent
 import com.beforeyoudie.common.applogic.impl.decompose.AppLogicTaskGraphFactory
 import com.beforeyoudie.common.applogic.impl.decompose.AppLogicTaskGraphFactoryImpl
-import com.beforeyoudie.common.applogic.impl.decompose.RootDecomposeComponent
 import com.beforeyoudie.common.storage.BeforeYouDieDb
 import com.beforeyoudie.common.storage.IBydStorage
 import com.beforeyoudie.common.storage.impl.SqlDelightBydStorage
@@ -52,7 +52,7 @@ interface ICommonBydKotlinInjectAppComponent {
   // ========== Bindings =============
 
   // Bind IBydRoot to the actual Decompose library implementation
-  val RootDecomposeComponent.bind: AppLogicRoot
+  val AppLogicRootDecomposeComponent.bind: AppLogicRoot
     @ApplicationScope
     @Provides
     get() = this

@@ -35,6 +35,7 @@ abstract class AppLogicRoot(private val storage: IBydStorage) {
    * may not yet be initialized.
    */
   val appState by lazy { _appState.asStateFlow() }
+
   /** Lenses on the appstate.  These make it easier to change subtrees of the overall app state.*/
   private val taskGraphStateFlow by lazy {
     run {
@@ -49,7 +50,7 @@ abstract class AppLogicRoot(private val storage: IBydStorage) {
   }
 
   /** Function to be called when an edit view is requested from the task graph. */
-  abstract fun onOpenEdit(taskId: TaskId)
+  protected abstract fun onOpenEdit(taskId: TaskId)
 
   /** Use this to subscribe to a child navigable view on task graph events after creation.*/
   protected fun subscribeToTaskGraphEvents(taskGraphEvents: SharedFlow<TaskGraphEvent>) {
@@ -105,7 +106,7 @@ abstract class AppLogicRoot(private val storage: IBydStorage) {
  */
 data class AppState(
   val taskGraph: Collection<TaskNode> = emptySet(),
-  val isLoading: Boolean = true,
+  val isLoading: Boolean = true
 )
 
 // TODO(#9) Deep links add deep link functionality

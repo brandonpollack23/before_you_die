@@ -4,7 +4,6 @@ import com.arkivanov.decompose.ComponentContext
 import com.beforeyoudie.common.applogic.AppLogicTaskGraph
 import com.beforeyoudie.common.applogic.AppLogicTaskGraphConfig
 import kotlin.coroutines.CoroutineContext
-import kotlin.coroutines.coroutineContext
 
 /**
  * Though it seems at first glance this class isn't really necessary part of the Decompose framework,
@@ -13,10 +12,10 @@ import kotlin.coroutines.coroutineContext
  */
 class TaskGraphDecomposeComponent(
   appLogicTaskGraphConfig: AppLogicTaskGraphConfig,
-  coroutineContext: CoroutineContext,
+  parentCoroutineContext: CoroutineContext,
   componentContext: ComponentContext
 ) :
   AppLogicTaskGraph(appLogicTaskGraphConfig),
   ComponentContext by componentContext {
-  override val coroutineScope = coroutineScopeWithLifecycle(coroutineContext)
+  override val coroutineScope = coroutineScopeWithLifecycle(parentCoroutineContext)
 }
