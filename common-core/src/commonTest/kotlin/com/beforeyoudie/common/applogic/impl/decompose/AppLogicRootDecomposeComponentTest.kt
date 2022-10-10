@@ -16,7 +16,6 @@ import kotlinx.coroutines.test.TestDispatcher
 import me.tatarka.inject.annotations.Component
 import me.tatarka.inject.annotations.Provides
 
-// TODO NOW seperate Decompose into it's own component provider that binds to AppLogic implementations (for being configurable)
 @OptIn(ExperimentalCoroutinesApi::class)
 @Component
 abstract class AppLogicRootDecomposeTestComponent(
