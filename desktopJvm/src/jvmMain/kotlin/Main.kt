@@ -1,10 +1,12 @@
 import androidx.compose.material.MaterialTheme
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
 import co.touchlab.kermit.CommonWriter
 import co.touchlab.kermit.Logger
 import co.touchlab.kermit.Severity
+import com.arkivanov.decompose.ExperimentalDecomposeApi
 import com.arkivanov.decompose.extensions.compose.jetbrains.lifecycle.LifecycleController
 import com.beforeyoudie.common.App
 import com.beforeyoudie.common.di.BydPlatformComponent
@@ -14,6 +16,7 @@ import com.beforeyoudie.common.di.create
 import kotlinx.coroutines.Dispatchers
 import kotlin.coroutines.CoroutineContext
 
+@OptIn(ExperimentalDecomposeApi::class)
 fun main() {
   // TODO(#6) PRIORITY create issue to have configurable stuff, including log severity + db file,  with config file/command line args, screen resolution.
   // This should also include selections for implementation (eg sqldelight, firebase storage, etc).
@@ -21,9 +24,11 @@ fun main() {
   Logger.setMinSeverity(Severity.Verbose)
   Logger.setLogWriters(CommonWriter())
 
-  val app = kotlinInjectCreateApp("beforeyoudie.db", Dispatchers.Main)
 
   application {
+    val coroutineScope = rememberCoroutineScope()
+    val app = kotlinInjectCreateApp("beforeyoudie.db", coroutineScope.coroutineContext)
+
     val windowState = rememberWindowState()
     LifecycleController(app.lifecycle, windowState)
 

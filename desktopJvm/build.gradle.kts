@@ -27,6 +27,8 @@ kotlin {
         implementation(libs.kermit)
         implementation(libs.decompose)
         implementation(libs.decompose.extensions.jetbrains)
+        implementation(libs.kotlinx.coroutines.core)
+        implementation(libs.kotlinx.coroutines.swing)
       }
     }
     val jvmTest by getting
