@@ -20,6 +20,7 @@ import kotlinx.coroutines.test.TestDispatcher
 import me.tatarka.inject.annotations.Component
 import me.tatarka.inject.annotations.Provides
 
+// TODO NOW separate out storage, platform, and corelogic components in DI
 @OptIn(ExperimentalCoroutinesApi::class)
 @Component
 abstract class AppLogicRootDecomposeTestComponent(
