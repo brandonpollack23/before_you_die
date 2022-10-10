@@ -18,12 +18,13 @@ import kotlin.coroutines.CoroutineContext
 
 @OptIn(ExperimentalDecomposeApi::class)
 fun main() {
-  // TODO(#6) PRIORITY create issue to have configurable stuff, including log severity + db file,  with config file/command line args, screen resolution.
+  // TODO(#6) PRIORITY create issue to have configurable stuff, including log severity + db file,
+  // with config file/command line args, screen resolution.
+  //
   // This should also include selections for implementation (eg sqldelight, firebase storage, etc).
   // You'll also need to restucture the DI system into seperate components.
   Logger.setMinSeverity(Severity.Verbose)
   Logger.setLogWriters(CommonWriter())
-
 
   application {
     val coroutineScope = rememberCoroutineScope()

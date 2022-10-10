@@ -122,7 +122,7 @@ android {
 
 sqldelight {
   database("BeforeYouDieDb") {
-    packageName = "com.beforeyoudie.common.storage"
+    packageName = "com.beforeyoudie.common.storage.impl"
     sourceFolders = listOf("sql")
     dialect = "sqlite:3.24"
     verifyMigrations = true

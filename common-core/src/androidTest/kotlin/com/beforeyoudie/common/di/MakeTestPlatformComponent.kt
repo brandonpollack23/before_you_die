@@ -34,6 +34,6 @@ actual fun makeTestPlatformComponent(): BydPlatformComponent {
     mockContext,
     "",
     StandardTestDispatcher(name = "TestMainDispatcher"),
-    StandardTestDispatcher(name = "TestIODispatcher"),
+    StandardTestDispatcher(name = "TestIODispatcher")
   )
 }

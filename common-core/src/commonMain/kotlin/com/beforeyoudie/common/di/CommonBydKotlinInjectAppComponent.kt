@@ -12,8 +12,8 @@ import com.beforeyoudie.common.applogic.impl.decompose.AppLogicEditFactoryImpl
 import com.beforeyoudie.common.applogic.impl.decompose.AppLogicRootDecomposeComponent
 import com.beforeyoudie.common.applogic.impl.decompose.AppLogicTaskGraphFactory
 import com.beforeyoudie.common.applogic.impl.decompose.AppLogicTaskGraphFactoryImpl
-import com.beforeyoudie.common.storage.BeforeYouDieDb
 import com.beforeyoudie.common.storage.IBydStorage
+import com.beforeyoudie.common.storage.impl.BeforeYouDieDb
 import com.beforeyoudie.common.storage.impl.SqlDelightBydStorage
 import com.squareup.sqldelight.db.SqlDriver
 import kotlinx.coroutines.CoroutineDispatcher

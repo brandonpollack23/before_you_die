@@ -71,7 +71,6 @@ class AppLogicRootDecomposeComponent(
     }
   }
 
-
   init {
     // Lifecycle setup.
     lifecycle.subscribe(object : Lifecycle.Callbacks {

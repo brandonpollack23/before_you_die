@@ -53,7 +53,6 @@ class AppLogicRootDecomposeComponentTest : CommonTest() {
     get() = appLogicRoot as AppLogicRootDecomposeComponent
   private lateinit var lifecycleRegistry: LifecycleRegistry
 
-
   private val picardTaskId = randomTaskId()
   private val rikerTaskId = randomTaskId()
   private val laforgeTaskId = randomTaskId()
@@ -92,7 +91,8 @@ class AppLogicRootDecomposeComponentTest : CommonTest() {
       testMainDispatcher.scheduler.advanceUntilIdle()
 
       appLogicRootDecomposeComponent.appState.value.isLoading shouldBe false
-      appLogicRootDecomposeComponent.appState.value.taskGraph shouldContainExactlyInAnyOrder taskNodes
+      appLogicRootDecomposeComponent.appState.value.taskGraph shouldContainExactlyInAnyOrder
+        taskNodes
     }
 
     test("Child navigation causes edit view to open") {
