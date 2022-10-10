@@ -55,7 +55,7 @@ kotlin {
         implementation(libs.kotest.properties)
         implementation(libs.kotlinx.coroutines.test)
       }
-      kotlin.srcDir("build/generated/ksp/common/commonTest/kotlin")
+      kotlin.srcDir("build/generated/ksp/jvm/jvmTest/kotlin")
     }
 
     val androidTest by getting {
@@ -68,7 +68,6 @@ kotlin {
       dependencies {
         implementation(libs.kotest.runner.junit5)
       }
-      kotlin.srcDir("build/generated/ksp/jvm/jvmTest/kotlin")
     }
   }
 }
