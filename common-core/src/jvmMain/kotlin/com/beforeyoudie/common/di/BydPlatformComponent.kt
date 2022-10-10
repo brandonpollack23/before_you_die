@@ -13,7 +13,9 @@ actual abstract class BydPlatformComponent(
   @get:ApplicationPlatformScope @get:Provides
   val databaseFileName: DatabaseFileName = "",
   @get:ApplicationPlatformScope @get:Provides
-  val applicationCoroutineContext: ApplicationCoroutineContext
+  val applicationCoroutineContext: ApplicationCoroutineContext,
+  @get:ApplicationPlatformScope @get:Provides
+  val ioCoroutineContext: IOCoroutineContext
 ) {
   @ApplicationPlatformScope
   @Provides

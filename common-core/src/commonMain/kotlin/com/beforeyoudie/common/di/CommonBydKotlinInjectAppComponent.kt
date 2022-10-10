@@ -16,6 +16,7 @@ import com.beforeyoudie.common.storage.BeforeYouDieDb
 import com.beforeyoudie.common.storage.IBydStorage
 import com.beforeyoudie.common.storage.impl.SqlDelightBydStorage
 import com.squareup.sqldelight.db.SqlDriver
+import kotlinx.coroutines.CoroutineDispatcher
 import me.tatarka.inject.annotations.Component
 import me.tatarka.inject.annotations.Provides
 import me.tatarka.inject.annotations.Scope
@@ -43,6 +44,9 @@ typealias IsDbInMemory = Boolean
 
 /** Qualifier for top level coroutine context provided by the platform.*/
 typealias ApplicationCoroutineContext = CoroutineContext
+
+/** Qualifier for the IO dispatcher to be injected.*/
+typealias IOCoroutineContext = CoroutineDispatcher
 
 /** Make this an interface so that it can be constructed differently in tests vs non tests. */
 interface ICommonBydKotlinInjectAppComponent {

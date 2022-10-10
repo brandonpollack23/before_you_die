@@ -6,5 +6,6 @@ import kotlinx.coroutines.test.StandardTestDispatcher
 @OptIn(ExperimentalCoroutinesApi::class)
 actual fun makeTestPlatformComponent(): BydPlatformComponent = BydPlatformComponent::class.create(
   DatabaseFileName(),
-  StandardTestDispatcher()
+  StandardTestDispatcher(name = "TestMainDispatcher"),
+  StandardTestDispatcher(name = "TestIODispatcher")
 )

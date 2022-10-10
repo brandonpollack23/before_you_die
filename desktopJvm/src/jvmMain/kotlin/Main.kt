@@ -48,6 +48,7 @@ fun kotlinInjectCreateApp(
   CommonBydKotlinInjectAppComponent::class.create(
     BydPlatformComponent::class.create(
       databaseFileName,
-      applicationCoroutineContext
+      applicationCoroutineContext,
+      Dispatchers.IO
     )
   )

@@ -1,13 +1,17 @@
 package com.beforeyoudie.common.applogic.impl.decompose
 
+import com.arkivanov.essenty.lifecycle.LifecycleRegistry
+import com.arkivanov.essenty.lifecycle.create
 import com.beforeyoudie.CommonTest
 import com.beforeyoudie.common.applogic.AppLogicRoot
 import com.beforeyoudie.common.di.ApplicationCoroutineContext
+import com.beforeyoudie.common.di.IOCoroutineContext
 import com.beforeyoudie.common.di.TestBydKotlinInjectAppComponent
 import com.beforeyoudie.common.di.create
 import com.beforeyoudie.common.state.TaskNode
 import com.beforeyoudie.common.storage.IBydStorage
 import com.beforeyoudie.randomTaskId
+import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockkClass
@@ -22,11 +26,15 @@ abstract class AppLogicRootDecomposeTestComponent(
   @Component val parent: TestBydKotlinInjectAppComponent =
     TestBydKotlinInjectAppComponent::class.create()
 ) {
-  abstract val testDispatcherContext: ApplicationCoroutineContext
-  val testDispatcher
-    get() = testDispatcherContext as TestDispatcher
+  abstract val testMainCoroutineContext: ApplicationCoroutineContext
+  val testMainDispatcher
+    get() = testMainCoroutineContext as TestDispatcher
+  abstract val testIOCoroutineContext: IOCoroutineContext
+  val testIODispatcher
+    get() = testIOCoroutineContext as TestDispatcher
 
   abstract val rootDecomposeComponent: AppLogicRoot
+  abstract val lifecycleRegistry: LifecycleRegistry
   abstract val storage: IBydStorage
 
   @Provides
@@ -35,11 +43,16 @@ abstract class AppLogicRootDecomposeTestComponent(
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class AppLogicRootDecomposeComponentTest : CommonTest() {
-  private lateinit var testDispatcher: TestDispatcher
+  private lateinit var testMainDispatcher: TestDispatcher
+  private lateinit var testIODispatcher: TestDispatcher
+
+  private lateinit var mockStorage: IBydStorage
+
   private lateinit var appLogicRoot: AppLogicRoot
   private val appLogicRootDecomposeComponent
     get() = appLogicRoot as AppLogicRootDecomposeComponent
-  private lateinit var mockStorage: IBydStorage
+  private lateinit var lifecycleRegistry: LifecycleRegistry
+
 
   private val picardTaskId = randomTaskId()
   private val rikerTaskId = randomTaskId()
@@ -48,11 +61,15 @@ class AppLogicRootDecomposeComponentTest : CommonTest() {
   init {
     beforeTest {
       val injectComponent = AppLogicRootDecomposeTestComponent::class.create()
-      testDispatcher = injectComponent.testDispatcher
-      appLogicRoot = injectComponent.rootDecomposeComponent
+      testMainDispatcher = injectComponent.testMainDispatcher
+      testIODispatcher = injectComponent.testIODispatcher
       mockStorage = injectComponent.storage
+      appLogicRoot = injectComponent.rootDecomposeComponent
+      lifecycleRegistry = injectComponent.lifecycleRegistry
 
       setupMocks()
+
+      lifecycleRegistry.create()
     }
 
     test("Is Correct Instance Implementation") {
@@ -64,29 +81,46 @@ class AppLogicRootDecomposeComponentTest : CommonTest() {
         AppLogicRoot.Child.TaskGraph::class
     }
 
-    // TODO NOW test navigation, streams, etc
+    test("Loads storage on initialization and transitions from isLoading state") {
+      appLogicRootDecomposeComponent.appState.value.isLoading shouldBe true
+
+      // Run onCreate launched load.
+      testMainDispatcher.scheduler.advanceUntilIdle()
+      // Load from IO.
+      testIODispatcher.scheduler.advanceUntilIdle()
+      // Complete load state change.
+      testMainDispatcher.scheduler.advanceUntilIdle()
+
+      appLogicRootDecomposeComponent.appState.value.isLoading shouldBe false
+      appLogicRootDecomposeComponent.appState.value.taskGraph shouldContainExactlyInAnyOrder taskNodes
+    }
+
+    test("Child navigation causes edit view to open") {
+    }
   }
 
-  private fun setupMocks() {
-    every { mockStorage.selectAllTaskNodeInformation() } returns setOf(
-      TaskNode(
-        picardTaskId,
-        "Captain Picard",
-        "Worlds best captain"
-      ),
-      TaskNode(
-        rikerTaskId,
-        "William T Riker",
-        "Beard or go home",
-        parent = picardTaskId,
-        blockedTasks = setOf(laforgeTaskId)
-      ),
-      TaskNode(
-        laforgeTaskId,
-        "Geordi Laforge",
-        "Space Engineering Master",
-        blockingTasks = setOf(rikerTaskId)
-      )
+  private val taskNodes: Set<TaskNode> = setOf(
+    TaskNode(
+      picardTaskId,
+      "Captain Picard",
+      "Worlds best captain"
+    ),
+    TaskNode(
+      rikerTaskId,
+      "William T Riker",
+      "Beard or go home",
+      parent = picardTaskId,
+      blockedTasks = setOf(laforgeTaskId)
+    ),
+    TaskNode(
+      laforgeTaskId,
+      "Geordi Laforge",
+      "Space Engineering Master",
+      blockingTasks = setOf(rikerTaskId)
     )
+  )
+
+  private fun setupMocks() {
+    every { mockStorage.selectAllTaskNodeInformation() } returns taskNodes
   }
 }

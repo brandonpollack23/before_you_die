@@ -33,6 +33,7 @@ actual fun makeTestPlatformComponent(): BydPlatformComponent {
   return TestBydPlatformAndroidComponent::class.create(
     mockContext,
     "",
-    StandardTestDispatcher()
+    StandardTestDispatcher(name = "TestMainDispatcher"),
+    StandardTestDispatcher(name = "TestIODispatcher"),
   )
 }

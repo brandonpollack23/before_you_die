@@ -19,10 +19,10 @@ import com.beforeyoudie.common.applogic.AppLogicTaskGraphConfig
 import com.beforeyoudie.common.applogic.AppState
 import com.beforeyoudie.common.applogic.DeepLink
 import com.beforeyoudie.common.di.ApplicationCoroutineContext
+import com.beforeyoudie.common.di.IOCoroutineContext
 import com.beforeyoudie.common.state.TaskId
 import com.beforeyoudie.common.storage.IBydStorage
 import com.beforeyoudie.common.util.getClassLogger
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -47,6 +47,7 @@ class AppLogicRootDecomposeComponent(
   private val appLogicTaskGraphFactory: AppLogicTaskGraphFactory,
   private val appLogicEditFactory: AppLogicEditFactory,
   private val applicationCoroutineContext: ApplicationCoroutineContext,
+  private val ioCoroutineContext: IOCoroutineContext,
   componentContext: ComponentContext
 ) :
   AppLogicRoot(storage),
@@ -70,12 +71,13 @@ class AppLogicRootDecomposeComponent(
     }
   }
 
+
   init {
     // Lifecycle setup.
     lifecycle.subscribe(object : Lifecycle.Callbacks {
       override fun onCreate() {
         coroutineScope.launch {
-          val initialTaskGraph = withContext(Dispatchers.IO) {
+          val initialTaskGraph = withContext(ioCoroutineContext) {
             logger.v { "Loading initial state from the storage" }
             storage.selectAllTaskNodeInformation()
           }
