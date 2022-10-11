@@ -48,7 +48,7 @@ fun main() {
 fun kotlinInjectCreateApp(
   databaseFileName: DatabaseFileName = "",
   applicationCoroutineContext: CoroutineContext,
-  deepLink: DeepLink,
+  deepLink: DeepLink
 ): BydKotlinInjectAppComponent {
   val platformComponent = JvmDesktopPlatformComponent::class.create(
     applicationCoroutineContext,
@@ -59,6 +59,6 @@ fun kotlinInjectCreateApp(
   return BydKotlinInjectAppComponent::class.create(
     platformComponent,
     storageComponent,
-    DecomposeAppLogicComponent::class.create(storageComponent, platformComponent, deepLink),
+    DecomposeAppLogicComponent::class.create(storageComponent, platformComponent, deepLink)
   )
 }

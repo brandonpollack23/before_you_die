@@ -8,17 +8,20 @@ import com.beforeyoudie.common.applogic.AppLogicRoot
 import com.beforeyoudie.common.applogic.TaskGraphEvent
 import com.beforeyoudie.common.di.ApplicationCoroutineContext
 import com.beforeyoudie.common.di.BydKotlinInjectAppComponent
-import com.beforeyoudie.common.di.DecomposeAppLogicComponent
 import com.beforeyoudie.common.di.IOCoroutineContext
 import com.beforeyoudie.common.di.MockStoragePlatformComponent
+import com.beforeyoudie.common.di.TestDecomposeAppLogicComponent
 import com.beforeyoudie.common.di.create
 import com.beforeyoudie.common.di.createTestPlatformComponent
+import com.beforeyoudie.common.state.TaskId
+import com.beforeyoudie.common.state.TaskIdGenerator
 import com.beforeyoudie.common.state.TaskNode
 import com.beforeyoudie.common.storage.IBydStorage
 import com.beforeyoudie.randomTaskId
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.shouldBe
 import io.mockk.every
+import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.test.TestDispatcher
@@ -40,11 +43,14 @@ abstract class AppLogicRootDecomposeTestComponent(
   abstract val rootDecomposeComponent: AppLogicRoot
   abstract val lifecycleRegistry: LifecycleRegistry
   abstract val storage: IBydStorage
+
+  abstract val taskIdGenerator: TaskIdGenerator
 }
 fun createAppLogicRootDecomposeTestComponent() = run {
   val platformComponent = createTestPlatformComponent()
   val storageComponent = MockStoragePlatformComponent::class.create()
-  val appLogicComponent = DecomposeAppLogicComponent::class.create(storageComponent, platformComponent)
+  val appLogicComponent =
+    TestDecomposeAppLogicComponent::class.create(storageComponent, platformComponent)
 
   val component = BydKotlinInjectAppComponent::class.create(
     platformComponent,
@@ -54,6 +60,10 @@ fun createAppLogicRootDecomposeTestComponent() = run {
 
   AppLogicRootDecomposeTestComponent::class.create(component)
 }
+
+private val picardTaskId = randomTaskId()
+private val rikerTaskId = randomTaskId()
+private val laforgeTaskId = randomTaskId()
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class AppLogicRootDecomposeComponentTest : CommonTest() {
@@ -67,9 +77,7 @@ class AppLogicRootDecomposeComponentTest : CommonTest() {
     get() = appLogicRoot as AppLogicRootDecomposeComponent
   private lateinit var lifecycleRegistry: LifecycleRegistry
 
-  private val picardTaskId = randomTaskId()
-  private val rikerTaskId = randomTaskId()
-  private val laforgeTaskId = randomTaskId()
+  private lateinit var taskIdGenerator: TaskIdGenerator
 
   init {
     beforeTest {
@@ -79,6 +87,7 @@ class AppLogicRootDecomposeComponentTest : CommonTest() {
       mockStorage = injectComponent.storage
       appLogicRoot = injectComponent.rootDecomposeComponent
       lifecycleRegistry = injectComponent.lifecycleRegistry
+      taskIdGenerator = injectComponent.taskIdGenerator
 
       setupMocks()
 
@@ -105,45 +114,108 @@ class AppLogicRootDecomposeComponentTest : CommonTest() {
 
     // TODO NOW comment explaining
     test("Child navigation causes edit view to open") {
+      // First makes certain the graph loads into memory.
       finishOnCreate()
       val graph = appLogicRootDecomposeComponent.childStack.value.active.instance
       graph as AppLogicRoot.Child.TaskGraph
 
+      // Trigger an open edit call.
       graph.appLogic.openEdit(picardTaskId)
 
+      // Detect this ocurred on the mock.
       graph.appLogic.taskGraphEvents.onEach {
         it shouldBe TaskGraphEvent.OpenEdit(picardTaskId)
       }
 
+      // Advance all coroutine flows.
       testMainDispatcher.scheduler.advanceUntilIdle()
 
+      // Ensure edit app logic child is created accordingly.
       val editTask = appLogicRootDecomposeComponent.childStack.value.active.instance
       editTask::class shouldBe AppLogicRoot.Child.EditTask::class
       editTask as AppLogicRoot.Child.EditTask
       editTask.appLogic.appLogicEditConfig shouldBe AppLogicEditConfig(picardTaskId)
     }
 
-    // TODO NOW for each of these three, make sure in memory state is updated, correct children are opened, and storage mock is called correctly
     test("Delete task event") {
+      finishOnCreate()
       val graph = appLogicRootDecomposeComponent.childStack.value.active.instance
       graph as AppLogicRoot.Child.TaskGraph
 
+      // Setup mock to return what should be removed by storage.
+      every { mockStorage.removeTaskNodeAndChildren(picardTaskId) } returns Result.success(
+        setOf(
+          picardTaskId,
+          rikerTaskId
+        )
+      )
+
+      // Make the call.
       graph.appLogic.deleteTaskAndChildren(picardTaskId)
 
+      // Verify the event is sent in the stream.
       graph.appLogic.taskGraphEvents.onEach {
         it shouldBe TaskGraphEvent.DeleteTaskAndChildren(picardTaskId)
       }
+
+      // Propogate coroutines and verify the call was made to storage.
+      testMainDispatcher.scheduler.advanceUntilIdle()
+      verify(exactly = 1) { mockStorage.removeTaskNodeAndChildren(picardTaskId) }
+
+      // Verify in memory state.
+      appLogicRootDecomposeComponent.appState.value.taskGraph shouldContainExactlyInAnyOrder
+        setOf(
+          TaskNode(
+            laforgeTaskId,
+            "Geordi Laforge",
+            "Space Engineering Master"
+          )
+        )
     }
 
     test("Add task event") {
+      finishOnCreate()
       val graph = appLogicRootDecomposeComponent.childStack.value.active.instance
       graph as AppLogicRoot.Child.TaskGraph
+
+      // Mock the insertion and extract the generated id
+      var gulmacetTaskId: TaskId? = null
+      every {
+        mockStorage.insertTaskNode(
+          TaskId(any()),
+          any(),
+          any(),
+          picardTaskId,
+          false
+        )
+      } answers {
+        gulmacetTaskId = TaskId(arg(0))
+        Result.success(
+          TaskNode(
+            id = gulmacetTaskId!!,
+            title = arg(1),
+            description = arg(2),
+            false,
+            picardTaskId
+          )
+        )
+      }
 
       graph.appLogic.createTask(
         "Take This Message To Your Leaders, Gul Macet",
         "We'll be watching",
         picardTaskId
       )
+      testMainDispatcher.scheduler.advanceUntilIdle()
+
+      verify(exactly = 1) {
+        mockStorage.insertTaskNode(
+          gulmacetTaskId!!,
+          "Take This Message To Your Leaders, Gul Macet",
+          "We'll be watching",
+          picardTaskId
+        )
+      }
 
       graph.appLogic.taskGraphEvents.onEach {
         it shouldBe TaskGraphEvent.CreateTask(
@@ -152,6 +224,35 @@ class AppLogicRootDecomposeComponentTest : CommonTest() {
           picardTaskId
         )
       }
+
+      appLogicRootDecomposeComponent.appState.value.taskGraph shouldContainExactlyInAnyOrder
+        setOf(
+          TaskNode(
+            gulmacetTaskId!!,
+            "Take This Message To Your Leaders, Gul Macet",
+            "We'll be watching",
+            parent = picardTaskId
+          ),
+          TaskNode(
+            picardTaskId,
+            "Captain Picard",
+            "Worlds best captain",
+            children = setOf(gulmacetTaskId!!)
+          ),
+          TaskNode(
+            rikerTaskId,
+            "William T Riker",
+            "Beard or go home",
+            parent = picardTaskId,
+            blockedTasks = setOf(laforgeTaskId)
+          ),
+          TaskNode(
+            laforgeTaskId,
+            "Geordi Laforge",
+            "Space Engineering Master",
+            blockingTasks = setOf(rikerTaskId)
+          )
+        )
     }
   }
 

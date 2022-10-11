@@ -21,6 +21,7 @@ import com.beforeyoudie.common.applogic.DeepLink
 import com.beforeyoudie.common.di.ApplicationCoroutineContext
 import com.beforeyoudie.common.di.IOCoroutineContext
 import com.beforeyoudie.common.state.TaskId
+import com.beforeyoudie.common.state.TaskIdGenerator
 import com.beforeyoudie.common.storage.IBydStorage
 import com.beforeyoudie.common.util.getClassLogger
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -49,9 +50,10 @@ class AppLogicRootDecomposeComponent(
   private val appLogicEditFactory: AppLogicEditFactory,
   private val applicationCoroutineContext: ApplicationCoroutineContext,
   private val ioCoroutineContext: IOCoroutineContext,
+  taskIdGenerator: TaskIdGenerator,
   componentContext: ComponentContext
 ) :
-  AppLogicRoot(storage),
+  AppLogicRoot(storage, taskIdGenerator),
   ComponentContext by componentContext {
   // The couroutine scope could come from external and the methods on the children of the root
   // could be "suspend", but since we maintain the lifecycle of these components separately there

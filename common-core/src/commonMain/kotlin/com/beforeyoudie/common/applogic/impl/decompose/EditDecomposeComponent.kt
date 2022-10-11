@@ -7,6 +7,7 @@ import com.beforeyoudie.common.applogic.AppLogicEditConfig
 /** This is the Decompose implementation of the corelogic for the edit views of a note. */
 class EditDecomposeComponent(
   appLogicEditConfig: AppLogicEditConfig,
-  componentContext: ComponentContext) :
+  componentContext: ComponentContext
+) :
   AppLogicEdit(appLogicEditConfig),
   ComponentContext by componentContext

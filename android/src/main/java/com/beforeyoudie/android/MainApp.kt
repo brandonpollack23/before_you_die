@@ -30,9 +30,9 @@ class MainApp : Application() {
 fun kotlinInjectCreateApp(
   context: Context,
   databaseFileName: DatabaseFileName,
-  deepLink: DeepLink,
   applicationCoroutineContext: ApplicationCoroutineContext,
   ioCoroutineContext: IOCoroutineContext,
+  deepLink: DeepLink = DeepLink.None
 ): BydKotlinInjectAppComponent {
   val platformComponent =
     AndroidBydPlatformComponent::class.create(

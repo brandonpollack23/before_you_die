@@ -1,6 +1,7 @@
 package com.beforeyoudie.common.applogic
 
 import com.beforeyoudie.common.state.TaskId
+import com.beforeyoudie.common.state.TaskIdGenerator
 import com.beforeyoudie.common.state.TaskNode
 import com.beforeyoudie.common.storage.IBydStorage
 import com.beforeyoudie.common.util.getClassLogger
@@ -11,7 +12,10 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 /** Interface representing the root applogic component. */
-abstract class AppLogicRoot(private val storage: IBydStorage) {
+abstract class AppLogicRoot(
+  private val storage: IBydStorage,
+  private val taskIdGenerator: TaskIdGenerator
+) {
   protected val logger = getClassLogger()
 
   /**
@@ -59,10 +63,11 @@ abstract class AppLogicRoot(private val storage: IBydStorage) {
         when (it) {
           is TaskGraphEvent.CreateTask -> {
             storage.insertTaskNode(
-              TaskId(),
-              it.title,
-              it.description,
-              complete = false
+              id = taskIdGenerator.generateTaskId(),
+              title = it.title,
+              description = it.description,
+              complete = false,
+              parent = it.parent
             ).onFailure { error ->
               // TODO ERRORS add failure state (flow) and handle failures?
               logger.e("Failed to insert node! $error")
@@ -73,16 +78,28 @@ abstract class AppLogicRoot(private val storage: IBydStorage) {
           }
 
           is TaskGraphEvent.DeleteTaskAndChildren -> {
-            storage.removeTaskNodeAndChildren(it.taskId).onFailure { error ->
-              logger.e("Failed to remove tasks and children! $error")
-            }.onSuccess { removedNodes ->
-              logger.i(
-                "Node ${it.taskId} and children (total of ${removedNodes.size}) " +
-                  "removed, updating in memory state"
-              )
-              taskGraphStateFlow.value =
-                taskGraphStateFlow.value.filter { taskNode -> !removedNodes.contains(taskNode.id) }
-            }
+            storage.removeTaskNodeAndChildren(it.taskId)
+              .onFailure { error ->
+                logger.e("Failed to remove tasks and children! $error")
+              }.onSuccess { removedNodes ->
+                val removedNodesSet = removedNodes.toSet()
+                logger.i(
+                  "Node ${it.taskId} and children (total of ${removedNodes.size}) " +
+                    "removed, updating in memory state"
+                )
+
+                // TODO(#13) Measure this and make it more efficent, potentially via full reload.
+                taskGraphStateFlow.value =
+                  taskGraphStateFlow.value
+                    .filter { taskNode -> !removedNodes.contains(taskNode.id) }
+                    .map { taskNode ->
+                      taskNode.copy(
+                        blockingTasks = taskNode.blockingTasks - removedNodesSet,
+                        blockedTasks = taskNode.blockedTasks - removedNodesSet,
+                        children = taskNode.children - removedNodesSet
+                      )
+                    }
+              }
           }
 
           is TaskGraphEvent.OpenEdit -> onOpenEdit(it.taskId)

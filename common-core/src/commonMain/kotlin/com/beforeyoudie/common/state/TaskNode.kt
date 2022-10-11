@@ -42,3 +42,8 @@ data class TaskNode(
     return true
   }
 }
+
+/** A basic task ID generator to be injected and therefore overridable for testing.*/
+open class TaskIdGenerator {
+  open fun generateTaskId() = TaskId(uuid4())
+}

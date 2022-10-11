@@ -28,7 +28,7 @@ abstract class AndroidBydPlatformComponent(
 @Component
 abstract class AndroidPlatformSqlDelightStorageComponent(
   @Component val androidPlatformComponent: AndroidBydPlatformComponent,
-  private val databaseFileName: DatabaseFileName = "",
+  private val databaseFileName: DatabaseFileName = ""
 ) : ApplicationStoragePlatformComponent {
   val SqlDelightBydStorage.bind: IBydStorage
     @ApplicationStoragePlatformScope
