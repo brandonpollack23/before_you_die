@@ -14,10 +14,11 @@ abstract class MockStoragePlatformComponent : ApplicationStoragePlatformComponen
 
   override fun provideIsInDbInMemory(databaseFileName: DatabaseFileName): IsDbInMemory = true
 
-  @get:Provides override val databaseFileName: DatabaseFileName = ""
+  override fun provideDatabaseFileName(): DatabaseFileName = ""
 
   // Unused since storage is mocked
-  @get:Provides override val sqlDriver: SqlDriver = mockkClass(SqlDriver::class)
+  @Provides
+  fun provideSqlDriver(): SqlDriver = mockkClass(SqlDriver::class)
 }
 
 expect fun createTestPlatformComponent(): BydPlatformComponent

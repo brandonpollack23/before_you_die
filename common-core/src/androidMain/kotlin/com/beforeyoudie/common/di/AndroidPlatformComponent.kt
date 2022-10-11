@@ -1,7 +1,6 @@
 package com.beforeyoudie.common.di
 
 import android.content.Context
-import co.touchlab.kermit.Logger
 import com.beforeyoudie.common.storage.IBydStorage
 import com.beforeyoudie.common.storage.impl.BeforeYouDieDb
 import com.beforeyoudie.common.storage.impl.SqlDelightBydStorage
@@ -17,28 +16,30 @@ abstract class AndroidBydPlatformComponent(
   @get:ApplicationPlatformScope
   @get:Provides
   val context: Context,
-
-  @get:ApplicationPlatformScope @get:Provides
-  override val applicationCoroutineContext: ApplicationCoroutineContext,
-
-  @get:ApplicationPlatformScope @get:Provides
-  override val ioCoroutineContext: IOCoroutineContext
+  private val applicationCoroutineContext: ApplicationCoroutineContext,
+  private val ioCoroutineContext: IOCoroutineContext
 ) : BydPlatformComponent {
+  override fun provideApplicationCoroutineContext(): ApplicationCoroutineContext =
+    applicationCoroutineContext
+
+  override fun provideIoCoroutineContext(): IOCoroutineContext = ioCoroutineContext
 }
 
 @Component
 abstract class AndroidPlatformSqlDelightStorageComponent(
   @Component val androidPlatformComponent: AndroidBydPlatformComponent,
-  @get:Provides override val databaseFileName: DatabaseFileName = "",
+  private val databaseFileName: DatabaseFileName = "",
 ) : ApplicationStoragePlatformComponent {
   val SqlDelightBydStorage.bind: IBydStorage
     @ApplicationStoragePlatformScope
     @Provides
     get() = this
 
+  override fun provideDatabaseFileName(): DatabaseFileName = databaseFileName
+
   @ApplicationStoragePlatformScope
   @Provides
-  open fun provideSqlDriver(
+  fun provideSqlDriver(
     databaseFileName: DatabaseFileName,
     isDbInMemory: IsDbInMemory,
     context: Context

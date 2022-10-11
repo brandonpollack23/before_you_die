@@ -12,18 +12,25 @@ import kotlin.io.path.createDirectories
 
 @Component
 abstract class JvmDesktopPlatformComponent(
-  @get:Provides override val applicationCoroutineContext: ApplicationCoroutineContext,
-  @get:Provides override val ioCoroutineContext: IOCoroutineContext
-) : BydPlatformComponent
+  private val applicationCoroutineContext: ApplicationCoroutineContext,
+  private val ioCoroutineContext: IOCoroutineContext
+) : BydPlatformComponent {
+  override fun provideApplicationCoroutineContext(): ApplicationCoroutineContext =
+    applicationCoroutineContext
+
+  override fun provideIoCoroutineContext(): IOCoroutineContext = ioCoroutineContext
+}
 
 @Component
 abstract class JvmDesktopPlatformSqlDelightStorageComponent(
-  @get:Provides override val databaseFileName: DatabaseFileName = ""
+  private val databaseFileName: DatabaseFileName = ""
 ) : ApplicationStoragePlatformComponent {
   val SqlDelightBydStorage.bind: IBydStorage
     @ApplicationStoragePlatformScope
     @Provides
     get() = this
+
+  override fun provideDatabaseFileName(): DatabaseFileName = databaseFileName
 
   /** Must set up the database schema, creating tables etc. before returning the database. */
   @ApplicationStoragePlatformScope

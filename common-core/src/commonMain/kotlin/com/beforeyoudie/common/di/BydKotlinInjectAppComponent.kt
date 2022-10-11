@@ -43,11 +43,13 @@ annotation class ApplicationPlatformScope
 /** Platform subcomponent, provides things like coroutine execution contexts.*/
 @ApplicationPlatformScope
 interface BydPlatformComponent {
-  @get:ApplicationPlatformScope
-  val applicationCoroutineContext: ApplicationCoroutineContext
+  @ApplicationPlatformScope
+  @Provides
+  fun provideApplicationCoroutineContext(): ApplicationCoroutineContext
 
-  @get:ApplicationPlatformScope
-  val ioCoroutineContext: IOCoroutineContext
+  @ApplicationPlatformScope
+  @Provides
+  fun provideIoCoroutineContext(): IOCoroutineContext
 }
 
 @Scope
@@ -64,10 +66,11 @@ interface ApplicationStoragePlatformComponent {
   val storage: IBydStorage
 
   @get:ApplicationStoragePlatformScope
-  val databaseFileName: DatabaseFileName
-
-  @get:ApplicationStoragePlatformScope
   val sqlDriver: SqlDriver
+
+  @ApplicationStoragePlatformScope
+  @Provides
+  fun provideDatabaseFileName(): DatabaseFileName
 
   @ApplicationStoragePlatformScope
   @Provides
