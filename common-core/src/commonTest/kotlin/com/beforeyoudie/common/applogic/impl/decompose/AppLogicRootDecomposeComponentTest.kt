@@ -1,10 +1,12 @@
 package com.beforeyoudie.common.applogic.impl.decompose
 
+import MockStoragePlatformComponent
 import com.arkivanov.essenty.lifecycle.LifecycleRegistry
 import com.arkivanov.essenty.lifecycle.create
 import com.beforeyoudie.CommonTest
 import com.beforeyoudie.common.applogic.AppLogicRoot
 import com.beforeyoudie.common.di.ApplicationCoroutineContext
+import com.beforeyoudie.common.di.ApplicationScope
 import com.beforeyoudie.common.di.ApplicationStoragePlatformComponent
 import com.beforeyoudie.common.di.BydKotlinInjectAppComponent
 import com.beforeyoudie.common.di.BydPlatformComponent
@@ -14,6 +16,7 @@ import com.beforeyoudie.common.di.create
 import com.beforeyoudie.common.state.TaskNode
 import com.beforeyoudie.common.storage.IBydStorage
 import com.beforeyoudie.randomTaskId
+import createTestPlatformComponent
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.shouldBe
 import io.mockk.every
@@ -41,9 +44,16 @@ abstract class AppLogicRootDecomposeTestComponent(
   abstract val rootDecomposeComponent: AppLogicRoot
   abstract val lifecycleRegistry: LifecycleRegistry
   abstract val storage: IBydStorage
-
-  @Provides
-  fun mockStorage(): IBydStorage = mockkClass(IBydStorage::class)
+}
+fun createAppLogicRootDecomposeTestComponent() = run {
+  val platformComponent = createTestPlatformComponent()
+  val storageComponent = MockStoragePlatformComponent::class.create()
+  val appLogicComponent = DecomposeAppLogicComponent::class.create(storageComponent, platformComponent)
+  AppLogicRootDecomposeTestComponent::class.create(
+    platformComponent,
+    storageComponent,
+    appLogicComponent
+  )
 }
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -64,7 +74,7 @@ class AppLogicRootDecomposeComponentTest : CommonTest() {
 
   init {
     beforeTest {
-      val injectComponent = AppLogicRootDecomposeTestComponent::class.create()
+      val injectComponent = createAppLogicRootDecomposeTestComponent()
       testMainDispatcher = injectComponent.testMainDispatcher
       testIODispatcher = injectComponent.testIODispatcher
       mockStorage = injectComponent.storage
