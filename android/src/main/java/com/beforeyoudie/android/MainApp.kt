@@ -4,6 +4,7 @@ import android.app.Application
 import android.content.Context
 import co.touchlab.kermit.Logger
 import co.touchlab.kermit.Severity
+import com.beforeyoudie.common.applogic.DeepLink
 import com.beforeyoudie.common.di.AndroidBydPlatformComponent
 import com.beforeyoudie.common.di.AndroidPlatformSqlDelightStorageComponent
 import com.beforeyoudie.common.di.ApplicationCoroutineContext
@@ -29,6 +30,7 @@ class MainApp : Application() {
 fun kotlinInjectCreateApp(
   context: Context,
   databaseFileName: DatabaseFileName,
+  deepLink: DeepLink,
   applicationCoroutineContext: ApplicationCoroutineContext,
   ioCoroutineContext: IOCoroutineContext,
 ): BydKotlinInjectAppComponent {
@@ -41,7 +43,7 @@ fun kotlinInjectCreateApp(
   val platformStorageComponent =
     AndroidPlatformSqlDelightStorageComponent::class.create(platformComponent, databaseFileName)
   val appLogicComponent =
-    DecomposeAppLogicComponent::class.create(platformStorageComponent, platformComponent)
+    DecomposeAppLogicComponent::class.create(deepLink, platformStorageComponent, platformComponent)
   return BydKotlinInjectAppComponent::class.create(
     platformComponent,
     platformStorageComponent,

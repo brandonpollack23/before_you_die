@@ -1,42 +1,35 @@
 package com.beforeyoudie.common.applogic.impl.decompose
 
-import MockStoragePlatformComponent
 import com.arkivanov.essenty.lifecycle.LifecycleRegistry
 import com.arkivanov.essenty.lifecycle.create
 import com.beforeyoudie.CommonTest
 import com.beforeyoudie.common.applogic.AppLogicRoot
 import com.beforeyoudie.common.di.ApplicationCoroutineContext
-import com.beforeyoudie.common.di.ApplicationScope
-import com.beforeyoudie.common.di.ApplicationStoragePlatformComponent
 import com.beforeyoudie.common.di.BydKotlinInjectAppComponent
-import com.beforeyoudie.common.di.BydPlatformComponent
 import com.beforeyoudie.common.di.DecomposeAppLogicComponent
 import com.beforeyoudie.common.di.IOCoroutineContext
+import com.beforeyoudie.common.di.MockStoragePlatformComponent
 import com.beforeyoudie.common.di.create
+import com.beforeyoudie.common.di.createTestPlatformComponent
 import com.beforeyoudie.common.state.TaskNode
 import com.beforeyoudie.common.storage.IBydStorage
 import com.beforeyoudie.randomTaskId
-import createTestPlatformComponent
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.shouldBe
 import io.mockk.every
-import io.mockk.mockkClass
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestDispatcher
 import me.tatarka.inject.annotations.Component
-import me.tatarka.inject.annotations.Provides
 
-// TODO NOW construct common test versions of each subcomponent, construct mock versions of each subcomponent, shared code.
 @OptIn(ExperimentalCoroutinesApi::class)
 @Component
 abstract class AppLogicRootDecomposeTestComponent(
-  platformComponent: BydPlatformComponent,
-  storageComponent: ApplicationStoragePlatformComponent,
-  appLogicComponent: DecomposeAppLogicComponent
-) : BydKotlinInjectAppComponent(platformComponent, storageComponent, appLogicComponent) {
+  @Component val bydKotlinInjectAppComponent: BydKotlinInjectAppComponent
+) {
   abstract val testMainCoroutineContext: ApplicationCoroutineContext
   val testMainDispatcher
     get() = testMainCoroutineContext as TestDispatcher
+
   abstract val testIOCoroutineContext: IOCoroutineContext
   val testIODispatcher
     get() = testIOCoroutineContext as TestDispatcher
@@ -49,11 +42,14 @@ fun createAppLogicRootDecomposeTestComponent() = run {
   val platformComponent = createTestPlatformComponent()
   val storageComponent = MockStoragePlatformComponent::class.create()
   val appLogicComponent = DecomposeAppLogicComponent::class.create(storageComponent, platformComponent)
-  AppLogicRootDecomposeTestComponent::class.create(
+
+  val component = BydKotlinInjectAppComponent::class.create(
     platformComponent,
     storageComponent,
     appLogicComponent
   )
+
+  AppLogicRootDecomposeTestComponent::class.create(component)
 }
 
 @OptIn(ExperimentalCoroutinesApi::class)

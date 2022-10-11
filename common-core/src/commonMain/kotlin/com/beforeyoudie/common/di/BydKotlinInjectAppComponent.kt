@@ -87,7 +87,8 @@ annotation class ApplicationAppLogicScope
 @Component
 abstract class DecomposeAppLogicComponent(
   @Component val storagePlatformComponent: ApplicationStoragePlatformComponent,
-  @Component val platformComponent: BydPlatformComponent
+  @Component val platformComponent: BydPlatformComponent,
+  @get:Provides val deepLink: DeepLink = DeepLink.None
 ) {
   val AppLogicRootDecomposeComponent.bind: AppLogicRoot
     @ApplicationAppLogicScope
@@ -130,7 +131,6 @@ abstract class BydKotlinInjectAppComponent(
   @Component val platformComponent: BydPlatformComponent,
   @Component val storageComponent: ApplicationStoragePlatformComponent,
   @Component val appLogicComponent: DecomposeAppLogicComponent,
-  @get:Provides val deepLink: DeepLink = DeepLink.None
 ) {
   abstract val root: AppLogicRoot
   abstract val lifecycle: LifecycleRegistry
