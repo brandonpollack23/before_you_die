@@ -56,13 +56,6 @@ interface ICommonBydKotlinInjectAppComponent {
   fun provideRootDefaultDecomposeComponentContext(lifecycle: Lifecycle): ComponentContext =
     DefaultComponentContext(lifecycle)
 
-  /** Must set up the database schema, creating tables etc. before returning the database. */
-  @ApplicationScope
-  @Provides
-  fun provideBeforeYouDieDb(driver: SqlDriver): BeforeYouDieDb {
-    BeforeYouDieDb.Schema.create(driver)
-    return BeforeYouDieDb(driver)
-  }
 }
 
 @Scope
@@ -96,6 +89,9 @@ annotation class ApplicationStoragePlatformScope
 // TODO NOW seperate no platform and platform storage
 @ApplicationStoragePlatformScope
 interface ApplicationStoragePlatformComponent {
+  @get:ApplicationStoragePlatformScope
+  val storage: IBydStorage
+
   @get:ApplicationStoragePlatformScope
   val databaseFileName: DatabaseFileName
 
@@ -138,8 +134,4 @@ abstract class CommonBydKotlinInjectAppComponent(
     @Provides
     get() = this
 
-  val SqlDelightBydStorage.bind: IBydStorage
-    @ApplicationScope
-    @Provides
-    get() = this
   }

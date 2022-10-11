@@ -1,6 +1,7 @@
 package com.beforeyoudie.common.di
 
 import com.beforeyoudie.common.storage.IBydStorage
+import com.beforeyoudie.common.storage.impl.BeforeYouDieDb
 import com.beforeyoudie.common.storage.impl.SqlDelightBydStorage
 import com.squareup.sqldelight.db.SqlDriver
 import com.squareup.sqldelight.sqlite.driver.JdbcSqliteDriver
@@ -19,6 +20,18 @@ abstract class JvmDesktopPlatformComponent(
 abstract class JvmDesktopPlatformSqlDelightStorageComponent(
   @get:Provides override val databaseFileName: DatabaseFileName = ""
 ) : ApplicationStoragePlatformComponent {
+  val SqlDelightBydStorage.bind: IBydStorage
+    @ApplicationStoragePlatformScope
+    @Provides
+    get() = this
+
+  /** Must set up the database schema, creating tables etc. before returning the database. */
+  @ApplicationStoragePlatformScope
+  @Provides
+  fun provideBeforeYouDieDb(driver: SqlDriver): BeforeYouDieDb {
+    BeforeYouDieDb.Schema.create(driver)
+    return BeforeYouDieDb(driver)
+  }
 
   @ApplicationStoragePlatformScope
   @Provides
