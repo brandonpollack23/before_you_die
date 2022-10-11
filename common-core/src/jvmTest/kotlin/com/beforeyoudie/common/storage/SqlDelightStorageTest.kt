@@ -1,8 +1,11 @@
 package com.beforeyoudie.common.storage
 
 import com.beforeyoudie.CommonTest
-import com.beforeyoudie.common.di.TestBydKotlinInjectAppComponent
+import com.beforeyoudie.common.di.BydKotlinInjectAppComponent
+import com.beforeyoudie.common.di.DecomposeAppLogicComponent
+import com.beforeyoudie.common.di.JvmDesktopPlatformSqlDelightStorageComponent
 import com.beforeyoudie.common.di.create
+import com.beforeyoudie.common.di.createTestPlatformComponent
 import com.beforeyoudie.common.state.TaskId
 import com.beforeyoudie.common.state.TaskNode
 import com.beforeyoudie.common.util.BYDFailure
@@ -18,10 +21,23 @@ import me.tatarka.inject.annotations.Component
 
 @Component
 abstract class SqlDelightStorageTestComponent(
-  @Component val parent: TestBydKotlinInjectAppComponent =
-    TestBydKotlinInjectAppComponent::class.create()
+  @Component val bydKotlinInjectAppComponent: BydKotlinInjectAppComponent
 ) {
   abstract val storage: IBydStorage
+}
+fun sqlDelightStorageTestComponent() = run {
+  val platformComponent = createTestPlatformComponent()
+  val storageComponent = JvmDesktopPlatformSqlDelightStorageComponent::class.create()
+  val appLogicComponent =
+    DecomposeAppLogicComponent::class.create(storageComponent, platformComponent)
+
+  val component = BydKotlinInjectAppComponent::class.create(
+    platformComponent,
+    storageComponent,
+    appLogicComponent
+  )
+
+  SqlDelightStorageTestComponent::class.create(component)
 }
 
 class SqlDelightStorageTest : CommonTest() {
@@ -29,7 +45,7 @@ class SqlDelightStorageTest : CommonTest() {
 
   init {
     beforeTest {
-      storage = SqlDelightStorageTestComponent::class.create().storage
+      storage = sqlDelightStorageTestComponent().storage
     }
 
     test("database is in memory for test") {

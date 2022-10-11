@@ -20,6 +20,7 @@ import io.mockk.every
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestDispatcher
 import me.tatarka.inject.annotations.Component
+import me.tatarka.inject.annotations.Scope
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @Component
