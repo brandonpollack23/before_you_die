@@ -3,7 +3,6 @@ package com.beforeyoudie.common.di
 import co.touchlab.kermit.Logger
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.DefaultComponentContext
-import com.arkivanov.essenty.lifecycle.Lifecycle
 import com.arkivanov.essenty.lifecycle.LifecycleRegistry
 import com.beforeyoudie.common.applogic.AppLogicRoot
 import com.beforeyoudie.common.applogic.DeepLink
@@ -13,8 +12,6 @@ import com.beforeyoudie.common.applogic.impl.decompose.AppLogicRootDecomposeComp
 import com.beforeyoudie.common.applogic.impl.decompose.AppLogicTaskGraphFactory
 import com.beforeyoudie.common.applogic.impl.decompose.AppLogicTaskGraphFactoryImpl
 import com.beforeyoudie.common.storage.IBydStorage
-import com.beforeyoudie.common.storage.impl.BeforeYouDieDb
-import com.beforeyoudie.common.storage.impl.SqlDelightBydStorage
 import com.squareup.sqldelight.db.SqlDriver
 import kotlinx.coroutines.CoroutineDispatcher
 import me.tatarka.inject.annotations.Component
@@ -24,11 +21,6 @@ import kotlin.coroutines.CoroutineContext
 
 /** Logger used during DI process and construction. */
 internal val DILogger = Logger.withTag("kotlin-inject")
-
-/** Scope of the common application component*/
-@Scope
-@Target(AnnotationTarget.CLASS, AnnotationTarget.FUNCTION, AnnotationTarget.PROPERTY_GETTER)
-annotation class ApplicationScope
 
 // Qualifiers
 /** Qualifier typealias for database file name String.*/
@@ -40,24 +32,6 @@ typealias ApplicationCoroutineContext = CoroutineContext
 /** Qualifier for the IO dispatcher to be injected.*/
 typealias IOCoroutineContext = CoroutineDispatcher
 
-/** Make this an interface so that it can be constructed differently in tests vs non tests. */
-interface ICommonBydKotlinInjectAppComponent {
-  val rootLogic: AppLogicRoot
-  val lifecycle: LifecycleRegistry
-
-  // ========== Providers =============
-
-  @ApplicationScope
-  @Provides
-  fun provideDecomposeLifecycle(): LifecycleRegistry = LifecycleRegistry()
-
-  @ApplicationScope
-  @Provides
-  fun provideRootDefaultDecomposeComponentContext(lifecycle: Lifecycle): ComponentContext =
-    DefaultComponentContext(lifecycle)
-
-}
-
 @Scope
 @Target(
   AnnotationTarget.CLASS,
@@ -66,8 +40,7 @@ interface ICommonBydKotlinInjectAppComponent {
   AnnotationTarget.PROPERTY
 )
 annotation class ApplicationPlatformScope
-
-/** Platform subcomponent, provides things like platform specific sql driver, context, etc.*/
+/** Platform subcomponent, provides things like coroutine execution contexts.*/
 @ApplicationPlatformScope
 interface BydPlatformComponent {
   @get:ApplicationPlatformScope
@@ -85,8 +58,6 @@ interface BydPlatformComponent {
   AnnotationTarget.PROPERTY
 )
 annotation class ApplicationStoragePlatformScope
-
-// TODO NOW seperate no platform and platform storage
 @ApplicationStoragePlatformScope
 interface ApplicationStoragePlatformComponent {
   @get:ApplicationStoragePlatformScope
@@ -103,35 +74,63 @@ interface ApplicationStoragePlatformComponent {
   fun provideIsInDbInMemory(databaseFileName: DatabaseFileName): IsDbInMemory
 }
 
-/** Component used by real implementations.*/
-@ApplicationScope
+@Scope
+@Target(
+  AnnotationTarget.CLASS,
+  AnnotationTarget.FUNCTION,
+  AnnotationTarget.PROPERTY_GETTER,
+  AnnotationTarget.PROPERTY
+)
+annotation class ApplicationAppLogicScope
+/** AppLogic Component implemented with Decompose.*/
+@ApplicationAppLogicScope
 @Component
-abstract class CommonBydKotlinInjectAppComponent(
-  @Component val platformComponent: BydPlatformComponent,
-  @Component val storageComponent: ApplicationStoragePlatformComponent,
-  @get:Provides val deepLink: DeepLink = DeepLink.None
-) :
-  ICommonBydKotlinInjectAppComponent {
-
-  // TODO NOW move to decompose component
+abstract class DecomposeAppLogicComponent(
+  @Component val storagePlatformComponent: ApplicationStoragePlatformComponent,
+  @Component val platformComponent: BydPlatformComponent
+) {
   val AppLogicRootDecomposeComponent.bind: AppLogicRoot
-    @ApplicationScope
+    @ApplicationAppLogicScope
     @Provides
     get() = this
 
   val AppLogicEditFactoryImpl.bind: AppLogicEditFactory
-    @ApplicationScope
+    @ApplicationAppLogicScope
     @Provides
     get() = this
 
   val AppLogicTaskGraphFactoryImpl.bind: AppLogicTaskGraphFactory
-    @ApplicationScope
+    @ApplicationAppLogicScope
     @Provides
     get() = this
 
-  val LifecycleRegistry.bind: Lifecycle
-    @ApplicationScope
-    @Provides
-    get() = this
+  @ApplicationAppLogicScope
+  @Provides
+  fun provideDecomposeLifecycle(): LifecycleRegistry = LifecycleRegistry()
 
-  }
+  @ApplicationAppLogicScope
+  @Provides
+  fun provideRootDefaultDecomposeComponentContext(lifecycle: LifecycleRegistry): ComponentContext =
+    DefaultComponentContext(lifecycle)
+}
+
+/** Scope of the common application component*/
+@Scope
+@Target(
+  AnnotationTarget.CLASS,
+  AnnotationTarget.FUNCTION,
+  AnnotationTarget.PROPERTY_GETTER,
+  AnnotationTarget.PROPERTY
+)
+annotation class ApplicationScope
+/** Component used by real implementations.*/
+@ApplicationScope
+@Component
+abstract class DefaultBydKotlinInjectAppComponent(
+  @Component val platformComponent: BydPlatformComponent,
+  @Component val storageComponent: ApplicationStoragePlatformComponent,
+  @Component val appLogicComponent: DecomposeAppLogicComponent,
+  @get:Provides val deepLink: DeepLink = DeepLink.None
+) {
+  abstract val lifecycle: LifecycleRegistry
+}

@@ -10,8 +10,9 @@ import com.arkivanov.decompose.ExperimentalDecomposeApi
 import com.arkivanov.decompose.extensions.compose.jetbrains.lifecycle.LifecycleController
 import com.beforeyoudie.common.App
 import com.beforeyoudie.common.applogic.DeepLink
-import com.beforeyoudie.common.di.CommonBydKotlinInjectAppComponent
+import com.beforeyoudie.common.di.DefaultBydKotlinInjectAppComponent
 import com.beforeyoudie.common.di.DatabaseFileName
+import com.beforeyoudie.common.di.DecomposeAppLogicComponent
 import com.beforeyoudie.common.di.JvmDesktopPlatformComponent
 import com.beforeyoudie.common.di.JvmDesktopPlatformSqlDelightStorageComponent
 import com.beforeyoudie.common.di.create
@@ -44,17 +45,21 @@ fun main() {
     }
   }
 }
-
 fun kotlinInjectCreateApp(
   databaseFileName: DatabaseFileName = "",
   applicationCoroutineContext: CoroutineContext,
   deepLink: DeepLink,
-): CommonBydKotlinInjectAppComponent =
-  CommonBydKotlinInjectAppComponent::class.create(
-    JvmDesktopPlatformComponent::class.create(
-      applicationCoroutineContext,
-      Dispatchers.IO
-    ),
-    JvmDesktopPlatformSqlDelightStorageComponent::class.create(databaseFileName),
+): DefaultBydKotlinInjectAppComponent {
+  val platformComponent = JvmDesktopPlatformComponent::class.create(
+    applicationCoroutineContext,
+    Dispatchers.IO
+  )
+  val storageComponent =
+    JvmDesktopPlatformSqlDelightStorageComponent::class.create(databaseFileName)
+  return DefaultBydKotlinInjectAppComponent::class.create(
+    platformComponent,
+    storageComponent,
+    DecomposeAppLogicComponent::class.create(storageComponent, platformComponent),
     deepLink,
   )
+}
