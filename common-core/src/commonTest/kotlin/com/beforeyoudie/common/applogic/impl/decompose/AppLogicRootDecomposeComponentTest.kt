@@ -112,7 +112,6 @@ class AppLogicRootDecomposeComponentTest : CommonTest() {
         taskNodes
     }
 
-    // TODO NOW comment explaining
     test("Child navigation causes edit view to open") {
       // First makes certain the graph loads into memory.
       finishOnCreate()
