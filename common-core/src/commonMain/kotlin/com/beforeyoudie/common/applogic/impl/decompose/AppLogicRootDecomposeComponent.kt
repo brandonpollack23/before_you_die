@@ -29,6 +29,7 @@ import kotlinx.coroutines.withContext
 import me.tatarka.inject.annotations.Inject
 import kotlin.coroutines.CoroutineContext
 
+// TODO NOW clean this up (esp create children)
 // TODO NOW test children
 
 /** This is the root CoreLogic component.  While the other components in the Decompose world are
@@ -63,6 +64,7 @@ class AppLogicRootDecomposeComponent(
 
   private val appStateInstanceKeeper = instanceKeeper.getOrCreate { RetainedAppState() }
   override val _appState: MutableStateFlow<AppState> = appStateInstanceKeeper.appState
+
   private class RetainedAppState : InstanceKeeper.Instance {
     private val logger = getClassLogger()
     val appState = MutableStateFlow(AppState())
@@ -117,7 +119,11 @@ class AppLogicRootDecomposeComponent(
       // TODO NOW implement edit now as well, just passing UUID will be fine since its all accessible from
       //  the higher level root and can be passed to children from there, no need to duplicate that work here
       is NavigationConfig.Edit -> Child.EditTask(
-        appLogicEditFactory.createEdit(applicationCoroutineContext, componentContext)
+        appLogicEditFactory.createEdit(
+          config.editConfig,
+          applicationCoroutineContext,
+          componentContext
+        )
       )
     }
   }
@@ -188,6 +194,7 @@ class AppLogicTaskGraphFactoryImpl : AppLogicTaskGraphFactory {
  */
 interface AppLogicEditFactory {
   fun createEdit(
+    appLogicEditConfig: AppLogicEditConfig,
     parentCoroutineContext: CoroutineContext,
     componentContext: ComponentContext
   ): AppLogicEdit
@@ -199,8 +206,9 @@ interface AppLogicEditFactory {
 @Inject
 class AppLogicEditFactoryImpl : AppLogicEditFactory {
   override fun createEdit(
+    appLogicEditConfig: AppLogicEditConfig,
     parentCoroutineContext: CoroutineContext,
     componentContext: ComponentContext
   ) =
-    EditDecomposeComponent(componentContext)
+    EditDecomposeComponent(appLogicEditConfig, componentContext)
 }

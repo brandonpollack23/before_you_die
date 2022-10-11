@@ -3,7 +3,9 @@ package com.beforeyoudie.common.applogic.impl.decompose
 import com.arkivanov.essenty.lifecycle.LifecycleRegistry
 import com.arkivanov.essenty.lifecycle.create
 import com.beforeyoudie.CommonTest
+import com.beforeyoudie.common.applogic.AppLogicEditConfig
 import com.beforeyoudie.common.applogic.AppLogicRoot
+import com.beforeyoudie.common.applogic.TaskGraphEvent
 import com.beforeyoudie.common.di.ApplicationCoroutineContext
 import com.beforeyoudie.common.di.BydKotlinInjectAppComponent
 import com.beforeyoudie.common.di.DecomposeAppLogicComponent
@@ -18,9 +20,9 @@ import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.test.TestDispatcher
 import me.tatarka.inject.annotations.Component
-import me.tatarka.inject.annotations.Scope
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @Component
@@ -94,21 +96,72 @@ class AppLogicRootDecomposeComponentTest : CommonTest() {
 
     test("Loads storage on initialization and transitions from isLoading state") {
       appLogicRootDecomposeComponent.appState.value.isLoading shouldBe true
-
-      // Run onCreate launched load.
-      testMainDispatcher.scheduler.advanceUntilIdle()
-      // Load from IO.
-      testIODispatcher.scheduler.advanceUntilIdle()
-      // Complete load state change.
-      testMainDispatcher.scheduler.advanceUntilIdle()
+      finishOnCreate()
 
       appLogicRootDecomposeComponent.appState.value.isLoading shouldBe false
       appLogicRootDecomposeComponent.appState.value.taskGraph shouldContainExactlyInAnyOrder
         taskNodes
     }
 
+    // TODO NOW comment explaining
     test("Child navigation causes edit view to open") {
+      finishOnCreate()
+      val graph = appLogicRootDecomposeComponent.childStack.value.active.instance
+      graph as AppLogicRoot.Child.TaskGraph
+
+      graph.appLogic.openEdit(picardTaskId)
+
+      graph.appLogic.taskGraphEvents.onEach {
+        it shouldBe TaskGraphEvent.OpenEdit(picardTaskId)
+      }
+
+      testMainDispatcher.scheduler.advanceUntilIdle()
+
+      val editTask = appLogicRootDecomposeComponent.childStack.value.active.instance
+      editTask::class shouldBe AppLogicRoot.Child.EditTask::class
+      editTask as AppLogicRoot.Child.EditTask
+      editTask.appLogic.appLogicEditConfig shouldBe AppLogicEditConfig(picardTaskId)
     }
+
+    // TODO NOW for each of these three, make sure in memory state is updated, correct children are opened, and storage mock is called correctly
+    test("Delete task event") {
+      val graph = appLogicRootDecomposeComponent.childStack.value.active.instance
+      graph as AppLogicRoot.Child.TaskGraph
+
+      graph.appLogic.deleteTaskAndChildren(picardTaskId)
+
+      graph.appLogic.taskGraphEvents.onEach {
+        it shouldBe TaskGraphEvent.DeleteTaskAndChildren(picardTaskId)
+      }
+    }
+
+    test("Add task event") {
+      val graph = appLogicRootDecomposeComponent.childStack.value.active.instance
+      graph as AppLogicRoot.Child.TaskGraph
+
+      graph.appLogic.createTask(
+        "Take This Message To Your Leaders, Gul Macet",
+        "We'll be watching",
+        picardTaskId
+      )
+
+      graph.appLogic.taskGraphEvents.onEach {
+        it shouldBe TaskGraphEvent.CreateTask(
+          "Take This Message To Your Leaders, Gul Macet",
+          "We'll be watching",
+          picardTaskId
+        )
+      }
+    }
+  }
+
+  private fun finishOnCreate() {
+    // Run onCreate launched load.
+    testMainDispatcher.scheduler.advanceUntilIdle()
+    // Load from IO.
+    testIODispatcher.scheduler.advanceUntilIdle()
+    // Complete load state change.
+    testMainDispatcher.scheduler.advanceUntilIdle()
   }
 
   private val taskNodes: Set<TaskNode> = setOf(

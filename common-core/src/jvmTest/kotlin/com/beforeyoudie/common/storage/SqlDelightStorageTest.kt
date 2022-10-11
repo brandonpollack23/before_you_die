@@ -17,7 +17,7 @@ import io.kotest.matchers.result.shouldBeSuccess
 import io.kotest.matchers.shouldBe
 import me.tatarka.inject.annotations.Component
 
-// TODO(#3) TESTING make also make run as android instrumentation test
+// TODO(#3) TESTING make also make run as android instrumentation test: https://kotest.io/docs/extensions/robolectric.html
 
 @Component
 abstract class SqlDelightStorageTestComponent(
