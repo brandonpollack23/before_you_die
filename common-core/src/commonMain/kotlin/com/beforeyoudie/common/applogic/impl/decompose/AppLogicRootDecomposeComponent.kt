@@ -30,7 +30,9 @@ import kotlinx.coroutines.withContext
 import me.tatarka.inject.annotations.Inject
 import kotlin.coroutines.CoroutineContext
 
-// TODO NOW clean this up (esp create children)
+// TODO NOW implement edit now as well, just passing UUID will be fine since its all accessible from
+//  the higher level root and can be passed to children from there, no need to duplicate that work here
+
 // TODO NOW test children
 
 /** This is the root CoreLogic component.  While the other components in the Decompose world are
@@ -55,7 +57,7 @@ class AppLogicRootDecomposeComponent(
 ) :
   AppLogicRoot(storage, taskIdGenerator),
   ComponentContext by componentContext {
-  // The couroutine scope could come from external and the methods on the children of the root
+  // The coroutine scope could come from external and the methods on the children of the root
   // could be "suspend", but since we maintain the lifecycle of these components separately there
   // is no reason to force the burden onto consumers of this library, we can use our own tree of
   // coroutine scopes.
@@ -64,16 +66,21 @@ class AppLogicRootDecomposeComponent(
   // our coroutine context tree that should be used.
   override val coroutineScope = coroutineScopeWithLifecycle(applicationCoroutineContext)
 
+  // Instance keeper, this saves/loads across configuration changes on multiple platforms.
   private val appStateInstanceKeeper = instanceKeeper.getOrCreate { RetainedAppState() }
   override val _appState: MutableStateFlow<AppState> = appStateInstanceKeeper.appState
 
-  private class RetainedAppState : InstanceKeeper.Instance {
-    private val logger = getClassLogger()
-    val appState = MutableStateFlow(AppState())
-    override fun onDestroy() {
-      logger.i { "destroying app state, app must be exiting" }
-    }
-  }
+  // Decompose navigation controller.
+  private val navigation = StackNavigation<NavigationConfig>()
+
+  // In decompose based UI implementation Composable widget, just check the interface is this type
+  // , then access this directly (NOT through the interface).
+  val childStack: Value<ChildStack<*, Child>> = childStack(
+    source = navigation,
+    initialStack = { getInitialStack(deepLink) },
+    childFactory = ::createChild,
+    handleBackButton = true
+  )
 
   init {
     // Lifecycle setup.
@@ -91,45 +98,6 @@ class AppLogicRootDecomposeComponent(
     })
   }
 
-  private val navigation = StackNavigation<NavigationConfig>()
-
-  // In decompose based UI implementation Composable widget, just check the interface is this type, then access this directly (NOT through the interface).
-  val childStack: Value<ChildStack<*, Child>> = childStack(
-    source = navigation,
-    initialStack = { getInitialStack(deepLink) },
-    childFactory = ::createChild,
-    handleBackButton = true
-  )
-
-  private fun createChild(
-    config: NavigationConfig,
-    componentContext: ComponentContext
-  ): Child {
-    logger.v("Creating a child with config $config")
-    return when (config) {
-      is NavigationConfig.TaskGraph -> {
-        val taskGraph = appLogicTaskGraphFactory.createTaskGraph(
-          config.taskGraphConfig,
-          applicationCoroutineContext,
-          componentContext
-        )
-
-        subscribeToTaskGraphEvents(taskGraph.taskGraphEvents)
-        Child.TaskGraph(taskGraph)
-      }
-
-      // TODO NOW implement edit now as well, just passing UUID will be fine since its all accessible from
-      //  the higher level root and can be passed to children from there, no need to duplicate that work here
-      is NavigationConfig.Edit -> Child.EditTask(
-        appLogicEditFactory.createEdit(
-          config.editConfig,
-          applicationCoroutineContext,
-          componentContext
-        )
-      )
-    }
-  }
-
   override fun onOpenEdit(taskId: TaskId) {
     if (appState.value.isLoading) {
       logger.e(
@@ -143,6 +111,54 @@ class AppLogicRootDecomposeComponent(
     navigation.push(NavigationConfig.Edit(AppLogicEditConfig(taskId)))
   }
 
+  private fun createChild(
+    config: NavigationConfig,
+    componentContext: ComponentContext
+  ): Child {
+    logger.v("Creating a child with config $config")
+    return when (config) {
+      is NavigationConfig.TaskGraph -> createTaskGraphChild(config, componentContext)
+      is NavigationConfig.Edit -> createEditChild(config, componentContext)
+    }
+  }
+
+  private fun createTaskGraphChild(
+    config: NavigationConfig.TaskGraph,
+    componentContext: ComponentContext
+  ): Child.TaskGraph {
+    val taskGraph = appLogicTaskGraphFactory.createTaskGraph(
+      config.taskGraphConfig,
+      applicationCoroutineContext,
+      componentContext
+    )
+
+    subscribeToTaskGraphEvents(taskGraph.taskGraphEvents)
+    return Child.TaskGraph(taskGraph)
+  }
+
+  private fun createEditChild(
+    config: NavigationConfig.Edit,
+    componentContext: ComponentContext
+  ) = Child.EditTask(
+    appLogicEditFactory.createEdit(
+      config.editConfig,
+      applicationCoroutineContext,
+      componentContext
+    )
+  )
+
+  /**
+   * The instance implementation for the app's state.  Pretty simple, just some logging on destroy
+   * here.
+   */
+  private class RetainedAppState : InstanceKeeper.Instance {
+    private val logger = getClassLogger()
+    val appState = MutableStateFlow(AppState())
+    override fun onDestroy() {
+      logger.i { "destroying app state, app must be exiting" }
+    }
+  }
+
   private companion object {
     fun getInitialStack(deepLink: DeepLink): List<NavigationConfig> = when (deepLink) {
       DeepLink.None -> listOf(NavigationConfig.TaskGraph())
@@ -150,6 +166,10 @@ class AppLogicRootDecomposeComponent(
   }
 }
 
+/**
+ * NavigationConfig which basically contains the type of child to create containing its necessary
+ * configurable construction parameters.
+ */
 private sealed class NavigationConfig : Parcelable {
   @Parcelize
   data class TaskGraph(
