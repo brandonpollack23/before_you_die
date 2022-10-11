@@ -5,8 +5,11 @@ import com.arkivanov.essenty.lifecycle.create
 import com.beforeyoudie.CommonTest
 import com.beforeyoudie.common.applogic.AppLogicRoot
 import com.beforeyoudie.common.di.ApplicationCoroutineContext
+import com.beforeyoudie.common.di.ApplicationStoragePlatformComponent
+import com.beforeyoudie.common.di.BydKotlinInjectAppComponent
+import com.beforeyoudie.common.di.BydPlatformComponent
+import com.beforeyoudie.common.di.DecomposeAppLogicComponent
 import com.beforeyoudie.common.di.IOCoroutineContext
-import com.beforeyoudie.common.di.TestBydKotlinInjectAppComponent
 import com.beforeyoudie.common.di.create
 import com.beforeyoudie.common.state.TaskNode
 import com.beforeyoudie.common.storage.IBydStorage
@@ -20,13 +23,14 @@ import kotlinx.coroutines.test.TestDispatcher
 import me.tatarka.inject.annotations.Component
 import me.tatarka.inject.annotations.Provides
 
-// TODO NOW separate out storage, platform, and corelogic components in DI
+// TODO NOW construct common test versions of each subcomponent, construct mock versions of each subcomponent, shared code.
 @OptIn(ExperimentalCoroutinesApi::class)
 @Component
 abstract class AppLogicRootDecomposeTestComponent(
-  @Component val parent: TestBydKotlinInjectAppComponent =
-    TestBydKotlinInjectAppComponent::class.create()
-) {
+  platformComponent: BydPlatformComponent,
+  storageComponent: ApplicationStoragePlatformComponent,
+  appLogicComponent: DecomposeAppLogicComponent
+) : BydKotlinInjectAppComponent(platformComponent, storageComponent, appLogicComponent) {
   abstract val testMainCoroutineContext: ApplicationCoroutineContext
   val testMainDispatcher
     get() = testMainCoroutineContext as TestDispatcher

@@ -126,11 +126,12 @@ annotation class ApplicationScope
 /** Component used by real implementations.*/
 @ApplicationScope
 @Component
-abstract class DefaultBydKotlinInjectAppComponent(
+abstract class BydKotlinInjectAppComponent(
   @Component val platformComponent: BydPlatformComponent,
   @Component val storageComponent: ApplicationStoragePlatformComponent,
   @Component val appLogicComponent: DecomposeAppLogicComponent,
   @get:Provides val deepLink: DeepLink = DeepLink.None
 ) {
+  abstract val root: AppLogicRoot
   abstract val lifecycle: LifecycleRegistry
 }
