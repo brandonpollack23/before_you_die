@@ -59,6 +59,6 @@ fun kotlinInjectCreateApp(
   return BydKotlinInjectAppComponent::class.create(
     platformComponent,
     storageComponent,
-    DecomposeAppLogicComponent::class.create(deepLink, storageComponent, platformComponent),
+    DecomposeAppLogicComponent::class.create(storageComponent, platformComponent, deepLink),
   )
 }

@@ -43,7 +43,7 @@ fun kotlinInjectCreateApp(
   val platformStorageComponent =
     AndroidPlatformSqlDelightStorageComponent::class.create(platformComponent, databaseFileName)
   val appLogicComponent =
-    DecomposeAppLogicComponent::class.create(deepLink, platformStorageComponent, platformComponent)
+    DecomposeAppLogicComponent::class.create(platformStorageComponent, platformComponent, deepLink)
   return BydKotlinInjectAppComponent::class.create(
     platformComponent,
     platformStorageComponent,
