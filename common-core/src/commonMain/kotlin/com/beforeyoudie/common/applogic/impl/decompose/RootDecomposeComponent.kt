@@ -96,7 +96,10 @@ class RootDecomposeComponent(
             storage.selectAllTaskNodeInformation()
           }
 
-          mutableAppStateFlow.value = appStateFlow.value.copy(taskGraph = initialTaskGraph, isLoading = false)
+          mutableAppStateFlow.value = appStateFlow.value.copy(
+            taskGraph = initialTaskGraph,
+            isLoading = false
+          )
         }
       }
 

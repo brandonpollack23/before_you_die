@@ -125,7 +125,9 @@ abstract class DecomposeAppLogicComponent(
 
   @ApplicationAppLogicScope
   @Provides
-  fun provideRootDefaultDecomposeComponentContext(lifecycle: LifecycleRegistry): RootComponentContext =
+  fun provideRootDefaultDecomposeComponentContext(
+    lifecycle: LifecycleRegistry
+  ): RootComponentContext =
     DefaultComponentContext(lifecycle)
 
   @ApplicationAppLogicScope
