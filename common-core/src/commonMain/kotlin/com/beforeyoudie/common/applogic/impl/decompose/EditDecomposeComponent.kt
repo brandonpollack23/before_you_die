@@ -12,7 +12,7 @@ class EditDecomposeComponent(
   taskNode: TaskNode,
   parentCoroutineContext: CoroutineContext,
   componentContext: ComponentContext
-) : AppLogicEdit(appLogicEditConfig),
+) : AppLogicEdit(appLogicEditConfig, taskNode),
   ComponentContext by componentContext {
   override val coroutineScope = coroutineScopeWithLifecycle(parentCoroutineContext)
 }
