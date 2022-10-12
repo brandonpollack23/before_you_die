@@ -20,6 +20,7 @@ import com.beforeyoudie.common.applogic.AppState
 import com.beforeyoudie.common.applogic.DeepLink
 import com.beforeyoudie.common.di.ApplicationCoroutineContext
 import com.beforeyoudie.common.di.IOCoroutineContext
+import com.beforeyoudie.common.di.RootComponentContext
 import com.beforeyoudie.common.state.TaskId
 import com.beforeyoudie.common.state.TaskIdGenerator
 import com.beforeyoudie.common.storage.IBydStorage
@@ -53,7 +54,7 @@ class RootDecomposeComponent(
   private val applicationCoroutineContext: ApplicationCoroutineContext,
   private val ioCoroutineContext: IOCoroutineContext,
   taskIdGenerator: TaskIdGenerator,
-  componentContext: ComponentContext
+  componentContext: RootComponentContext
 ) :
   AppLogicRoot(storage, taskIdGenerator),
   ComponentContext by componentContext {

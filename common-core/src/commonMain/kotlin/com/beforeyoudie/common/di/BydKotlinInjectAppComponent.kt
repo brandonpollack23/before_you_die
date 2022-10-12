@@ -30,6 +30,9 @@ typealias DatabaseFileName = String
 /** Qualifier typealias for database in memory Boolean.*/
 typealias IsDbInMemory = Boolean
 
+/** Qualifier for root component context.*/
+typealias RootComponentContext = ComponentContext
+
 /** Qualifier for top level coroutine context provided by the platform.*/
 typealias ApplicationCoroutineContext = CoroutineContext
 
@@ -100,6 +103,7 @@ abstract class DecomposeAppLogicComponent(
   @Component val platformComponent: BydPlatformComponent,
   @get:Provides val deepLink: DeepLink = DeepLink.None
 ) {
+  // There is only ever allowed to be one instance of this at a time, otherwise ChildStack will complain.
   val RootDecomposeComponent.bind: AppLogicRoot
     @ApplicationAppLogicScope
     @Provides
@@ -121,7 +125,7 @@ abstract class DecomposeAppLogicComponent(
 
   @ApplicationAppLogicScope
   @Provides
-  fun provideRootDefaultDecomposeComponentContext(lifecycle: LifecycleRegistry): ComponentContext =
+  fun provideRootDefaultDecomposeComponentContext(lifecycle: LifecycleRegistry): RootComponentContext =
     DefaultComponentContext(lifecycle)
 
   @ApplicationAppLogicScope

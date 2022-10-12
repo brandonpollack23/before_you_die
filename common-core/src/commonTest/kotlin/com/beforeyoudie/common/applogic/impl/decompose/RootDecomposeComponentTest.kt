@@ -253,9 +253,6 @@ class AppLogicRootDecomposeComponentTest : CommonTest() {
           )
         )
     }
-
-    // TODO NOW test that the same component context will have the same app state (including current child)
-    // TODO NOW test that the same component context will not call onCreate twice and hit database twice
   }
 
   private fun finishOnCreate() {
