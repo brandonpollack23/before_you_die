@@ -19,27 +19,30 @@ abstract class AppLogicTaskGraph(
   /** See [AppLogicRoot] */
   abstract val coroutineScope: CoroutineScope
 
-  private val _taskGraphEvents: MutableSharedFlow<TaskGraphEvent> =
+  private val mutableTaskGraphEvents: MutableSharedFlow<TaskGraphEvent> =
     MutableSharedFlow(replay = 1, onBufferOverflow = BufferOverflow.DROP_OLDEST)
 
-  /** The immutable view on the state of the application as a whole. */
-  val taskGraphEvents = _taskGraphEvents.asSharedFlow()
+  /**
+   * The immutable view on the events emitted by the task graph to be consumed by owning AppLogic
+   * components.
+   */
+  val taskGraphEvents = mutableTaskGraphEvents.asSharedFlow()
 
   fun createTask(title: String, description: String?, parent: TaskId?) {
     coroutineScope.launch {
-      _taskGraphEvents.emit(TaskGraphEvent.CreateTask(title, description, parent))
+      mutableTaskGraphEvents.emit(TaskGraphEvent.CreateTask(title, description, parent))
     }
   }
 
   fun deleteTaskAndChildren(uuid: TaskId) {
     coroutineScope.launch {
-      _taskGraphEvents.emit(TaskGraphEvent.DeleteTaskAndChildren(uuid))
+      mutableTaskGraphEvents.emit(TaskGraphEvent.DeleteTaskAndChildren(uuid))
     }
   }
 
   fun openEdit(uuid: TaskId) {
     coroutineScope.launch {
-      _taskGraphEvents.emit(TaskGraphEvent.OpenEdit(uuid))
+      mutableTaskGraphEvents.emit(TaskGraphEvent.OpenEdit(uuid))
     }
   }
 }
@@ -65,7 +68,7 @@ enum class VisibilityMode {
 }
 
 /**
- * These are the events emitted by the reactive stream/flow for UI constructed by [createTaskGraphEventsFlow]
+ * These are the events emitted by the reactive stream/flow to be responded to upstream.
  */
 sealed interface TaskGraphEvent {
   /** Create a task with the specified parameters. */

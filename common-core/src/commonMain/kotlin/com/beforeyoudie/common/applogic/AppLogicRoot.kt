@@ -103,9 +103,7 @@ abstract class AppLogicRoot(
               }
           }
 
-          is TaskGraphEvent.OpenEdit -> {
-            onOpenEdit(it.taskId)
-          }
+          is TaskGraphEvent.OpenEdit -> onOpenEdit(it.taskId)
         }
       }
     }

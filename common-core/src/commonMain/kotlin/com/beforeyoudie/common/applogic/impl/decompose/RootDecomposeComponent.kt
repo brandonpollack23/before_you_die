@@ -23,6 +23,7 @@ import com.beforeyoudie.common.di.IOCoroutineContext
 import com.beforeyoudie.common.di.RootComponentContext
 import com.beforeyoudie.common.state.TaskId
 import com.beforeyoudie.common.state.TaskIdGenerator
+import com.beforeyoudie.common.state.TaskNode
 import com.beforeyoudie.common.storage.IBydStorage
 import com.beforeyoudie.common.util.getClassLogger
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -30,9 +31,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import me.tatarka.inject.annotations.Inject
 import kotlin.coroutines.CoroutineContext
-
-// TODO NOW implement edit now as well, just passing UUID will be fine since its all accessible from
-//  the higher level root and can be passed to children from there, no need to duplicate that work here
 
 // TODO NOW test children
 
@@ -150,13 +148,17 @@ class RootDecomposeComponent(
   private fun createEditChild(
     config: NavigationConfig.Edit,
     componentContext: ComponentContext
-  ) = Child.EditTask(
-    appLogicEditFactory.createEdit(
-      config.editConfig,
-      applicationCoroutineContext,
-      componentContext
+  ): Child.EditTask {
+    val taskNode = appStateFlow.value.taskGraph[config.editConfig.taskNodeId]!!
+    return Child.EditTask(
+      appLogicEditFactory.createEdit(
+        config.editConfig,
+        taskNode,
+        applicationCoroutineContext,
+        componentContext
+      )
     )
-  )
+  }
 
   /**
    * The instance implementation for the app's state.
@@ -237,6 +239,7 @@ class AppLogicTaskGraphFactoryImpl : AppLogicTaskGraphFactory {
 interface AppLogicEditFactory {
   fun createEdit(
     appLogicEditConfig: AppLogicEditConfig,
+    taskNode: TaskNode,
     parentCoroutineContext: CoroutineContext,
     componentContext: ComponentContext
   ): AppLogicEdit
@@ -249,8 +252,9 @@ interface AppLogicEditFactory {
 class AppLogicEditFactoryImpl : AppLogicEditFactory {
   override fun createEdit(
     appLogicEditConfig: AppLogicEditConfig,
+    taskNode: TaskNode,
     parentCoroutineContext: CoroutineContext,
     componentContext: ComponentContext
   ) =
-    EditDecomposeComponent(appLogicEditConfig, componentContext)
+    EditDecomposeComponent(appLogicEditConfig, taskNode, parentCoroutineContext, componentContext)
 }
