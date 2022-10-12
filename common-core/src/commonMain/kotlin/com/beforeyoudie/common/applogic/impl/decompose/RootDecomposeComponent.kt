@@ -45,7 +45,7 @@ import kotlin.coroutines.CoroutineContext
  * @property appLogicEditFactory factory for creating a new note edit AppLogic
  */
 @Inject
-class AppLogicRootDecomposeComponent(
+class RootDecomposeComponent(
   private val storage: IBydStorage,
   private val deepLink: DeepLink = DeepLink.None,
   private val appLogicTaskGraphFactory: AppLogicTaskGraphFactory,
@@ -66,21 +66,21 @@ class AppLogicRootDecomposeComponent(
   // our coroutine context tree that should be used.
   override val coroutineScope = coroutineScopeWithLifecycle(applicationCoroutineContext)
 
-  // Instance keeper, this saves/loads across configuration changes on multiple platforms.
-  private val appStateInstanceKeeper = instanceKeeper.getOrCreate { RetainedAppState() }
-  override val _appState: MutableStateFlow<AppState> = appStateInstanceKeeper.appState
-
   // Decompose navigation controller.
   private val navigation = StackNavigation<NavigationConfig>()
 
-  // In decompose based UI implementation Composable widget, just check the interface is this type
-  // , then access this directly (NOT through the interface).
+  // Decompose child stack navigation.  This internally saves child configurations for
+  // reconstruction.
   val childStack: Value<ChildStack<*, Child>> = childStack(
     source = navigation,
     initialStack = { getInitialStack(deepLink) },
     childFactory = ::createChild,
     handleBackButton = true
   )
+
+  // Instance keeper, this saves/loads across configuration changes on multiple platforms.
+  private val appStateInstanceKeeper = instanceKeeper.getOrCreate { RetainedAppState(childStack) }
+  override val mutableAppStateFlow: MutableStateFlow<AppState> = appStateInstanceKeeper.appState
 
   init {
     // Lifecycle setup.
@@ -92,14 +92,14 @@ class AppLogicRootDecomposeComponent(
             storage.selectAllTaskNodeInformation()
           }
 
-          _appState.value = appState.value.copy(taskGraph = initialTaskGraph, isLoading = false)
+          mutableAppStateFlow.value = appStateFlow.value.copy(taskGraph = initialTaskGraph, isLoading = false)
         }
       }
     })
   }
 
   override fun onOpenEdit(taskId: TaskId) {
-    if (appState.value.isLoading) {
+    if (appStateFlow.value.isLoading) {
       logger.e(
         "Open edit called while loading, this shouldn't be possible! " +
           "Returning and doing nothing"
@@ -148,14 +148,29 @@ class AppLogicRootDecomposeComponent(
   )
 
   /**
-   * The instance implementation for the app's state.  Pretty simple, just some logging on destroy
-   * here.
+   * The instance implementation for the app's state.
+   *
+   * This logs and creates the instance, subscribes to the [Value] and converts it to be part of
+   * the app's state [MutableStateFlow], and also logs and unsubscribes on destroy.
    */
-  private class RetainedAppState : InstanceKeeper.Instance {
+  private class RetainedAppState(
+    private val childStack: Value<ChildStack<*, Child>>
+  ) : InstanceKeeper.Instance {
     private val logger = getClassLogger()
-    val appState = MutableStateFlow(AppState())
+    val appState = MutableStateFlow(AppState(activeChild = childStack.value.active.instance))
+
+    init {
+      logger.i { "creating app state, app must be initializing" }
+      childStack.subscribe(::updateAppStateBasedOnChildStack)
+    }
+
+    private fun updateAppStateBasedOnChildStack(childStack: ChildStack<*, Child>) {
+      appState.value = appState.value.copy(activeChild = childStack.active.instance)
+    }
+
     override fun onDestroy() {
       logger.i { "destroying app state, app must be exiting" }
+      childStack.unsubscribe(::updateAppStateBasedOnChildStack)
     }
   }
 
@@ -210,7 +225,7 @@ class AppLogicTaskGraphFactoryImpl : AppLogicTaskGraphFactory {
 }
 
 /**
- * Interface for constructing [IAppLogicEdit].
+ * Interface for constructing [AppLogicEdit].
  *
  * Factory is helpful because it allows construction to be overridden and changed in the future and in tests.
  */

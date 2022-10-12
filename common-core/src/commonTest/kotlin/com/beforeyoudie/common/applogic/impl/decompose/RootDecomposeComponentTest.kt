@@ -29,7 +29,7 @@ import me.tatarka.inject.annotations.Component
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @Component
-abstract class AppLogicRootDecomposeTestComponent(
+abstract class RootDecomposeTestComponent(
   @Component val bydKotlinInjectAppComponent: BydKotlinInjectAppComponent
 ) {
   abstract val testMainCoroutineContext: ApplicationCoroutineContext
@@ -58,7 +58,7 @@ fun createAppLogicRootDecomposeTestComponent() = run {
     appLogicComponent
   )
 
-  AppLogicRootDecomposeTestComponent::class.create(component)
+  RootDecomposeTestComponent::class.create(component)
 }
 
 private val picardTaskId = randomTaskId()
@@ -73,8 +73,8 @@ class AppLogicRootDecomposeComponentTest : CommonTest() {
   private lateinit var mockStorage: IBydStorage
 
   private lateinit var appLogicRoot: AppLogicRoot
-  private val appLogicRootDecomposeComponent
-    get() = appLogicRoot as AppLogicRootDecomposeComponent
+  private val rootDecomposeComponent
+    get() = appLogicRoot as RootDecomposeComponent
   private lateinit var lifecycleRegistry: LifecycleRegistry
 
   private lateinit var taskIdGenerator: TaskIdGenerator
@@ -95,27 +95,27 @@ class AppLogicRootDecomposeComponentTest : CommonTest() {
     }
 
     test("Is Correct Instance Implementation") {
-      appLogicRoot::class shouldBe AppLogicRootDecomposeComponent::class
+      appLogicRoot::class shouldBe RootDecomposeComponent::class
     }
 
     test("Initial child is a task graph") {
-      appLogicRootDecomposeComponent.childStack.value.active.instance::class shouldBe
+      rootDecomposeComponent.childStack.value.active.instance::class shouldBe
         AppLogicRoot.Child.TaskGraph::class
     }
 
     test("Loads storage on initialization and transitions from isLoading state") {
-      appLogicRootDecomposeComponent.appState.value.isLoading shouldBe true
+      rootDecomposeComponent.appStateFlow.value.isLoading shouldBe true
       finishOnCreate()
 
-      appLogicRootDecomposeComponent.appState.value.isLoading shouldBe false
-      appLogicRootDecomposeComponent.appState.value.taskGraph shouldContainExactlyInAnyOrder
+      rootDecomposeComponent.appStateFlow.value.isLoading shouldBe false
+      rootDecomposeComponent.appStateFlow.value.taskGraph shouldContainExactlyInAnyOrder
         taskNodes
     }
 
     test("Child navigation causes edit view to open") {
       // First makes certain the graph loads into memory.
       finishOnCreate()
-      val graph = appLogicRootDecomposeComponent.childStack.value.active.instance
+      val graph = rootDecomposeComponent.childStack.value.active.instance
       graph as AppLogicRoot.Child.TaskGraph
 
       // Trigger an open edit call.
@@ -130,7 +130,7 @@ class AppLogicRootDecomposeComponentTest : CommonTest() {
       testMainDispatcher.scheduler.advanceUntilIdle()
 
       // Ensure edit app logic child is created accordingly.
-      val editTask = appLogicRootDecomposeComponent.childStack.value.active.instance
+      val editTask = rootDecomposeComponent.childStack.value.active.instance
       editTask::class shouldBe AppLogicRoot.Child.EditTask::class
       editTask as AppLogicRoot.Child.EditTask
       editTask.appLogic.appLogicEditConfig shouldBe AppLogicEditConfig(picardTaskId)
@@ -138,7 +138,7 @@ class AppLogicRootDecomposeComponentTest : CommonTest() {
 
     test("Delete task event") {
       finishOnCreate()
-      val graph = appLogicRootDecomposeComponent.childStack.value.active.instance
+      val graph = rootDecomposeComponent.childStack.value.active.instance
       graph as AppLogicRoot.Child.TaskGraph
 
       // Setup mock to return what should be removed by storage.
@@ -162,7 +162,7 @@ class AppLogicRootDecomposeComponentTest : CommonTest() {
       verify(exactly = 1) { mockStorage.removeTaskNodeAndChildren(picardTaskId) }
 
       // Verify in memory state.
-      appLogicRootDecomposeComponent.appState.value.taskGraph shouldContainExactlyInAnyOrder
+      rootDecomposeComponent.appStateFlow.value.taskGraph shouldContainExactlyInAnyOrder
         setOf(
           TaskNode(
             laforgeTaskId,
@@ -174,7 +174,7 @@ class AppLogicRootDecomposeComponentTest : CommonTest() {
 
     test("Add task event") {
       finishOnCreate()
-      val graph = appLogicRootDecomposeComponent.childStack.value.active.instance
+      val graph = rootDecomposeComponent.childStack.value.active.instance
       graph as AppLogicRoot.Child.TaskGraph
 
       // Mock the insertion and extract the generated id
@@ -224,7 +224,7 @@ class AppLogicRootDecomposeComponentTest : CommonTest() {
         )
       }
 
-      appLogicRootDecomposeComponent.appState.value.taskGraph shouldContainExactlyInAnyOrder
+      rootDecomposeComponent.appStateFlow.value.taskGraph shouldContainExactlyInAnyOrder
         setOf(
           TaskNode(
             gulmacetTaskId!!,

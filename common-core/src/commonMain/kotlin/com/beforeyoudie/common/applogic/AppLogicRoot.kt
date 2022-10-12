@@ -32,21 +32,21 @@ abstract class AppLogicRoot(
    * [com.beforeyoudie.common.applogic] package and methods on the classes within should be used to
    * manipulate the state of the application.
    */
-  protected abstract val _appState: MutableStateFlow<AppState>
+  protected abstract val mutableAppStateFlow: MutableStateFlow<AppState>
 
   /**
    * Immutable view onto AppState. They are lazy initialized because this class's coroutine scope and state
    * may not yet be initialized.
    */
-  val appState by lazy { _appState.asStateFlow() }
+  val appStateFlow by lazy { mutableAppStateFlow.asStateFlow() }
 
   /** Lenses on the appstate.  These make it easier to change subtrees of the overall app state.*/
   private val taskGraphStateFlow by lazy {
     run {
-      val f = MutableStateFlow(_appState.value.taskGraph)
+      val f = MutableStateFlow(mutableAppStateFlow.value.taskGraph)
       coroutineScope.launch {
         f.collect {
-          _appState.value = _appState.value.copy(taskGraph = it)
+          mutableAppStateFlow.value = mutableAppStateFlow.value.copy(taskGraph = it)
         }
       }
       f
@@ -123,6 +123,7 @@ abstract class AppLogicRoot(
  */
 data class AppState(
   val taskGraph: Collection<TaskNode> = emptySet(),
+  val activeChild: AppLogicRoot.Child,
   val isLoading: Boolean = true
 )
 

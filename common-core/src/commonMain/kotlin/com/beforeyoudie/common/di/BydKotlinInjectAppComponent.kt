@@ -8,9 +8,9 @@ import com.beforeyoudie.common.applogic.AppLogicRoot
 import com.beforeyoudie.common.applogic.DeepLink
 import com.beforeyoudie.common.applogic.impl.decompose.AppLogicEditFactory
 import com.beforeyoudie.common.applogic.impl.decompose.AppLogicEditFactoryImpl
-import com.beforeyoudie.common.applogic.impl.decompose.AppLogicRootDecomposeComponent
 import com.beforeyoudie.common.applogic.impl.decompose.AppLogicTaskGraphFactory
 import com.beforeyoudie.common.applogic.impl.decompose.AppLogicTaskGraphFactoryImpl
+import com.beforeyoudie.common.applogic.impl.decompose.RootDecomposeComponent
 import com.beforeyoudie.common.state.TaskIdGenerator
 import com.beforeyoudie.common.storage.IBydStorage
 import com.squareup.sqldelight.db.SqlDriver
@@ -100,7 +100,7 @@ abstract class DecomposeAppLogicComponent(
   @Component val platformComponent: BydPlatformComponent,
   @get:Provides val deepLink: DeepLink = DeepLink.None
 ) {
-  val AppLogicRootDecomposeComponent.bind: AppLogicRoot
+  val RootDecomposeComponent.bind: AppLogicRoot
     @ApplicationAppLogicScope
     @Provides
     get() = this
