@@ -79,13 +79,16 @@ class RootDecomposeComponent(
   )
 
   // Instance keeper, this saves/loads across configuration changes on multiple platforms.
-  private val appStateInstanceKeeper = instanceKeeper.getOrCreate { RetainedAppState(childStack) }
+  private val appStateInstanceKeeper =
+    instanceKeeper.getOrCreate { RetainedAppState(childStack.value) }
   override val mutableAppStateFlow: MutableStateFlow<AppState> = appStateInstanceKeeper.appState
 
   init {
     // Lifecycle setup.
     lifecycle.subscribe(object : Lifecycle.Callbacks {
       override fun onCreate() {
+        childStack.subscribe(::updateAppStateBasedOnChildStack)
+
         coroutineScope.launch {
           val initialTaskGraph = withContext(ioCoroutineContext) {
             logger.v { "Loading initial state from the storage" }
@@ -94,6 +97,10 @@ class RootDecomposeComponent(
 
           mutableAppStateFlow.value = appStateFlow.value.copy(taskGraph = initialTaskGraph, isLoading = false)
         }
+      }
+
+      override fun onDestroy() {
+        childStack.unsubscribe(::updateAppStateBasedOnChildStack)
       }
     })
   }
@@ -154,24 +161,18 @@ class RootDecomposeComponent(
    * the app's state [MutableStateFlow], and also logs and unsubscribes on destroy.
    */
   private class RetainedAppState(
-    private val childStack: Value<ChildStack<*, Child>>
+    childStack: ChildStack<*, Child>
   ) : InstanceKeeper.Instance {
     private val logger = getClassLogger()
-    val appState = MutableStateFlow(AppState(activeChild = childStack.value.active.instance))
+    val appState = MutableStateFlow(AppState(activeChild = childStack.active.instance))
 
-    init {
-      logger.i { "creating app state, app must be initializing" }
-      childStack.subscribe(::updateAppStateBasedOnChildStack)
-    }
+    init { logger.i { "creating app state, app must be initializing" } }
+    override fun onDestroy() { logger.i { "destroying app state, app must be exiting" } }
+  }
 
-    private fun updateAppStateBasedOnChildStack(childStack: ChildStack<*, Child>) {
-      appState.value = appState.value.copy(activeChild = childStack.active.instance)
-    }
-
-    override fun onDestroy() {
-      logger.i { "destroying app state, app must be exiting" }
-      childStack.unsubscribe(::updateAppStateBasedOnChildStack)
-    }
+  private fun updateAppStateBasedOnChildStack(childStack: ChildStack<*, Child>) {
+    mutableAppStateFlow.value =
+      mutableAppStateFlow.value.copy(activeChild = childStack.active.instance)
   }
 
   private companion object {
