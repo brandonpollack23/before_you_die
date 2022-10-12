@@ -24,48 +24,54 @@ class SqlDelightBydStorage(
 ) : IBydStorage {
   private val logger: Logger = getClassLogger()
 
-  override fun selectAllTaskNodeInformation(): Collection<TaskNode> {
+  override fun selectAllTaskNodeInformation(): Map<TaskId, TaskNode> {
     logger.v("selecting all task nodes")
     return database.taskNodeQueries.selectAllTaskNodesWithDependentAndChildData()
       .executeAsList()
-      .map {
-        TaskNode(
-          id = TaskId(uuidFrom(it.id)),
-          title = it.title,
-          description = it.description,
-          isComplete = it.complete,
-          // TODO(#1) SQLDELIGHT_BLOCKED remove this if and the other after fixing broken correlated subqueries
-          parent = if (it.parent.isNotBlank()) TaskId(uuidFrom(it.parent)) else null,
-          children = expandTaskIdList(it.children),
-          blockingTasks = if (it.blocking_tasks.isNotEmpty()) {
-            expandTaskIdList(it.blocking_tasks)
-          } else {
-            emptySet()
-          },
-          blockedTasks = expandTaskIdList(it.blocked_tasks)
-        )
+      .associate {
+        val taskId = TaskId(uuidFrom(it.id))
+        taskId to
+          TaskNode(
+            id = taskId,
+            title = it.title,
+            description = it.description,
+            isComplete = it.complete,
+            // TODO(#1) SQLDELIGHT_BLOCKED remove this if and the other after fixing broken correlated subqueries
+            parent = if (it.parent.isNotBlank()) TaskId(uuidFrom(it.parent)) else null,
+            children = expandTaskIdList(it.children),
+            blockingTasks = if (it.blocking_tasks.isNotEmpty()) {
+              expandTaskIdList(it.blocking_tasks)
+            } else {
+              emptySet()
+            },
+            blockedTasks = expandTaskIdList(it.blocked_tasks)
+          )
       }
   }
 
-  override fun selectAllActionableTaskNodeInformation(): Collection<TaskNode> {
+  override fun selectAllActionableTaskNodeInformation(): Map<TaskId, TaskNode> {
     logger.v("selecting all task nodes that are not blocked")
-    return database.taskNodeQueries.selectAllActionableTaskNodes().executeAsList().map {
-      TaskNode(
-        id = TaskId(uuidFrom(it.id)),
-        title = it.title,
-        description = it.description,
-        isComplete = it.complete,
-        // TODO(#1) SQLDELIGHT_BLOCKED remove this if and the other after fixing broken correlated subqueries
-        parent = if (it.parent.isNotBlank()) TaskId(uuidFrom(it.parent)) else null,
-        children = expandTaskIdList(it.children),
-        blockingTasks = if (it.blocking_tasks.isNotEmpty()) {
-          expandTaskIdList(it.blocking_tasks)
-        } else {
-          emptySet()
-        },
-        blockedTasks = expandTaskIdList(it.blocked_tasks)
-      )
-    }
+    return database.taskNodeQueries.selectAllActionableTaskNodes()
+      .executeAsList()
+      .associate {
+        val taskId = TaskId(uuidFrom(it.id))
+        taskId to
+          TaskNode(
+            id = taskId,
+            title = it.title,
+            description = it.description,
+            isComplete = it.complete,
+            // TODO(#1) SQLDELIGHT_BLOCKED remove this if and the other after fixing broken correlated subqueries
+            parent = if (it.parent.isNotBlank()) TaskId(uuidFrom(it.parent)) else null,
+            children = expandTaskIdList(it.children),
+            blockingTasks = if (it.blocking_tasks.isNotEmpty()) {
+              expandTaskIdList(it.blocking_tasks)
+            } else {
+              emptySet()
+            },
+            blockedTasks = expandTaskIdList(it.blocked_tasks)
+          )
+      }
   }
 
   override fun insertTaskNode(

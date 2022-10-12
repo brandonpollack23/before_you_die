@@ -10,8 +10,8 @@ import com.beforeyoudie.common.state.TaskId
 import com.beforeyoudie.common.state.TaskNode
 import com.beforeyoudie.common.util.BYDFailure
 import com.benasher44.uuid.uuidFrom
-import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
-import io.kotest.matchers.collections.shouldHaveAtMostSize
+import io.kotest.matchers.maps.shouldContainExactly
+import io.kotest.matchers.maps.shouldHaveSize
 import io.kotest.matchers.result.shouldBeFailure
 import io.kotest.matchers.result.shouldBeSuccess
 import io.kotest.matchers.shouldBe
@@ -25,6 +25,7 @@ abstract class SqlDelightStorageTestComponent(
 ) {
   abstract val storage: IBydStorage
 }
+
 fun sqlDelightStorageTestComponent() = run {
   val platformComponent = createTestPlatformComponent()
   val storageComponent = JvmDesktopPlatformSqlDelightStorageComponent::class.create()
@@ -66,11 +67,11 @@ class SqlDelightStorageTest : CommonTest() {
         complete = false
       )
 
-      storage.selectAllTaskNodeInformation() shouldContainExactlyInAnyOrder setOf(
+      storage.selectAllTaskNodeInformation() shouldContainExactly setOf(
         TaskNode(uuid1, "uuid1"),
         TaskNode(uuid2, "uuid2", description = "", isComplete = true),
         TaskNode(uuid3, "uuid3", description = "captain picard baby", parent = uuid2)
-      )
+      ).associateBy { it.id }
     }
 
     test("update title") {
@@ -79,16 +80,16 @@ class SqlDelightStorageTest : CommonTest() {
       val uuid2 = TaskId(uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3598"))
       storage.insertTaskNode(uuid2, "uuid2", null, complete = false)
 
-      storage.selectAllTaskNodeInformation() shouldContainExactlyInAnyOrder setOf(
+      storage.selectAllTaskNodeInformation() shouldContainExactly setOf(
         TaskNode(uuid1, "uuid1"),
         TaskNode(uuid2, "uuid2")
-      )
+      ).associateBy { it.id }
 
       storage.updateTaskTitle(uuid1, "new uuid1 title") shouldBeSuccess Unit
-      storage.selectAllTaskNodeInformation() shouldContainExactlyInAnyOrder setOf(
+      storage.selectAllTaskNodeInformation() shouldContainExactly setOf(
         TaskNode(uuid1, "new uuid1 title"),
         TaskNode(uuid2, "uuid2")
-      )
+      ).associateBy { it.id }
     }
 
     test("update title fail") {
@@ -98,10 +99,10 @@ class SqlDelightStorageTest : CommonTest() {
       storage.insertTaskNode(uuid2, "uuid2", null, complete = false)
       val uuid3 = TaskId(uuidFrom("3d8f7dd6-c345-49a8-aa1d-404fb9ea3598"))
 
-      storage.selectAllTaskNodeInformation() shouldContainExactlyInAnyOrder setOf(
+      storage.selectAllTaskNodeInformation() shouldContainExactly setOf(
         TaskNode(uuid1, "uuid1"),
         TaskNode(uuid2, "uuid2")
-      )
+      ).associateBy { it.id }
 
       storage.updateTaskTitle(uuid3, "new uuid1 title") shouldBeFailure
         BYDFailure.NonExistentNodeId(uuid3)
@@ -113,16 +114,16 @@ class SqlDelightStorageTest : CommonTest() {
       val uuid2 = TaskId(uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3598"))
       storage.insertTaskNode(uuid2, "uuid2", null, complete = false)
 
-      storage.selectAllTaskNodeInformation() shouldContainExactlyInAnyOrder setOf(
+      storage.selectAllTaskNodeInformation() shouldContainExactly setOf(
         TaskNode(uuid1, "uuid1"),
         TaskNode(uuid2, "uuid2")
-      )
+      ).associateBy { it.id }
 
       storage.updateTaskDescription(uuid1, "new uuid1 description") shouldBeSuccess Unit
-      storage.selectAllTaskNodeInformation() shouldContainExactlyInAnyOrder setOf(
+      storage.selectAllTaskNodeInformation() shouldContainExactly setOf(
         TaskNode(uuid1, "uuid1", description = "new uuid1 description"),
         TaskNode(uuid2, "uuid2")
-      )
+      ).associateBy { it.id }
     }
 
     test("update descprption fail") {
@@ -132,10 +133,10 @@ class SqlDelightStorageTest : CommonTest() {
       storage.insertTaskNode(uuid2, "uuid2", null, complete = false)
       val uuid3 = TaskId(uuidFrom("3d8f7dd6-c345-49a8-aa1d-404fb9ea3598"))
 
-      storage.selectAllTaskNodeInformation() shouldContainExactlyInAnyOrder setOf(
+      storage.selectAllTaskNodeInformation() shouldContainExactly setOf(
         TaskNode(uuid1, "uuid1"),
         TaskNode(uuid2, "uuid2")
-      )
+      ).associateBy { it.id }
 
       storage.updateTaskDescription(uuid3, "new uuid1 description") shouldBeFailure
         BYDFailure.NonExistentNodeId(uuid3)
@@ -149,30 +150,30 @@ class SqlDelightStorageTest : CommonTest() {
       val uuid3 = TaskId(uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3588"))
       storage.insertTaskNode(uuid3, "uuid3", null, complete = false)
 
-      storage.selectAllTaskNodeInformation() shouldContainExactlyInAnyOrder setOf(
+      storage.selectAllTaskNodeInformation() shouldContainExactly setOf(
         TaskNode(uuid1, "uuid1"),
         TaskNode(uuid2, "uuid2"),
         TaskNode(uuid3, "uuid3")
-      )
+      ).associateBy { it.id }
 
       storage.markComplete(uuid1)
-      storage.selectAllTaskNodeInformation() shouldContainExactlyInAnyOrder setOf(
+      storage.selectAllTaskNodeInformation() shouldContainExactly setOf(
         TaskNode(uuid1, "uuid1", isComplete = true),
         TaskNode(uuid2, "uuid2"),
         TaskNode(uuid3, "uuid3")
-      )
+      ).associateBy { it.id }
       storage.markComplete(uuid2)
-      storage.selectAllTaskNodeInformation() shouldContainExactlyInAnyOrder setOf(
+      storage.selectAllTaskNodeInformation() shouldContainExactly setOf(
         TaskNode(uuid1, "uuid1", isComplete = true),
         TaskNode(uuid2, "uuid2", isComplete = true),
         TaskNode(uuid3, "uuid3")
-      )
+      ).associateBy { it.id }
       storage.markComplete(uuid3)
-      storage.selectAllTaskNodeInformation() shouldContainExactlyInAnyOrder setOf(
+      storage.selectAllTaskNodeInformation() shouldContainExactly setOf(
         TaskNode(uuid1, "uuid1", isComplete = true),
         TaskNode(uuid2, "uuid2", isComplete = true),
         TaskNode(uuid3, "uuid3", isComplete = true)
-      )
+      ).associateBy { it.id }
     }
 
     test("parent child relation, including multiple children") {
@@ -191,20 +192,19 @@ class SqlDelightStorageTest : CommonTest() {
 
       val allResults = storage.selectAllTaskNodeInformation()
 
-      allResults shouldContainExactlyInAnyOrder
-        setOf(
-          TaskNode(uuid1, "uuid1", children = setOf(uuid2, uuid4)),
-          TaskNode(
-            uuid2,
-            "uuid2",
-            description = "",
-            isComplete = true,
-            parent = uuid1,
-            children = setOf(uuid3)
-          ),
-          TaskNode(uuid3, "uuid3", description = "captain picard baby", parent = uuid2),
-          TaskNode(uuid4, "uuid4", description = "no love for worf", parent = uuid1)
-        )
+      allResults shouldContainExactly setOf(
+        TaskNode(uuid1, "uuid1", children = setOf(uuid2, uuid4)),
+        TaskNode(
+          uuid2,
+          "uuid2",
+          description = "",
+          isComplete = true,
+          parent = uuid1,
+          children = setOf(uuid3)
+        ),
+        TaskNode(uuid3, "uuid3", description = "captain picard baby", parent = uuid2),
+        TaskNode(uuid4, "uuid4", description = "no love for worf", parent = uuid1)
+      ).associateBy { it.id }
     }
 
     test("parent child relation, including multiple children using properties") {
@@ -223,20 +223,19 @@ class SqlDelightStorageTest : CommonTest() {
 
       val allResults = storage.selectAllTaskNodeInformation()
 
-      allResults shouldContainExactlyInAnyOrder
-        setOf(
-          TaskNode(uuid1, "uuid1", children = setOf(uuid2, uuid4)),
-          TaskNode(
-            uuid2,
-            "uuid2",
-            description = "",
-            isComplete = true,
-            parent = uuid1,
-            children = setOf(uuid3)
-          ),
-          TaskNode(uuid3, "uuid3", description = "captain picard baby", parent = uuid2),
-          TaskNode(uuid4, "uuid4", description = "no love for worf", parent = uuid1)
-        )
+      allResults shouldContainExactly setOf(
+        TaskNode(uuid1, "uuid1", children = setOf(uuid2, uuid4)),
+        TaskNode(
+          uuid2,
+          "uuid2",
+          description = "",
+          isComplete = true,
+          parent = uuid1,
+          children = setOf(uuid3)
+        ),
+        TaskNode(uuid3, "uuid3", description = "captain picard baby", parent = uuid2),
+        TaskNode(uuid4, "uuid4", description = "no love for worf", parent = uuid1)
+      ).associateBy { it.id }
     }
 
     test("child can only have one parent") {
@@ -267,7 +266,7 @@ class SqlDelightStorageTest : CommonTest() {
 
       val allResults = storage.selectAllTaskNodeInformation()
 
-      allResults shouldContainExactlyInAnyOrder setOf(
+      allResults shouldContainExactly setOf(
         TaskNode(uuid1, "uuid1", blockingTasks = setOf(uuid2)),
         TaskNode(
           uuid2,
@@ -290,7 +289,7 @@ class SqlDelightStorageTest : CommonTest() {
           description = "no love for worf",
           blockedTasks = setOf(uuid3)
         )
-      )
+      ).associateBy { it.id }
     }
 
     test("dependencies work diamond (one to many and many to one)") {
@@ -318,7 +317,7 @@ class SqlDelightStorageTest : CommonTest() {
 
       val allResults = storage.selectAllTaskNodeInformation()
 
-      allResults shouldContainExactlyInAnyOrder setOf(
+      allResults shouldContainExactly setOf(
         TaskNode(uuid1, "uuid1", blockingTasks = setOf(uuid2, uuid3)),
         TaskNode(
           uuid2,
@@ -340,7 +339,7 @@ class SqlDelightStorageTest : CommonTest() {
           description = "no love for worf",
           blockedTasks = setOf(uuid3, uuid2)
         )
-      )
+      ).associateBy { it.id }
     }
 
     test("dependencies fail with a small loop") {
@@ -421,15 +420,15 @@ class SqlDelightStorageTest : CommonTest() {
       storage.addDependencyRelationship(uuid3, uuid4)
 
       // First only 1 should be actionable
-      storage.selectAllActionableTaskNodeInformation() shouldContainExactlyInAnyOrder setOf(
+      storage.selectAllActionableTaskNodeInformation() shouldContainExactly setOf(
         TaskNode(uuid0, "uuid0"),
         TaskNode(uuid1, "uuid1", blockedTasks = setOf(uuid2, uuid3))
-      )
+      ).associateBy { it.id }
 
       storage.markComplete(uuid0) shouldBeSuccess Unit
       storage.markComplete(uuid1) shouldBeSuccess Unit
       // Now 2 and 3 should be actionable, since 4 is blocked and 1 is complete.
-      storage.selectAllActionableTaskNodeInformation() shouldContainExactlyInAnyOrder setOf(
+      storage.selectAllActionableTaskNodeInformation() shouldContainExactly setOf(
         TaskNode(
           uuid2,
           "uuid2",
@@ -444,11 +443,11 @@ class SqlDelightStorageTest : CommonTest() {
           blockingTasks = setOf(uuid1),
           blockedTasks = setOf(uuid4)
         )
-      )
+      ).associateBy { it.id }
 
       storage.markComplete(uuid2) shouldBeSuccess Unit
       // only 3 should still be actionable, since 4 is blocked by 3 still
-      storage.selectAllActionableTaskNodeInformation() shouldContainExactlyInAnyOrder setOf(
+      storage.selectAllActionableTaskNodeInformation() shouldContainExactly setOf(
         TaskNode(
           uuid3,
           "uuid3",
@@ -456,22 +455,22 @@ class SqlDelightStorageTest : CommonTest() {
           blockingTasks = setOf(uuid1),
           blockedTasks = setOf(uuid4)
         )
-      )
+      ).associateBy { it.id }
 
       storage.markComplete(uuid3) shouldBeSuccess Unit
       // now 4 is opened up!
-      storage.selectAllActionableTaskNodeInformation() shouldContainExactlyInAnyOrder setOf(
+      storage.selectAllActionableTaskNodeInformation() shouldContainExactly setOf(
         TaskNode(
           uuid4,
           "uuid4",
           description = "no love for worf",
           blockingTasks = setOf(uuid3, uuid2)
         )
-      )
+      ).associateBy { it.id }
 
       storage.markComplete(uuid4) shouldBeSuccess Unit
       // now 4 is opened up!
-      storage.selectAllActionableTaskNodeInformation() shouldHaveAtMostSize 0
+      storage.selectAllActionableTaskNodeInformation() shouldHaveSize 0
     }
 
     test("marking incomplete should force dependent tasks to no longer be visibile") {
@@ -492,15 +491,15 @@ class SqlDelightStorageTest : CommonTest() {
       storage.addDependencyRelationship(uuid3, uuid4)
 
       // First only 1 should be actionable
-      storage.selectAllActionableTaskNodeInformation() shouldContainExactlyInAnyOrder setOf(
+      storage.selectAllActionableTaskNodeInformation() shouldContainExactly setOf(
         TaskNode(uuid0, "uuid0"),
         TaskNode(uuid1, "uuid1", blockedTasks = setOf(uuid2, uuid3))
-      )
+      ).associateBy { it.id }
 
       storage.markComplete(uuid0) shouldBeSuccess Unit
       storage.markComplete(uuid1) shouldBeSuccess Unit
       // Now 2 and 3 should be actionable, since 4 is blocked and 1 is complete.
-      storage.selectAllActionableTaskNodeInformation() shouldContainExactlyInAnyOrder setOf(
+      storage.selectAllActionableTaskNodeInformation() shouldContainExactly setOf(
         TaskNode(
           uuid2,
           "uuid2",
@@ -515,12 +514,12 @@ class SqlDelightStorageTest : CommonTest() {
           blockingTasks = setOf(uuid1),
           blockedTasks = setOf(uuid4)
         )
-      )
+      ).associateBy { it.id }
 
       storage.markIncomplete(uuid1) shouldBeSuccess Unit
-      storage.selectAllActionableTaskNodeInformation() shouldContainExactlyInAnyOrder setOf(
+      storage.selectAllActionableTaskNodeInformation() shouldContainExactly setOf(
         TaskNode(uuid1, "uuid1", blockedTasks = setOf(uuid2, uuid3))
-      )
+      ).associateBy { it.id }
     }
 
     test("reparenting operation completes successfully") {
@@ -534,11 +533,11 @@ class SqlDelightStorageTest : CommonTest() {
       storage.addChildToTaskNode(uuid0, uuid1) shouldBeSuccess Unit
       storage.reparentChildToTaskNode(uuid2, uuid1) shouldBeSuccess Unit
 
-      storage.selectAllTaskNodeInformation() shouldContainExactlyInAnyOrder setOf(
+      storage.selectAllTaskNodeInformation() shouldContainExactly setOf(
         TaskNode(uuid0, "uuid0"),
         TaskNode(uuid1, "uuid1", parent = uuid2),
         TaskNode(uuid2, "uuid2", children = setOf(uuid1))
-      )
+      ).associateBy { it.id }
     }
 
     test("reparenting operation fails when there is no existing parent") {
@@ -592,11 +591,11 @@ class SqlDelightStorageTest : CommonTest() {
 
       storage.removeTaskNodeAndChildren(uuid0)
 
-      storage.selectAllTaskNodeInformation() shouldContainExactlyInAnyOrder setOf(
+      storage.selectAllTaskNodeInformation() shouldContainExactly setOf(
         TaskNode(uuid2, "uuid2"),
         TaskNode(uuid3, "uuid3"),
         TaskNode(uuid4, "uuid4")
-      )
+      ).associateBy { it.id }
     }
 
     test("remve task recursively removes all chilrdren") {
@@ -617,7 +616,7 @@ class SqlDelightStorageTest : CommonTest() {
       storage.addChildToTaskNode(uuid3, uuid4)
 
       storage.removeTaskNodeAndChildren(uuid0) shouldBeSuccess Unit
-      storage.selectAllTaskNodeInformation() shouldContainExactlyInAnyOrder setOf()
+      storage.selectAllTaskNodeInformation() shouldContainExactly emptyMap()
     }
 
     test("remove nonexistant node fails") {
@@ -644,7 +643,7 @@ class SqlDelightStorageTest : CommonTest() {
 
       storage.removeDependencyRelationship(uuid3, uuid2) shouldBeSuccess Unit
 
-      storage.selectAllTaskNodeInformation() shouldContainExactlyInAnyOrder setOf(
+      storage.selectAllTaskNodeInformation() shouldContainExactly setOf(
         TaskNode(uuid1, "uuid1", blockingTasks = setOf(uuid2)),
         TaskNode(uuid2, "uuid2", description = "", blockedTasks = setOf(uuid1)),
         TaskNode(
@@ -654,7 +653,7 @@ class SqlDelightStorageTest : CommonTest() {
           blockingTasks = setOf(uuid4)
         ),
         TaskNode(uuid4, "uuid4", description = "no love for worf", blockedTasks = setOf(uuid3))
-      )
+      ).associateBy { it.id }
     }
 
     test("fails to remove non existant dep") {

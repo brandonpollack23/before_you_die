@@ -73,7 +73,7 @@ abstract class AppLogicRoot(
               logger.e("Failed to insert node! $error")
             }.onSuccess { task ->
               logger.i("Node ${task.id} inserted, updating in memory state")
-              taskGraphStateFlow.value += task
+              taskGraphStateFlow.value += (task.id to task)
             }
           }
 
@@ -91,8 +91,9 @@ abstract class AppLogicRoot(
                 // TODO(#13) Measure this and make it more efficent, potentially via full reload.
                 taskGraphStateFlow.value =
                   taskGraphStateFlow.value
-                    .filter { taskNode -> !removedNodes.contains(taskNode.id) }
-                    .map { taskNode ->
+                    .filter { entry -> !removedNodes.contains(entry.key) }
+                    .mapValues { entry ->
+                      val taskNode = entry.value
                       taskNode.copy(
                         blockingTasks = taskNode.blockingTasks - removedNodesSet,
                         blockedTasks = taskNode.blockedTasks - removedNodesSet,
@@ -102,7 +103,9 @@ abstract class AppLogicRoot(
               }
           }
 
-          is TaskGraphEvent.OpenEdit -> onOpenEdit(it.taskId)
+          is TaskGraphEvent.OpenEdit -> {
+            onOpenEdit(it.taskId)
+          }
         }
       }
     }
@@ -122,7 +125,7 @@ abstract class AppLogicRoot(
  * The overall application state, this includes the state of the graph, any ui elements, etc.
  */
 data class AppState(
-  val taskGraph: Collection<TaskNode> = emptySet(),
+  val taskGraph: Map<TaskId, TaskNode> = emptyMap(),
   val activeChild: AppLogicRoot.Child,
   val isLoading: Boolean = true
 )

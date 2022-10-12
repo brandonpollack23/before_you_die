@@ -18,7 +18,7 @@ import com.beforeyoudie.common.state.TaskIdGenerator
 import com.beforeyoudie.common.state.TaskNode
 import com.beforeyoudie.common.storage.IBydStorage
 import com.beforeyoudie.randomTaskId
-import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
+import io.kotest.matchers.maps.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.verify
@@ -108,7 +108,7 @@ class AppLogicRootDecomposeComponentTest : CommonTest() {
       finishOnCreate()
 
       rootDecomposeComponent.appStateFlow.value.isLoading shouldBe false
-      rootDecomposeComponent.appStateFlow.value.taskGraph shouldContainExactlyInAnyOrder
+      rootDecomposeComponent.appStateFlow.value.taskGraph shouldContainExactly
         taskNodes
     }
 
@@ -162,9 +162,9 @@ class AppLogicRootDecomposeComponentTest : CommonTest() {
       verify(exactly = 1) { mockStorage.removeTaskNodeAndChildren(picardTaskId) }
 
       // Verify in memory state.
-      rootDecomposeComponent.appStateFlow.value.taskGraph shouldContainExactlyInAnyOrder
-        setOf(
-          TaskNode(
+      rootDecomposeComponent.appStateFlow.value.taskGraph shouldContainExactly
+        mapOf(
+          laforgeTaskId to TaskNode(
             laforgeTaskId,
             "Geordi Laforge",
             "Space Engineering Master"
@@ -224,28 +224,28 @@ class AppLogicRootDecomposeComponentTest : CommonTest() {
         )
       }
 
-      rootDecomposeComponent.appStateFlow.value.taskGraph shouldContainExactlyInAnyOrder
-        setOf(
-          TaskNode(
+      rootDecomposeComponent.appStateFlow.value.taskGraph shouldContainExactly
+        mapOf(
+          gulmacetTaskId!! to TaskNode(
             gulmacetTaskId!!,
             "Take This Message To Your Leaders, Gul Macet",
             "We'll be watching",
             parent = picardTaskId
           ),
-          TaskNode(
+          picardTaskId to TaskNode(
             picardTaskId,
             "Captain Picard",
             "Worlds best captain",
             children = setOf(gulmacetTaskId!!)
           ),
-          TaskNode(
+          rikerTaskId to TaskNode(
             rikerTaskId,
             "William T Riker",
             "Beard or go home",
             parent = picardTaskId,
             blockedTasks = setOf(laforgeTaskId)
           ),
-          TaskNode(
+          laforgeTaskId to TaskNode(
             laforgeTaskId,
             "Geordi Laforge",
             "Space Engineering Master",
@@ -264,20 +264,20 @@ class AppLogicRootDecomposeComponentTest : CommonTest() {
     testMainDispatcher.scheduler.advanceUntilIdle()
   }
 
-  private val taskNodes: Set<TaskNode> = setOf(
-    TaskNode(
+  private val taskNodes: Map<TaskId, TaskNode> = mapOf(
+    picardTaskId to TaskNode(
       picardTaskId,
       "Captain Picard",
       "Worlds best captain"
     ),
-    TaskNode(
+    rikerTaskId to TaskNode(
       rikerTaskId,
       "William T Riker",
       "Beard or go home",
       parent = picardTaskId,
       blockedTasks = setOf(laforgeTaskId)
     ),
-    TaskNode(
+    laforgeTaskId to TaskNode(
       laforgeTaskId,
       "Geordi Laforge",
       "Space Engineering Master",
