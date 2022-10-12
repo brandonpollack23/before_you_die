@@ -17,11 +17,12 @@ include(":common-ui")
 dependencyResolutionManagement {
   versionCatalogs {
     create("libs") {
-      val kotlinVersion = "1.7.10"
+      val kotlinVersion = "1.7.20"
       version("kotlin-compiler", kotlinVersion)
       val kspVersion = "1.0.6"
       version("kotlin-ksp", "$kotlinVersion-$kspVersion")
-      version("jetbrains-compose", "1.2.0-beta02")
+      // WARNING JS won't work until in kotlin 1.7.20 until compose 1.21 according to release notes
+      version("jetbrains-compose", "1.2.0")
       version("spotless", "6.11.0")
 
       // kotlin-inject DI
