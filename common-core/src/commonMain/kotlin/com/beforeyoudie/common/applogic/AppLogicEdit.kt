@@ -13,7 +13,7 @@ import kotlinx.coroutines.launch
 abstract class AppLogicEdit(val appLogicEditConfig: AppLogicEditConfig) {
   abstract val coroutineScope: CoroutineScope
 
-  private val mutableEditTaskEvents: MutableSharedFlow<EditTaskEvents> =
+  private val mutableEditTaskEvents: MutableSharedFlow<EditTaskEvent> =
     MutableSharedFlow(replay = 1, onBufferOverflow = BufferOverflow.DROP_OLDEST)
 
   /**
@@ -24,14 +24,14 @@ abstract class AppLogicEdit(val appLogicEditConfig: AppLogicEditConfig) {
 
   fun editTitle(newTitle: String) {
     coroutineScope.launch {
-      mutableEditTaskEvents.emit(EditTaskEvents.EditTitle(appLogicEditConfig.taskNodeId, newTitle))
+      mutableEditTaskEvents.emit(EditTaskEvent.EditTitle(appLogicEditConfig.taskNodeId, newTitle))
     }
   }
 
   fun editDescription(newDescription: String) {
     coroutineScope.launch {
       mutableEditTaskEvents.emit(
-        EditTaskEvents.EditDescription(
+        EditTaskEvent.EditDescription(
           appLogicEditConfig.taskNodeId,
           newDescription
         )
@@ -42,7 +42,7 @@ abstract class AppLogicEdit(val appLogicEditConfig: AppLogicEditConfig) {
   fun addChild(newChild: TaskId) {
     coroutineScope.launch {
       mutableEditTaskEvents.emit(
-        EditTaskEvents.AddChild(appLogicEditConfig.taskNodeId, newChild)
+        EditTaskEvent.AddChild(appLogicEditConfig.taskNodeId, newChild)
       )
     }
   }
@@ -50,7 +50,7 @@ abstract class AppLogicEdit(val appLogicEditConfig: AppLogicEditConfig) {
   fun setParent(newParent: TaskId) {
     coroutineScope.launch {
       mutableEditTaskEvents.emit(
-        EditTaskEvents.SetParent(appLogicEditConfig.taskNodeId, newParent)
+        EditTaskEvent.SetParent(appLogicEditConfig.taskNodeId, newParent)
       )
     }
   }
@@ -58,7 +58,7 @@ abstract class AppLogicEdit(val appLogicEditConfig: AppLogicEditConfig) {
   fun addBlockingTask(blockingTask: TaskId) {
     coroutineScope.launch {
       mutableEditTaskEvents.emit(
-        EditTaskEvents.AddBlockingTask(appLogicEditConfig.taskNodeId, blockingTask)
+        EditTaskEvent.AddBlockingTask(appLogicEditConfig.taskNodeId, blockingTask)
       )
     }
   }
@@ -66,7 +66,7 @@ abstract class AppLogicEdit(val appLogicEditConfig: AppLogicEditConfig) {
   fun addBlockedTask(blockedTask: TaskId) {
     coroutineScope.launch {
       mutableEditTaskEvents.emit(
-        EditTaskEvents.AddBlockedTask(appLogicEditConfig.taskNodeId, blockedTask)
+        EditTaskEvent.AddBlockedTask(appLogicEditConfig.taskNodeId, blockedTask)
       )
     }
   }
@@ -82,12 +82,13 @@ data class AppLogicEditConfig(val taskNodeId: TaskId) : Parcelable
 /**
  * These are the events emitted by the reactive stream/flow to be responded to upstream.
  */
-sealed interface EditTaskEvents {
-  data class EditTitle(val taskId: TaskId, val newTitle: String) : EditTaskEvents
-  data class EditDescription(val taskId: TaskId, val newDescription: String) : EditTaskEvents
+sealed interface EditTaskEvent {
+  data class EditTitle(val taskId: TaskId, val newTitle: String) : EditTaskEvent
+  data class EditDescription(val taskId: TaskId, val newDescription: String) : EditTaskEvent
+
   // TODO NOW make tests for all these
-  data class AddChild(val taskId: TaskId, val newChild: TaskId) : EditTaskEvents
-  data class SetParent(val taskId: TaskId, val newParent: TaskId) : EditTaskEvents
-  data class AddBlockingTask(val taskId: TaskId, val blockingTask: TaskId) : EditTaskEvents
-  data class AddBlockedTask(val taskId: TaskId, val blockedTask: TaskId) : EditTaskEvents
+  data class AddChild(val taskId: TaskId, val newChild: TaskId) : EditTaskEvent
+  data class SetParent(val taskId: TaskId, val newParent: TaskId) : EditTaskEvent
+  data class AddBlockingTask(val taskId: TaskId, val blockingTask: TaskId) : EditTaskEvent
+  data class AddBlockedTask(val taskId: TaskId, val blockedTask: TaskId) : EditTaskEvent
 }

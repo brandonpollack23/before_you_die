@@ -114,23 +114,22 @@ abstract class AppLogicRoot(
       }
   }
 
-  protected fun subscribeToEditTaskEvents(editTaskEvents: SharedFlow<EditTaskEvents>) {
+  protected fun subscribeToEditTaskEvents(editTaskEvents: SharedFlow<EditTaskEvent>) {
     coroutineScope.launch {
       editTaskEvents.collect { taskEvent ->
         when (taskEvent) {
-          is EditTaskEvents.EditTitle -> handleEditTaskTitle(taskEvent)
-          is EditTaskEvents.EditDescription -> handleEditTaskDescription(taskEvent)
-          // TODO NOW implement these and test
-          is EditTaskEvents.SetParent -> handleSetParent(taskEvent)
-          is EditTaskEvents.AddChild -> handleAddChild(taskEvent)
-          is EditTaskEvents.AddBlockingTask -> handleAddBlockingTask(taskEvent)
-          is EditTaskEvents.AddBlockedTask -> handleAddBlockedTask(taskEvent)
+          is EditTaskEvent.EditTitle -> handleEditTaskTitle(taskEvent)
+          is EditTaskEvent.EditDescription -> handleEditTaskDescription(taskEvent)
+          is EditTaskEvent.SetParent -> handleSetParent(taskEvent)
+          is EditTaskEvent.AddChild -> handleAddChild(taskEvent)
+          is EditTaskEvent.AddBlockingTask -> handleAddBlockingTask(taskEvent)
+          is EditTaskEvent.AddBlockedTask -> handleAddBlockedTask(taskEvent)
         }
       }
     }
   }
 
-  private fun handleEditTaskTitle(taskEvent: EditTaskEvents.EditTitle) {
+  private fun handleEditTaskTitle(taskEvent: EditTaskEvent.EditTitle) {
     storage.updateTaskTitle(taskEvent.taskId, taskEvent.newTitle)
       .onSuccess {
         taskGraphStateFlow.update { taskGraph ->
@@ -139,11 +138,13 @@ abstract class AppLogicRoot(
           taskGraph + (taskEvent.taskId to newTaskNode)
         }
       }.onFailure {
-        logger.e("Failed to update task title for ${taskEvent.taskId} to ${taskEvent.newTitle}: $it")
+        logger.e(
+          "Failed to update task title for ${taskEvent.taskId} to ${taskEvent.newTitle}: $it"
+        )
       }
   }
 
-  private fun handleEditTaskDescription(taskEvent: EditTaskEvents.EditDescription) {
+  private fun handleEditTaskDescription(taskEvent: EditTaskEvent.EditDescription) {
     storage.updateTaskDescription(taskEvent.taskId, taskEvent.newDescription)
       .onSuccess {
         taskGraphStateFlow.update { taskGraph ->
@@ -153,12 +154,13 @@ abstract class AppLogicRoot(
         }
       }.onFailure {
         logger.e(
-          "Failed to update task description for ${taskEvent.taskId} to ${taskEvent.newDescription}: $it"
+          "Failed to update task description for " +
+            "${taskEvent.taskId} to ${taskEvent.newDescription}: $it"
         )
       }
   }
 
-  private fun handleSetParent(taskEvent: EditTaskEvents.SetParent) {
+  private fun handleSetParent(taskEvent: EditTaskEvent.SetParent) {
     val childToUpdate = appStateFlow.value.taskGraph[taskEvent.taskId]
     if (childToUpdate == null) {
       logger.e { "No such task ${taskEvent.taskId} to update parent to ${taskEvent.newParent}" }
@@ -174,10 +176,10 @@ abstract class AppLogicRoot(
     addChildHelper(parentToUpdate, childToUpdate)
   }
 
-  private fun handleAddChild(taskEvent: EditTaskEvents.AddChild) {
+  private fun handleAddChild(taskEvent: EditTaskEvent.AddChild) {
     val childToUpdate = appStateFlow.value.taskGraph[taskEvent.newChild]
     if (childToUpdate == null) {
-      logger.e { "No such task ${taskEvent.taskId} to update parent to ${taskEvent.newChild}" }
+      logger.e { "No such task ${taskEvent.newChild} to update parent to ${taskEvent.taskId}" }
     }
 
     val parentToUpdate = appStateFlow.value.taskGraph[taskEvent.taskId]
@@ -190,10 +192,41 @@ abstract class AppLogicRoot(
     addChildHelper(parentToUpdate, childToUpdate)
   }
 
-  private fun addChildHelper(
-    parentToUpdate: TaskNode,
-    childToUpdate: TaskNode
-  ) {
+  private fun handleAddBlockingTask(taskEvent: EditTaskEvent.AddBlockingTask) {
+    val blockedTask = appStateFlow.value.taskGraph[taskEvent.taskId]
+    if (blockedTask == null) {
+      logger.e {
+        "No such task ${taskEvent.taskId} to add blocking task to to ${taskEvent.blockingTask}"
+      }
+    }
+
+    val blockingTask = appStateFlow.value.taskGraph[taskEvent.blockingTask]
+    if (blockedTask == null) {
+      logger.e { "No such task ${taskEvent.blockingTask} to be blocked by ${taskEvent.taskId}" }
+    }
+
+    if (blockedTask == null || blockingTask == null) return
+
+    addTaskDependencyHelper(blockingTask, blockedTask)
+  }
+
+  private fun handleAddBlockedTask(taskEvent: EditTaskEvent.AddBlockedTask) {
+    val blockedTask = appStateFlow.value.taskGraph[taskEvent.blockedTask]
+    if (blockedTask == null) {
+      logger.e { "No such task ${taskEvent.taskId} to add blocking task to to ${taskEvent.taskId}" }
+    }
+
+    val blockingTask = appStateFlow.value.taskGraph[taskEvent.taskId]
+    if (blockedTask == null) {
+      logger.e { "No such task ${taskEvent.taskId} to be blocked by ${taskEvent.taskId}" }
+    }
+
+    if (blockedTask == null || blockingTask == null) return
+
+    addTaskDependencyHelper(blockingTask, blockedTask)
+  }
+
+  private fun addChildHelper(parentToUpdate: TaskNode, childToUpdate: TaskNode) {
     if (parentToUpdate.children.contains(childToUpdate.id)) {
       // Reparent operation
       storage.reparentChildToTaskNode(parentToUpdate.id, childToUpdate.id)
@@ -213,9 +246,22 @@ abstract class AppLogicRoot(
     }
   }
 
-  private fun isSetParentOperationValidWithLogging(taskEvent: EditTaskEvents.SetParent): Boolean {
+  private fun addTaskDependencyHelper(blockingTask: TaskNode, blockedTask: TaskNode) {
+    storage.addDependencyRelationship(blockingTask.id, blockedTask.id).onSuccess {
+      val blockedTaskBlockingTasks = blockedTask.blockingTasks + blockingTask.id
+      val updatedBlockedTask =
+        blockedTask.id to blockedTask.copy(blockingTasks = blockedTaskBlockingTasks)
 
-    return true
+      val blockingTaskBlockedTasks = blockingTask.blockedTasks + blockedTask.id
+      val updatedBlockingTask =
+        blockingTask.id to blockingTask.copy(blockedTasks = blockingTaskBlockedTasks)
+
+      taskGraphStateFlow.update { taskGraph ->
+        taskGraph + listOf(updatedBlockedTask, updatedBlockingTask)
+      }
+    }.onFailure {
+      logger.e { "Failure updating dependency relationship: $it" }
+    }
   }
 
   /** All possible children and their configurations, to be used on navigation for construction.*/
