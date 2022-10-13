@@ -27,6 +27,7 @@ import com.beforeyoudie.common.state.TaskNode
 import com.beforeyoudie.common.storage.IBydStorage
 import com.beforeyoudie.common.util.getClassLogger
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import me.tatarka.inject.annotations.Inject
@@ -94,10 +95,12 @@ class RootDecomposeComponent(
             storage.selectAllTaskNodeInformation()
           }
 
-          mutableAppStateFlow.value = appStateFlow.value.copy(
-            taskGraph = initialTaskGraph,
-            isLoading = false
-          )
+          mutableAppStateFlow.update { appState ->
+            appState.copy(
+              taskGraph = initialTaskGraph,
+              isLoading = false
+            )
+          }
         }
       }
 
@@ -177,8 +180,9 @@ class RootDecomposeComponent(
   }
 
   private fun updateAppStateBasedOnChildStack(childStack: ChildStack<*, Child>) {
-    mutableAppStateFlow.value =
-      mutableAppStateFlow.value.copy(activeChild = childStack.active.instance)
+    mutableAppStateFlow.update {
+      it.copy(activeChild = childStack.active.instance)
+    }
   }
 
   private companion object {

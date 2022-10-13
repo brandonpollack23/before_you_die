@@ -9,6 +9,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 /** Interface representing the root applogic component. */
@@ -45,8 +46,8 @@ abstract class AppLogicRoot(
     run {
       val f = MutableStateFlow(mutableAppStateFlow.value.taskGraph)
       coroutineScope.launch {
-        f.collect {
-          mutableAppStateFlow.value = mutableAppStateFlow.value.copy(taskGraph = it)
+        f.collect { newTaskGraph ->
+          mutableAppStateFlow.update { appState -> appState.copy(taskGraph = newTaskGraph) }
         }
       }
       f
@@ -56,6 +57,7 @@ abstract class AppLogicRoot(
   /** Function to be called when an edit view is requested from the task graph. */
   protected abstract fun onOpenEdit(taskId: TaskId)
 
+  // TODO NOW break into private functions for each task for readability.
   /** Use this to subscribe to a child navigable view on task graph events after creation.*/
   protected fun subscribeToTaskGraphEvents(taskGraphEvents: SharedFlow<TaskGraphEvent>) {
     coroutineScope.launch {
@@ -68,20 +70,20 @@ abstract class AppLogicRoot(
               description = it.description,
               complete = false,
               parent = it.parent
-            ).onFailure { error ->
+            ).onSuccess { task ->
+              logger.i("Node ${task.id} inserted, updating in memory state")
+              taskGraphStateFlow.update { taskGraph ->
+                taskGraph + (task.id to task)
+              }
+            }.onFailure { error ->
               // TODO ERRORS add failure state (flow) and handle failures?
               logger.e("Failed to insert node! $error")
-            }.onSuccess { task ->
-              logger.i("Node ${task.id} inserted, updating in memory state")
-              taskGraphStateFlow.value += (task.id to task)
             }
           }
 
           is TaskGraphEvent.DeleteTaskAndChildren -> {
             storage.removeTaskNodeAndChildren(it.taskId)
-              .onFailure { error ->
-                logger.e("Failed to remove tasks and children! $error")
-              }.onSuccess { removedNodes ->
+              .onSuccess { removedNodes ->
                 val removedNodesSet = removedNodes.toSet()
                 logger.i(
                   "Node ${it.taskId} and children (total of ${removedNodes.size}) " +
@@ -89,8 +91,8 @@ abstract class AppLogicRoot(
                 )
 
                 // TODO(#13) Measure this and make it more efficent, potentially via full reload.
-                taskGraphStateFlow.value =
-                  taskGraphStateFlow.value
+                taskGraphStateFlow.update { taskGraph ->
+                  taskGraph
                     .filter { entry -> !removedNodes.contains(entry.key) }
                     .mapValues { entry ->
                       val taskNode = entry.value
@@ -100,10 +102,33 @@ abstract class AppLogicRoot(
                         children = taskNode.children - removedNodesSet
                       )
                     }
+                }
+              }.onFailure { error ->
+                logger.e("Failed to remove tasks and children! $error")
               }
           }
 
           is TaskGraphEvent.OpenEdit -> onOpenEdit(it.taskId)
+        }
+      }
+    }
+  }
+
+  // TODO NOW finish and utilize in RootDecomposeComponent creation of edit
+  protected fun subscribeToEditTaskEvents(editTaskEvents: SharedFlow<EditTaskEvents>) {
+    coroutineScope.launch {
+      editTaskEvents.collect {
+        when (it) {
+          is EditTaskEvents.EditTitle -> TODO()
+
+          is EditTaskEvents.EditDescription -> {
+            storage.updateTaskDescription(it.taskId, it.newDescription)
+              .onSuccess {
+                TODO()
+              }.onFailure {
+                TODO()
+              }
+          }
         }
       }
     }

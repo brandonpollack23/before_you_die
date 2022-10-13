@@ -60,5 +60,4 @@ sealed interface EditTaskEvents {
 
   // TODO NOW add children, blocking, blockers, change parent
   // TODO NOW make methods for all these
-  // TODO NOW consumption of editTaskEvents
 }
