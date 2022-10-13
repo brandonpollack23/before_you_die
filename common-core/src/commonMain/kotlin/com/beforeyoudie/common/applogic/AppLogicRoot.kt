@@ -165,18 +165,41 @@ abstract class AppLogicRoot(
     }
 
     val parentToUpdate = appStateFlow.value.taskGraph[taskEvent.newParent]
-    if (childToUpdate == null) {
+    if (parentToUpdate == null) {
       logger.e { "No such parent ${taskEvent.newParent} to update with child ${taskEvent.taskId}" }
     }
 
     if (childToUpdate == null || parentToUpdate == null) return
 
-    if (parentToUpdate.children.contains(taskEvent.taskId)) {
+    addChildHelper(parentToUpdate, childToUpdate)
+  }
+
+  private fun handleAddChild(taskEvent: EditTaskEvents.AddChild) {
+    val childToUpdate = appStateFlow.value.taskGraph[taskEvent.newChild]
+    if (childToUpdate == null) {
+      logger.e { "No such task ${taskEvent.taskId} to update parent to ${taskEvent.newChild}" }
+    }
+
+    val parentToUpdate = appStateFlow.value.taskGraph[taskEvent.taskId]
+    if (parentToUpdate == null) {
+      logger.e { "No such parent ${taskEvent.taskId} to update with child ${taskEvent.newChild}" }
+    }
+
+    if (childToUpdate == null || parentToUpdate == null) return
+
+    addChildHelper(parentToUpdate, childToUpdate)
+  }
+
+  private fun addChildHelper(
+    parentToUpdate: TaskNode,
+    childToUpdate: TaskNode
+  ) {
+    if (parentToUpdate.children.contains(childToUpdate.id)) {
       // Reparent operation
-      storage.reparentChildToTaskNode(taskEvent.newParent, taskEvent.taskId)
+      storage.reparentChildToTaskNode(parentToUpdate.id, childToUpdate.id)
     } else {
       // First parenting
-      storage.addChildToTaskNode(taskEvent.newParent, taskEvent.taskId)
+      storage.addChildToTaskNode(parentToUpdate.id, childToUpdate.id)
     }.onSuccess {
       taskGraphStateFlow.update { taskGraph ->
         val updatedChild = childToUpdate.id to childToUpdate.copy(parent = parentToUpdate.id)
