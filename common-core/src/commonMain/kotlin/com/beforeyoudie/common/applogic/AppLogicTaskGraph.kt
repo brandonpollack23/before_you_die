@@ -45,6 +45,12 @@ abstract class AppLogicTaskGraph(
       mutableTaskGraphEvents.emit(TaskGraphEvent.OpenEdit(uuid))
     }
   }
+
+  fun setParentChildRelation(parent: TaskId, child: TaskId) {
+    coroutineScope.launch {
+      mutableTaskGraphEvents.emit(TaskGraphEvent.SetParentChild(parent, child))
+    }
+  }
 }
 
 /**
@@ -77,6 +83,6 @@ sealed interface TaskGraphEvent {
 
   /** Delete a task with the specified uuid. */
   data class DeleteTaskAndChildren(val taskId: TaskId) : TaskGraphEvent
-
   data class OpenEdit(val taskId: TaskId) : TaskGraphEvent
+  data class SetParentChild(val parent: TaskId, val child: TaskId) : TaskGraphEvent
 }

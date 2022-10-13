@@ -85,8 +85,6 @@ data class AppLogicEditConfig(val taskNodeId: TaskId) : Parcelable
 sealed interface EditTaskEvent {
   data class EditTitle(val taskId: TaskId, val newTitle: String) : EditTaskEvent
   data class EditDescription(val taskId: TaskId, val newDescription: String) : EditTaskEvent
-
-  // TODO NOW make tests for all these
   data class AddChild(val taskId: TaskId, val newChild: TaskId) : EditTaskEvent
   data class SetParent(val taskId: TaskId, val newParent: TaskId) : EditTaskEvent
   data class AddBlockingTask(val taskId: TaskId, val blockingTask: TaskId) : EditTaskEvent

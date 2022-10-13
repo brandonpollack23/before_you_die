@@ -236,7 +236,7 @@ class AppLogicRootDecomposeComponentTest : CommonTest() {
             picardTaskId,
             "Captain Picard",
             "Worlds best captain",
-            children = setOf(gulmacetTaskId!!)
+            children = setOf(rikerTaskId, gulmacetTaskId!!)
           ),
           rikerTaskId to TaskNode(
             rikerTaskId,
@@ -279,7 +279,8 @@ class AppLogicRootDecomposeComponentTest : CommonTest() {
       appLogicRoot.appStateFlow.value.taskGraph[picardTaskId] shouldBe TaskNode(
         picardTaskId,
         "Admiral Picard",
-        "Worlds best captain"
+        "Worlds best captain",
+        children = setOf(rikerTaskId)
       )
     }
 
@@ -308,9 +309,43 @@ class AppLogicRootDecomposeComponentTest : CommonTest() {
       appLogicRoot.appStateFlow.value.taskGraph[picardTaskId] shouldBe TaskNode(
         picardTaskId,
         "Captain Picard",
-        "Exemplary Human"
+        "Exemplary Human",
+        children = setOf(rikerTaskId)
       )
     }
+
+    test("Add Child From Edit -- Reparent") {
+      finishOnCreate()
+      val graph = rootDecomposeComponent.childStack.value.active.instance
+      graph as AppLogicRoot.Child.TaskGraph
+
+      graph.appLogic.openEdit(picardTaskId)
+      testMainDispatcher.scheduler.advanceUntilIdle()
+
+      every {
+        mockStorage.addChildToTaskNode(picardTaskId, laforgeTaskId)
+      } answers {
+        Result.success(Unit)
+      }
+
+      val edit = appLogicRoot.appStateFlow.value.activeChild as AppLogicRoot.Child.EditTask
+      edit.appLogic.addChild(laforgeTaskId)
+      testMainDispatcher.scheduler.advanceUntilIdle()
+
+      verify(exactly = 1) {
+        mockStorage.addChildToTaskNode(picardTaskId, laforgeTaskId)
+      }
+
+      appLogicRoot.appStateFlow.value.taskGraph[picardTaskId] shouldBe TaskNode(
+        picardTaskId,
+        "Captain Picard",
+        "Worlds best captain",
+        children = setOf(rikerTaskId, laforgeTaskId)
+      )
+    }
+
+    // TODO NOW make tests for setParent, add blocking, add blocked
+    // TODO NOW Add child and parent from graph view
   }
 
   private fun finishOnCreate() {
@@ -326,7 +361,8 @@ class AppLogicRootDecomposeComponentTest : CommonTest() {
     picardTaskId to TaskNode(
       picardTaskId,
       "Captain Picard",
-      "Worlds best captain"
+      "Worlds best captain",
+      children = setOf(rikerTaskId)
     ),
     rikerTaskId to TaskNode(
       rikerTaskId,

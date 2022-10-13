@@ -65,6 +65,22 @@ abstract class AppLogicRoot(
           is TaskGraphEvent.CreateTask -> handleCreateTaskEvent(it)
           is TaskGraphEvent.DeleteTaskAndChildren -> handleDeleteTaskAndChildrenEvent(it)
           is TaskGraphEvent.OpenEdit -> onOpenEdit(it.taskId)
+          is TaskGraphEvent.SetParentChild -> onSetParentChild(it)
+        }
+      }
+    }
+  }
+
+  protected fun subscribeToEditTaskEvents(editTaskEvents: SharedFlow<EditTaskEvent>) {
+    coroutineScope.launch {
+      editTaskEvents.collect { taskEvent ->
+        when (taskEvent) {
+          is EditTaskEvent.EditTitle -> handleEditTaskTitle(taskEvent)
+          is EditTaskEvent.EditDescription -> handleEditTaskDescription(taskEvent)
+          is EditTaskEvent.SetParent -> handleSetParent(taskEvent)
+          is EditTaskEvent.AddChild -> handleAddChild(taskEvent)
+          is EditTaskEvent.AddBlockingTask -> handleAddBlockingTask(taskEvent)
+          is EditTaskEvent.AddBlockedTask -> handleAddBlockedTask(taskEvent)
         }
       }
     }
@@ -114,21 +130,6 @@ abstract class AppLogicRoot(
       }
   }
 
-  protected fun subscribeToEditTaskEvents(editTaskEvents: SharedFlow<EditTaskEvent>) {
-    coroutineScope.launch {
-      editTaskEvents.collect { taskEvent ->
-        when (taskEvent) {
-          is EditTaskEvent.EditTitle -> handleEditTaskTitle(taskEvent)
-          is EditTaskEvent.EditDescription -> handleEditTaskDescription(taskEvent)
-          is EditTaskEvent.SetParent -> handleSetParent(taskEvent)
-          is EditTaskEvent.AddChild -> handleAddChild(taskEvent)
-          is EditTaskEvent.AddBlockingTask -> handleAddBlockingTask(taskEvent)
-          is EditTaskEvent.AddBlockedTask -> handleAddBlockedTask(taskEvent)
-        }
-      }
-    }
-  }
-
   private fun handleEditTaskTitle(taskEvent: EditTaskEvent.EditTitle) {
     storage.updateTaskTitle(taskEvent.taskId, taskEvent.newTitle)
       .onSuccess {
@@ -160,15 +161,23 @@ abstract class AppLogicRoot(
       }
   }
 
+  private fun onSetParentChild(setParentChildEvent: TaskGraphEvent.SetParentChild) {
+    handleSetParent(setParentChildEvent.parent, setParentChildEvent.child)
+  }
+
   private fun handleSetParent(taskEvent: EditTaskEvent.SetParent) {
-    val childToUpdate = appStateFlow.value.taskGraph[taskEvent.taskId]
+    handleSetParent(taskEvent.newParent, taskEvent.taskId)
+  }
+
+  private fun handleSetParent(parent: TaskId, child: TaskId) {
+    val childToUpdate = appStateFlow.value.taskGraph[child]
     if (childToUpdate == null) {
-      logger.e { "No such task ${taskEvent.taskId} to update parent to ${taskEvent.newParent}" }
+      logger.e { "No such task $child to update parent to $parent" }
     }
 
-    val parentToUpdate = appStateFlow.value.taskGraph[taskEvent.newParent]
+    val parentToUpdate = appStateFlow.value.taskGraph[parent]
     if (parentToUpdate == null) {
-      logger.e { "No such parent ${taskEvent.newParent} to update with child ${taskEvent.taskId}" }
+      logger.e { "No such parent $parent to update with child $child" }
     }
 
     if (childToUpdate == null || parentToUpdate == null) return
