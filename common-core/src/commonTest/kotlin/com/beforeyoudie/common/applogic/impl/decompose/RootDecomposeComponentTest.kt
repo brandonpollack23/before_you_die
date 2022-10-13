@@ -342,9 +342,96 @@ class AppLogicRootDecomposeComponentTest : CommonTest() {
         "Worlds best captain",
         children = setOf(rikerTaskId, laforgeTaskId)
       )
+      appLogicRoot.appStateFlow.value.taskGraph[laforgeTaskId] shouldBe TaskNode(
+        laforgeTaskId,
+        "Geordi Laforge",
+        "Space Engineering Master",
+        parent = picardTaskId,
+        blockingTasks = setOf(rikerTaskId)
+      )
     }
 
-    // TODO NOW make tests for setParent, add blocking, add blocked
+    test("Add Parent From Edit -- New Parent") {
+      finishOnCreate()
+      val graph = rootDecomposeComponent.childStack.value.active.instance
+      graph as AppLogicRoot.Child.TaskGraph
+
+      graph.appLogic.openEdit(laforgeTaskId)
+      testMainDispatcher.scheduler.advanceUntilIdle()
+
+      every {
+        mockStorage.addChildToTaskNode(picardTaskId, laforgeTaskId)
+      } answers {
+        Result.success(Unit)
+      }
+
+      val edit = appLogicRoot.appStateFlow.value.activeChild as AppLogicRoot.Child.EditTask
+      edit.appLogic.setParent(picardTaskId)
+      testMainDispatcher.scheduler.advanceUntilIdle()
+
+      verify(exactly = 1) {
+        mockStorage.addChildToTaskNode(picardTaskId, laforgeTaskId)
+      }
+
+      appLogicRoot.appStateFlow.value.taskGraph[picardTaskId] shouldBe TaskNode(
+        picardTaskId,
+        "Captain Picard",
+        "Worlds best captain",
+        children = setOf(rikerTaskId, laforgeTaskId)
+      )
+      appLogicRoot.appStateFlow.value.taskGraph[laforgeTaskId] shouldBe TaskNode(
+        laforgeTaskId,
+        "Geordi Laforge",
+        "Space Engineering Master",
+        parent = picardTaskId,
+        blockingTasks = setOf(rikerTaskId)
+      )
+    }
+
+    test("Add Parent From Edit -- Reparent") {
+      finishOnCreate()
+      val graph = rootDecomposeComponent.childStack.value.active.instance
+      graph as AppLogicRoot.Child.TaskGraph
+
+      graph.appLogic.openEdit(rikerTaskId)
+      testMainDispatcher.scheduler.advanceUntilIdle()
+
+      every {
+        mockStorage.addChildToTaskNode(laforgeTaskId, rikerTaskId)
+      } answers {
+        Result.success(Unit)
+      }
+
+      val edit = appLogicRoot.appStateFlow.value.activeChild as AppLogicRoot.Child.EditTask
+      edit.appLogic.setParent(laforgeTaskId)
+      testMainDispatcher.scheduler.advanceUntilIdle()
+
+      verify(exactly = 1) {
+        mockStorage.addChildToTaskNode(laforgeTaskId, rikerTaskId)
+      }
+
+      appLogicRoot.appStateFlow.value.taskGraph[picardTaskId] shouldBe TaskNode(
+        picardTaskId,
+        "Captain Picard",
+        "Worlds best captain",
+      )
+      appLogicRoot.appStateFlow.value.taskGraph[rikerTaskId] shouldBe TaskNode(
+        rikerTaskId,
+        "William T Riker",
+        "Beard or go home",
+        parent = laforgeTaskId,
+        blockedTasks = setOf(laforgeTaskId)
+      )
+      appLogicRoot.appStateFlow.value.taskGraph[laforgeTaskId] shouldBe TaskNode(
+        laforgeTaskId,
+        "Geordi Laforge",
+        "Space Engineering Master",
+        children = setOf(rikerTaskId),
+        blockingTasks = setOf(rikerTaskId)
+      )
+    }
+
+    // TODO NOW make tests for add blocking, add blocked
     // TODO NOW Add child and parent from graph view
   }
 
