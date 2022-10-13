@@ -32,8 +32,6 @@ import kotlinx.coroutines.withContext
 import me.tatarka.inject.annotations.Inject
 import kotlin.coroutines.CoroutineContext
 
-// TODO NOW test children
-
 /** This is the root CoreLogic component.  While the other components in the Decompose world are
  * created dynamically by this class, this one is a singleton and is thus injected by my DI
  * framework (kotlin-inject at the time of writing).

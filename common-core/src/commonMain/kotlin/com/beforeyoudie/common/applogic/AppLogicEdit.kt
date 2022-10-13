@@ -38,6 +38,38 @@ abstract class AppLogicEdit(val appLogicEditConfig: AppLogicEditConfig) {
       )
     }
   }
+
+  fun addChild(newChild: TaskId) {
+    coroutineScope.launch {
+      mutableEditTaskEvents.emit(
+        EditTaskEvents.AddChild(appLogicEditConfig.taskNodeId, newChild)
+      )
+    }
+  }
+
+  fun setParent(newParent: TaskId) {
+    coroutineScope.launch {
+      mutableEditTaskEvents.emit(
+        EditTaskEvents.SetParent(appLogicEditConfig.taskNodeId, newParent)
+      )
+    }
+  }
+
+  fun addBlockingTask(blockingTask: TaskId) {
+    coroutineScope.launch {
+      mutableEditTaskEvents.emit(
+        EditTaskEvents.AddBlockingTask(appLogicEditConfig.taskNodeId, blockingTask)
+      )
+    }
+  }
+
+  fun addBlockedTask(blockedTask: TaskId) {
+    coroutineScope.launch {
+      mutableEditTaskEvents.emit(
+        EditTaskEvents.AddBlockedTask(appLogicEditConfig.taskNodeId, blockedTask)
+      )
+    }
+  }
 }
 
 /**
@@ -53,7 +85,9 @@ data class AppLogicEditConfig(val taskNodeId: TaskId) : Parcelable
 sealed interface EditTaskEvents {
   data class EditTitle(val taskId: TaskId, val newTitle: String) : EditTaskEvents
   data class EditDescription(val taskId: TaskId, val newDescription: String) : EditTaskEvents
-
-  // TODO NOW add children, blocking, blockers, change parent
-  // TODO NOW make methods and tests for all these
+  // TODO NOW make tests for all these
+  data class AddChild(val taskId: TaskId, val newChild: TaskId) : EditTaskEvents
+  data class SetParent(val taskId: TaskId, val newParent: TaskId) : EditTaskEvents
+  data class AddBlockingTask(val taskId: TaskId, val blockingTask: TaskId) : EditTaskEvents
+  data class AddBlockedTask(val taskId: TaskId, val blockedTask: TaskId) : EditTaskEvents
 }

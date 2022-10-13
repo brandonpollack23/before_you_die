@@ -121,6 +121,11 @@ abstract class AppLogicRoot(
         when (taskEvent) {
           is EditTaskEvents.EditTitle -> handleEditTaskTitle(taskEvent)
           is EditTaskEvents.EditDescription -> handleEditTaskDescription(taskEvent)
+          // TODO NOW implement these
+          is EditTaskEvents.AddBlockedTask -> TODO()
+          is EditTaskEvents.AddBlockingTask -> TODO()
+          is EditTaskEvents.AddChild -> TODO()
+          is EditTaskEvents.SetParent -> TODO()
         }
       }
     }
