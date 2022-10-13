@@ -3,18 +3,14 @@ package com.beforeyoudie.common.applogic
 import com.arkivanov.essenty.parcelable.Parcelable
 import com.arkivanov.essenty.parcelable.Parcelize
 import com.beforeyoudie.common.state.TaskId
-import com.beforeyoudie.common.state.TaskNode
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 
-// TODO NOW implement edit now as well, just passing UUID will be fine since its all accessible from
-//  the higher level root and can be passed to children from there, no need to duplicate that work here
-
 /** Interface representing the editor logic for a task. */
-abstract class AppLogicEdit(val appLogicEditConfig: AppLogicEditConfig, val taskNode: TaskNode) {
+abstract class AppLogicEdit(val appLogicEditConfig: AppLogicEditConfig) {
   abstract val coroutineScope: CoroutineScope
 
   private val mutableEditTaskEvents: MutableSharedFlow<EditTaskEvents> =
@@ -59,5 +55,5 @@ sealed interface EditTaskEvents {
   data class EditDescription(val taskId: TaskId, val newDescription: String) : EditTaskEvents
 
   // TODO NOW add children, blocking, blockers, change parent
-  // TODO NOW make methods for all these
+  // TODO NOW make methods and tests for all these
 }

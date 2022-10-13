@@ -23,7 +23,6 @@ import com.beforeyoudie.common.di.IOCoroutineContext
 import com.beforeyoudie.common.di.RootComponentContext
 import com.beforeyoudie.common.state.TaskId
 import com.beforeyoudie.common.state.TaskIdGenerator
-import com.beforeyoudie.common.state.TaskNode
 import com.beforeyoudie.common.storage.IBydStorage
 import com.beforeyoudie.common.util.getClassLogger
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -152,15 +151,14 @@ class RootDecomposeComponent(
     config: NavigationConfig.Edit,
     componentContext: ComponentContext
   ): Child.EditTask {
-    val taskNode = appStateFlow.value.taskGraph[config.editConfig.taskNodeId]!!
-    return Child.EditTask(
-      appLogicEditFactory.createEdit(
-        config.editConfig,
-        taskNode,
-        applicationCoroutineContext,
-        componentContext
-      )
+    val editTask = appLogicEditFactory.createEdit(
+      config.editConfig,
+      applicationCoroutineContext,
+      componentContext
     )
+
+    subscribeToEditTaskEvents(editTask.editTaskEvents)
+    return Child.EditTask(editTask)
   }
 
   /**
@@ -243,7 +241,6 @@ class AppLogicTaskGraphFactoryImpl : AppLogicTaskGraphFactory {
 interface AppLogicEditFactory {
   fun createEdit(
     appLogicEditConfig: AppLogicEditConfig,
-    taskNode: TaskNode,
     parentCoroutineContext: CoroutineContext,
     componentContext: ComponentContext
   ): AppLogicEdit
@@ -256,9 +253,8 @@ interface AppLogicEditFactory {
 class AppLogicEditFactoryImpl : AppLogicEditFactory {
   override fun createEdit(
     appLogicEditConfig: AppLogicEditConfig,
-    taskNode: TaskNode,
     parentCoroutineContext: CoroutineContext,
     componentContext: ComponentContext
   ) =
-    EditDecomposeComponent(appLogicEditConfig, taskNode, parentCoroutineContext, componentContext)
+    EditDecomposeComponent(appLogicEditConfig, parentCoroutineContext, componentContext)
 }

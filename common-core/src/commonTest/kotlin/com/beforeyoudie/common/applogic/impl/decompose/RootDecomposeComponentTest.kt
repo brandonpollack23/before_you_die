@@ -253,6 +253,8 @@ class AppLogicRootDecomposeComponentTest : CommonTest() {
           )
         )
     }
+
+    // TODO NOW edit title, edit description
   }
 
   private fun finishOnCreate() {

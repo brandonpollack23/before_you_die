@@ -57,96 +57,101 @@ abstract class AppLogicRoot(
   /** Function to be called when an edit view is requested from the task graph. */
   protected abstract fun onOpenEdit(taskId: TaskId)
 
-  // TODO NOW break into private functions for each task for readability.
   /** Use this to subscribe to a child navigable view on task graph events after creation.*/
   protected fun subscribeToTaskGraphEvents(taskGraphEvents: SharedFlow<TaskGraphEvent>) {
     coroutineScope.launch {
       taskGraphEvents.collect {
         when (it) {
-          is TaskGraphEvent.CreateTask -> {
-            storage.insertTaskNode(
-              id = taskIdGenerator.generateTaskId(),
-              title = it.title,
-              description = it.description,
-              complete = false,
-              parent = it.parent
-            ).onSuccess { task ->
-              logger.i("Node ${task.id} inserted, updating in memory state")
-              taskGraphStateFlow.update { taskGraph ->
-                taskGraph + (task.id to task)
-              }
-            }.onFailure { error ->
-              // TODO ERRORS add failure state (flow) and handle failures?
-              logger.e("Failed to insert node! $error")
-            }
-          }
-
-          is TaskGraphEvent.DeleteTaskAndChildren -> {
-            storage.removeTaskNodeAndChildren(it.taskId)
-              .onSuccess { removedNodes ->
-                val removedNodesSet = removedNodes.toSet()
-                logger.i(
-                  "Node ${it.taskId} and children (total of ${removedNodes.size}) " +
-                    "removed, updating in memory state"
-                )
-
-                // TODO(#13) Measure this and make it more efficent, potentially via full reload.
-                taskGraphStateFlow.update { taskGraph ->
-                  taskGraph
-                    .filter { entry -> !removedNodes.contains(entry.key) }
-                    .mapValues { entry ->
-                      val taskNode = entry.value
-                      taskNode.copy(
-                        blockingTasks = taskNode.blockingTasks - removedNodesSet,
-                        blockedTasks = taskNode.blockedTasks - removedNodesSet,
-                        children = taskNode.children - removedNodesSet
-                      )
-                    }
-                }
-              }.onFailure { error ->
-                logger.e("Failed to remove tasks and children! $error")
-              }
-          }
-
+          is TaskGraphEvent.CreateTask -> handleCreateTaskEvent(it)
+          is TaskGraphEvent.DeleteTaskAndChildren -> handleDeleteTaskAndChildrenEvent(it)
           is TaskGraphEvent.OpenEdit -> onOpenEdit(it.taskId)
         }
       }
     }
   }
 
-  // TODO NOW cleanup and then utilize in RootDecomposeComponent creation of edit
+  private fun handleCreateTaskEvent(it: TaskGraphEvent.CreateTask) {
+    storage.insertTaskNode(
+      id = taskIdGenerator.generateTaskId(),
+      title = it.title,
+      description = it.description,
+      complete = false,
+      parent = it.parent
+    ).onSuccess { task ->
+      logger.i("Node ${task.id} inserted, updating in memory state")
+      taskGraphStateFlow.update { taskGraph ->
+        taskGraph + (task.id to task)
+      }
+    }.onFailure { error ->
+      // TODO ERRORS add failure state (flow) and handle failures?
+      logger.e("Failed to insert node! $error")
+    }
+  }
+
+  private fun handleDeleteTaskAndChildrenEvent(it: TaskGraphEvent.DeleteTaskAndChildren) {
+    storage.removeTaskNodeAndChildren(it.taskId)
+      .onSuccess { removedNodes ->
+        val removedNodesSet = removedNodes.toSet()
+        logger.i(
+          "Node ${it.taskId} and children (total of ${removedNodes.size}) " +
+            "removed, updating in memory state"
+        )
+
+        // TODO(#13) Measure this and make it more efficent, potentially via full reload.
+        taskGraphStateFlow.update { taskGraph ->
+          taskGraph
+            .filter { entry -> !removedNodes.contains(entry.key) }
+            .mapValues { entry ->
+              val taskNode = entry.value
+              taskNode.copy(
+                blockingTasks = taskNode.blockingTasks - removedNodesSet,
+                blockedTasks = taskNode.blockedTasks - removedNodesSet,
+                children = taskNode.children - removedNodesSet
+              )
+            }
+        }
+      }.onFailure { error ->
+        logger.e("Failed to remove tasks and children! $error")
+      }
+  }
+
   protected fun subscribeToEditTaskEvents(editTaskEvents: SharedFlow<EditTaskEvents>) {
     coroutineScope.launch {
       editTaskEvents.collect { taskEvent ->
         when (taskEvent) {
-          is EditTaskEvents.EditTitle -> {
-            storage.updateTaskTitle(taskEvent.taskId, taskEvent.newTitle)
-              .onSuccess {
-                taskGraphStateFlow.update { taskGraph ->
-                  val newTaskNode =
-                    taskGraph[taskEvent.taskId]!!.copy(title = taskEvent.newTitle)
-                  taskGraph + (taskEvent.taskId to newTaskNode)
-                }
-              }.onFailure {
-                logger.e("Failed to update task title for ${taskEvent.taskId} to ${taskEvent.newTitle}")
-              }
-          }
-
-          is EditTaskEvents.EditDescription -> {
-            storage.updateTaskDescription(taskEvent.taskId, taskEvent.newDescription)
-              .onSuccess {
-                taskGraphStateFlow.update { taskGraph ->
-                  val newTaskNode =
-                    taskGraph[taskEvent.taskId]!!.copy(description = taskEvent.newDescription)
-                  taskGraph + (taskEvent.taskId to newTaskNode)
-                }
-              }.onFailure {
-                logger.e("Failed to update task description for ${taskEvent.taskId} to ${taskEvent.newDescription}")
-              }
-          }
+          is EditTaskEvents.EditTitle -> handleEditTaskTitle(taskEvent)
+          is EditTaskEvents.EditDescription -> handleEditTaskDescription(taskEvent)
         }
       }
     }
+  }
+
+  private fun handleEditTaskTitle(taskEvent: EditTaskEvents.EditTitle) {
+    storage.updateTaskTitle(taskEvent.taskId, taskEvent.newTitle)
+      .onSuccess {
+        taskGraphStateFlow.update { taskGraph ->
+          val newTaskNode =
+            taskGraph[taskEvent.taskId]!!.copy(title = taskEvent.newTitle)
+          taskGraph + (taskEvent.taskId to newTaskNode)
+        }
+      }.onFailure {
+        logger.e("Failed to update task title for ${taskEvent.taskId} to ${taskEvent.newTitle}")
+      }
+  }
+
+  private fun handleEditTaskDescription(taskEvent: EditTaskEvents.EditDescription) {
+    storage.updateTaskDescription(taskEvent.taskId, taskEvent.newDescription)
+      .onSuccess {
+        taskGraphStateFlow.update { taskGraph ->
+          val newTaskNode =
+            taskGraph[taskEvent.taskId]!!.copy(description = taskEvent.newDescription)
+          taskGraph + (taskEvent.taskId to newTaskNode)
+        }
+      }.onFailure {
+        logger.e(
+          "Failed to update task description for ${taskEvent.taskId} to ${taskEvent.newDescription}"
+        )
+      }
   }
 
   /** All possible children and their configurations, to be used on navigation for construction.*/
