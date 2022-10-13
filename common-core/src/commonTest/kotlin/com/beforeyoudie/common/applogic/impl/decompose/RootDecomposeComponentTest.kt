@@ -414,7 +414,7 @@ class AppLogicRootDecomposeComponentTest : CommonTest() {
       appLogicRoot.appStateFlow.value.taskGraph[picardTaskId] shouldBe TaskNode(
         picardTaskId,
         "Captain Picard",
-        "Worlds best captain",
+        "Worlds best captain"
       )
       appLogicRoot.appStateFlow.value.taskGraph[rikerTaskId] shouldBe TaskNode(
         rikerTaskId,
@@ -465,7 +465,7 @@ class AppLogicRootDecomposeComponentTest : CommonTest() {
         rikerTaskId,
         "William T Riker",
         "Beard or go home",
-        parent = laforgeTaskId,
+        parent = picardTaskId,
         blockedTasks = setOf(laforgeTaskId),
         blockingTasks = setOf(picardTaskId)
       )
@@ -473,12 +473,12 @@ class AppLogicRootDecomposeComponentTest : CommonTest() {
         laforgeTaskId,
         "Geordi Laforge",
         "Space Engineering Master",
-        children = setOf(rikerTaskId),
         blockingTasks = setOf(rikerTaskId)
       )
     }
 
     // TODO(#14) This should also show the error state in AppState
+    // TODO illegal add parent has no effect
     // TODO illegal add blocking has no effect
 
     // TODO NOW make tests for add blocked

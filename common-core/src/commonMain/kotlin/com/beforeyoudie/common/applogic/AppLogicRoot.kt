@@ -96,7 +96,7 @@ abstract class AppLogicRoot(
     ).onSuccess { task ->
       logger.i("Node ${task.id} inserted, updating in memory state")
       taskGraphStateFlow.update { taskGraph ->
-        val newParent = it.parent?.let {p ->
+        val newParent = it.parent?.let { p ->
           val parent = taskGraph[p]!!
           parent.copy(children = parent.children + task.id)
         }
@@ -254,9 +254,19 @@ abstract class AppLogicRoot(
       taskGraphStateFlow.update { taskGraph ->
         val updatedChild = childToUpdate.id to childToUpdate.copy(parent = parentToUpdate.id)
         val parentsNewChildren = parentToUpdate.children + childToUpdate.id
-        val updatedParent = parentToUpdate.id to parentToUpdate.copy(children = parentsNewChildren)
+        val updatedNewParent = parentToUpdate.id to parentToUpdate.copy(
+          children = parentsNewChildren
+        )
+        val updatedOldParent = childToUpdate.parent?.let { p ->
+          val oldParent = taskGraph[p]!!
+          val newChildren = oldParent.children - childToUpdate.id
+          oldParent.copy(children = newChildren)
+        }
 
-        taskGraph + listOf(updatedChild, updatedParent)
+        val tasksToAdd = mutableListOf(updatedChild, updatedNewParent)
+        if (updatedOldParent != null) tasksToAdd += updatedOldParent.id to updatedOldParent
+
+        taskGraph + tasksToAdd
       }
     }.onFailure {
       logger.e { "Failure updating parent child relationship: $it" }
