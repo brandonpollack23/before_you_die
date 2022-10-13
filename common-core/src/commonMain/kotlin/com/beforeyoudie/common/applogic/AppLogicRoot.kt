@@ -114,19 +114,34 @@ abstract class AppLogicRoot(
     }
   }
 
-  // TODO NOW finish and utilize in RootDecomposeComponent creation of edit
+  // TODO NOW cleanup and then utilize in RootDecomposeComponent creation of edit
   protected fun subscribeToEditTaskEvents(editTaskEvents: SharedFlow<EditTaskEvents>) {
     coroutineScope.launch {
-      editTaskEvents.collect {
-        when (it) {
-          is EditTaskEvents.EditTitle -> TODO()
+      editTaskEvents.collect { taskEvent ->
+        when (taskEvent) {
+          is EditTaskEvents.EditTitle -> {
+            storage.updateTaskTitle(taskEvent.taskId, taskEvent.newTitle)
+              .onSuccess {
+                taskGraphStateFlow.update { taskGraph ->
+                  val newTaskNode =
+                    taskGraph[taskEvent.taskId]!!.copy(title = taskEvent.newTitle)
+                  taskGraph + (taskEvent.taskId to newTaskNode)
+                }
+              }.onFailure {
+                logger.e("Failed to update task title for ${taskEvent.taskId} to ${taskEvent.newTitle}")
+              }
+          }
 
           is EditTaskEvents.EditDescription -> {
-            storage.updateTaskDescription(it.taskId, it.newDescription)
+            storage.updateTaskDescription(taskEvent.taskId, taskEvent.newDescription)
               .onSuccess {
-                TODO()
+                taskGraphStateFlow.update { taskGraph ->
+                  val newTaskNode =
+                    taskGraph[taskEvent.taskId]!!.copy(description = taskEvent.newDescription)
+                  taskGraph + (taskEvent.taskId to newTaskNode)
+                }
               }.onFailure {
-                TODO()
+                logger.e("Failed to update task description for ${taskEvent.taskId} to ${taskEvent.newDescription}")
               }
           }
         }
