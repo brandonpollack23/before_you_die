@@ -164,6 +164,7 @@ abstract class AppLogicRoot(
   }
 }
 
+// TODO (#14) Add state for errors and set it when there are issues doing any of the possible actions from the child event streams.
 /**
  * The overall application state, this includes the state of the graph, any ui elements, etc.
  */

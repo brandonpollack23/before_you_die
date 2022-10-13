@@ -254,7 +254,63 @@ class AppLogicRootDecomposeComponentTest : CommonTest() {
         )
     }
 
-    // TODO NOW edit title, edit description
+    test("edit title") {
+      finishOnCreate()
+      val graph = rootDecomposeComponent.childStack.value.active.instance
+      graph as AppLogicRoot.Child.TaskGraph
+
+      graph.appLogic.openEdit(picardTaskId)
+      testMainDispatcher.scheduler.advanceUntilIdle()
+
+      every {
+        mockStorage.updateTaskTitle(picardTaskId, any())
+      } answers {
+        Result.success(Unit)
+      }
+
+      val edit = appLogicRoot.appStateFlow.value.activeChild as AppLogicRoot.Child.EditTask
+      edit.appLogic.editTitle("Admiral Picard")
+      testMainDispatcher.scheduler.advanceUntilIdle()
+
+      verify(exactly = 1) {
+        mockStorage.updateTaskTitle(picardTaskId, "Admiral Picard")
+      }
+
+      appLogicRoot.appStateFlow.value.taskGraph[picardTaskId] shouldBe TaskNode(
+        picardTaskId,
+        "Admiral Picard",
+        "Worlds best captain"
+      )
+    }
+
+    test("edit description") {
+      finishOnCreate()
+      val graph = rootDecomposeComponent.childStack.value.active.instance
+      graph as AppLogicRoot.Child.TaskGraph
+
+      graph.appLogic.openEdit(picardTaskId)
+      testMainDispatcher.scheduler.advanceUntilIdle()
+
+      every {
+        mockStorage.updateTaskDescription(picardTaskId, any())
+      } answers {
+        Result.success(Unit)
+      }
+
+      val edit = appLogicRoot.appStateFlow.value.activeChild as AppLogicRoot.Child.EditTask
+      edit.appLogic.editDescription("Exemplary Human")
+      testMainDispatcher.scheduler.advanceUntilIdle()
+
+      verify(exactly = 1) {
+        mockStorage.updateTaskDescription(picardTaskId, "Exemplary Human")
+      }
+
+      appLogicRoot.appStateFlow.value.taskGraph[picardTaskId] shouldBe TaskNode(
+        picardTaskId,
+        "Captain Picard",
+        "Exemplary Human"
+      )
+    }
   }
 
   private fun finishOnCreate() {
