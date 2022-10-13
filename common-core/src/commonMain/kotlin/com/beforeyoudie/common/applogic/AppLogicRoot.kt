@@ -82,9 +82,8 @@ abstract class AppLogicRoot(
       taskGraphStateFlow.update { taskGraph ->
         taskGraph + (task.id to task)
       }
-    }.onFailure { error ->
-      // TODO ERRORS add failure state (flow) and handle failures?
-      logger.e("Failed to insert node! $error")
+    }.onFailure {
+      logger.e("Failed to insert node! $it")
     }
   }
 
@@ -110,8 +109,8 @@ abstract class AppLogicRoot(
               )
             }
         }
-      }.onFailure { error ->
-        logger.e("Failed to remove tasks and children! $error")
+      }.onFailure {
+        logger.e("Failed to remove tasks and children! $it")
       }
   }
 
@@ -121,11 +120,11 @@ abstract class AppLogicRoot(
         when (taskEvent) {
           is EditTaskEvents.EditTitle -> handleEditTaskTitle(taskEvent)
           is EditTaskEvents.EditDescription -> handleEditTaskDescription(taskEvent)
-          // TODO NOW implement these
-          is EditTaskEvents.AddBlockedTask -> TODO()
-          is EditTaskEvents.AddBlockingTask -> TODO()
-          is EditTaskEvents.AddChild -> TODO()
-          is EditTaskEvents.SetParent -> TODO()
+          // TODO NOW implement these and test
+          is EditTaskEvents.SetParent -> handleSetParent(taskEvent)
+          is EditTaskEvents.AddChild -> handleAddChild(taskEvent)
+          is EditTaskEvents.AddBlockingTask -> handleAddBlockingTask(taskEvent)
+          is EditTaskEvents.AddBlockedTask -> handleAddBlockedTask(taskEvent)
         }
       }
     }
@@ -140,7 +139,7 @@ abstract class AppLogicRoot(
           taskGraph + (taskEvent.taskId to newTaskNode)
         }
       }.onFailure {
-        logger.e("Failed to update task title for ${taskEvent.taskId} to ${taskEvent.newTitle}")
+        logger.e("Failed to update task title for ${taskEvent.taskId} to ${taskEvent.newTitle}: $it")
       }
   }
 
@@ -154,9 +153,46 @@ abstract class AppLogicRoot(
         }
       }.onFailure {
         logger.e(
-          "Failed to update task description for ${taskEvent.taskId} to ${taskEvent.newDescription}"
+          "Failed to update task description for ${taskEvent.taskId} to ${taskEvent.newDescription}: $it"
         )
       }
+  }
+
+  private fun handleSetParent(taskEvent: EditTaskEvents.SetParent) {
+    val childToUpdate = appStateFlow.value.taskGraph[taskEvent.taskId]
+    if (childToUpdate == null) {
+      logger.e { "No such task ${taskEvent.taskId} to update parent to ${taskEvent.newParent}" }
+    }
+
+    val parentToUpdate = appStateFlow.value.taskGraph[taskEvent.newParent]
+    if (childToUpdate == null) {
+      logger.e { "No such parent ${taskEvent.newParent} to update with child ${taskEvent.taskId}" }
+    }
+
+    if (childToUpdate == null || parentToUpdate == null) return
+
+    if (parentToUpdate.children.contains(taskEvent.taskId)) {
+      // Reparent operation
+      storage.reparentChildToTaskNode(taskEvent.newParent, taskEvent.taskId)
+    } else {
+      // First parenting
+      storage.addChildToTaskNode(taskEvent.newParent, taskEvent.taskId)
+    }.onSuccess {
+      taskGraphStateFlow.update { taskGraph ->
+        val updatedChild = childToUpdate.id to childToUpdate.copy(parent = parentToUpdate.id)
+        val parentsNewChildren = parentToUpdate.children + childToUpdate.id
+        val updatedParent = parentToUpdate.id to parentToUpdate.copy(children = parentsNewChildren)
+
+        taskGraph + listOf(updatedChild, updatedParent)
+      }
+    }.onFailure {
+      logger.e { "Failure updating parent child relationship: $it" }
+    }
+  }
+
+  private fun isSetParentOperationValidWithLogging(taskEvent: EditTaskEvents.SetParent): Boolean {
+
+    return true
   }
 
   /** All possible children and their configurations, to be used on navigation for construction.*/
