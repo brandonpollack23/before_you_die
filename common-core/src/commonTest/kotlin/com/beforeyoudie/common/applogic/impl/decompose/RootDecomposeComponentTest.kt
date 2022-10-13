@@ -18,6 +18,7 @@ import com.beforeyoudie.common.state.TaskIdGenerator
 import com.beforeyoudie.common.state.TaskNode
 import com.beforeyoudie.common.storage.IBydStorage
 import com.beforeyoudie.randomTaskId
+import io.kotest.matchers.maps.shouldContainAll
 import io.kotest.matchers.maps.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import io.mockk.every
@@ -224,7 +225,7 @@ class AppLogicRootDecomposeComponentTest : CommonTest() {
         )
       }
 
-      rootDecomposeComponent.appStateFlow.value.taskGraph shouldContainExactly
+      rootDecomposeComponent.appStateFlow.value.taskGraph shouldContainAll
         mapOf(
           gulmacetTaskId!! to TaskNode(
             gulmacetTaskId!!,
@@ -431,7 +432,56 @@ class AppLogicRootDecomposeComponentTest : CommonTest() {
       )
     }
 
-    // TODO NOW make tests for add blocking, add blocked
+    test("Add Blocking") {
+      finishOnCreate()
+      val graph = rootDecomposeComponent.childStack.value.active.instance
+      graph as AppLogicRoot.Child.TaskGraph
+
+      graph.appLogic.openEdit(rikerTaskId)
+      testMainDispatcher.scheduler.advanceUntilIdle()
+
+      every {
+        mockStorage.addDependencyRelationship(picardTaskId, rikerTaskId)
+      } answers {
+        Result.success(Unit)
+      }
+
+      val edit = appLogicRoot.appStateFlow.value.activeChild as AppLogicRoot.Child.EditTask
+      edit.appLogic.addBlockingTask(picardTaskId)
+      testMainDispatcher.scheduler.advanceUntilIdle()
+
+      verify(exactly = 1) {
+        mockStorage.addDependencyRelationship(picardTaskId, rikerTaskId)
+      }
+
+      appLogicRoot.appStateFlow.value.taskGraph[picardTaskId] shouldBe TaskNode(
+        picardTaskId,
+        "Captain Picard",
+        "Worlds best captain",
+        children = setOf(rikerTaskId),
+        blockedTasks = setOf(rikerTaskId)
+      )
+      appLogicRoot.appStateFlow.value.taskGraph[rikerTaskId] shouldBe TaskNode(
+        rikerTaskId,
+        "William T Riker",
+        "Beard or go home",
+        parent = laforgeTaskId,
+        blockedTasks = setOf(laforgeTaskId),
+        blockingTasks = setOf(picardTaskId)
+      )
+      appLogicRoot.appStateFlow.value.taskGraph[laforgeTaskId] shouldBe TaskNode(
+        laforgeTaskId,
+        "Geordi Laforge",
+        "Space Engineering Master",
+        children = setOf(rikerTaskId),
+        blockingTasks = setOf(rikerTaskId)
+      )
+    }
+
+    // TODO(#14) This should also show the error state in AppState
+    // TODO illegal add blocking has no effect
+
+    // TODO NOW make tests for add blocked
     // TODO NOW Add child and parent from graph view
   }
 

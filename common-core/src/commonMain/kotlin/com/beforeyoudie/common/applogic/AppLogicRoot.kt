@@ -96,7 +96,15 @@ abstract class AppLogicRoot(
     ).onSuccess { task ->
       logger.i("Node ${task.id} inserted, updating in memory state")
       taskGraphStateFlow.update { taskGraph ->
-        taskGraph + (task.id to task)
+        val newParent = it.parent?.let {p ->
+          val parent = taskGraph[p]!!
+          parent.copy(children = parent.children + task.id)
+        }
+
+        val tasksToAdd = mutableListOf(task.id to task)
+        if (newParent != null) tasksToAdd += newParent.id to newParent
+
+        taskGraph + tasksToAdd
       }
     }.onFailure {
       logger.e("Failed to insert node! $it")

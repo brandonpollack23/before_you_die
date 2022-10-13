@@ -69,7 +69,7 @@ class SqlDelightStorageTest : CommonTest() {
 
       storage.selectAllTaskNodeInformation() shouldContainExactly setOf(
         TaskNode(uuid1, "uuid1"),
-        TaskNode(uuid2, "uuid2", description = "", isComplete = true),
+        TaskNode(uuid2, "uuid2", description = "", isComplete = true, children = setOf(uuid3)),
         TaskNode(uuid3, "uuid3", description = "captain picard baby", parent = uuid2)
       ).associateBy { it.id }
     }
