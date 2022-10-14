@@ -467,6 +467,8 @@ class AppLogicRootDecomposeComponentTest : CommonTest() {
       appLogicRoot.appStateFlow.value.taskGraph shouldContainExactly taskNodes
     }
 
+    // TODO NOW Add child and parent from graph view
+
     test("Add Blocking") {
       finishOnCreate()
       val graph = rootDecomposeComponent.childStack.value.active.instance
@@ -513,10 +515,36 @@ class AppLogicRootDecomposeComponentTest : CommonTest() {
     }
 
     // TODO(#14) This should also show the error state in AppState
-    // TODO NOW illegal add blocking has no effect
+    test("Add Blocking Illegal") {
+      finishOnCreate()
+      val graph = rootDecomposeComponent.childStack.value.active.instance
+      graph as AppLogicRoot.Child.TaskGraph
 
-    // TODO NOW make tests for add blocked
-    // TODO NOW Add child and parent from graph view
+      graph.appLogic.openEdit(laforgeTaskId)
+      testMainDispatcher.scheduler.advanceUntilIdle()
+
+      every {
+        mockStorage.addDependencyRelationship(rikerTaskId, laforgeTaskId)
+      } answers {
+        Result.failure(BYDFailure.OperationWouldIntroduceCycle(rikerTaskId, laforgeTaskId))
+      }
+
+      val edit = appLogicRoot.appStateFlow.value.activeChild as AppLogicRoot.Child.EditTask
+      edit.appLogic.addBlockingTask(rikerTaskId)
+      testMainDispatcher.scheduler.advanceUntilIdle()
+
+      verify(exactly = 1) {
+        mockStorage.addDependencyRelationship(rikerTaskId, laforgeTaskId)
+      }
+
+      assertLogSeverityWithStrings(
+        Severity.Error,
+        listOf(rikerTaskId, laforgeTaskId).map { it.toString() }
+      )
+      appLogicRoot.appStateFlow.value.taskGraph shouldBe taskNodes
+    }
+
+    // TODO NOW make tests for add blocked success and illegal
   }
 
   private fun finishOnCreate() {
