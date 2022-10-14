@@ -544,7 +544,79 @@ class AppLogicRootDecomposeComponentTest : CommonTest() {
       appLogicRoot.appStateFlow.value.taskGraph shouldBe taskNodes
     }
 
-    // TODO NOW make tests for add blocked success and illegal
+    test("Add Blocked") {
+      finishOnCreate()
+      val graph = rootDecomposeComponent.childStack.value.active.instance
+      graph as AppLogicRoot.Child.TaskGraph
+
+      graph.appLogic.openEdit(picardTaskId)
+      testMainDispatcher.scheduler.advanceUntilIdle()
+
+      every {
+        mockStorage.addDependencyRelationship(picardTaskId, rikerTaskId)
+      } answers {
+        Result.success(Unit)
+      }
+
+      val edit = appLogicRoot.appStateFlow.value.activeChild as AppLogicRoot.Child.EditTask
+      edit.appLogic.addBlockedTask(rikerTaskId)
+      testMainDispatcher.scheduler.advanceUntilIdle()
+
+      verify(exactly = 1) {
+        mockStorage.addDependencyRelationship(picardTaskId, rikerTaskId)
+      }
+
+      appLogicRoot.appStateFlow.value.taskGraph[picardTaskId] shouldBe TaskNode(
+        picardTaskId,
+        "Captain Picard",
+        "Worlds best captain",
+        children = setOf(rikerTaskId),
+        blockedTasks = setOf(rikerTaskId)
+      )
+      appLogicRoot.appStateFlow.value.taskGraph[rikerTaskId] shouldBe TaskNode(
+        rikerTaskId,
+        "William T Riker",
+        "Beard or go home",
+        parent = picardTaskId,
+        blockedTasks = setOf(laforgeTaskId),
+        blockingTasks = setOf(picardTaskId)
+      )
+      appLogicRoot.appStateFlow.value.taskGraph[laforgeTaskId] shouldBe TaskNode(
+        laforgeTaskId,
+        "Geordi Laforge",
+        "Space Engineering Master",
+        blockingTasks = setOf(rikerTaskId)
+      )
+    }
+
+    test("Add Blocked Illegal") {
+      finishOnCreate()
+      val graph = rootDecomposeComponent.childStack.value.active.instance
+      graph as AppLogicRoot.Child.TaskGraph
+
+      graph.appLogic.openEdit(rikerTaskId)
+      testMainDispatcher.scheduler.advanceUntilIdle()
+
+      every {
+        mockStorage.addDependencyRelationship(rikerTaskId, laforgeTaskId)
+      } answers {
+        Result.failure(BYDFailure.OperationWouldIntroduceCycle(laforgeTaskId, rikerTaskId))
+      }
+
+      val edit = appLogicRoot.appStateFlow.value.activeChild as AppLogicRoot.Child.EditTask
+      edit.appLogic.addBlockedTask(laforgeTaskId)
+      testMainDispatcher.scheduler.advanceUntilIdle()
+
+      verify(exactly = 1) {
+        mockStorage.addDependencyRelationship(rikerTaskId, laforgeTaskId)
+      }
+
+      assertLogSeverityWithStrings(
+        Severity.Error,
+        listOf(rikerTaskId, laforgeTaskId).map { it.toString() }
+      )
+      appLogicRoot.appStateFlow.value.taskGraph shouldBe taskNodes
+    }
   }
 
   private fun finishOnCreate() {
