@@ -1,5 +1,7 @@
 package com.beforeyoudie.common.applogic.impl.decompose
 
+import co.touchlab.kermit.ExperimentalKermitApi
+import co.touchlab.kermit.Severity
 import com.arkivanov.essenty.lifecycle.LifecycleRegistry
 import com.arkivanov.essenty.lifecycle.create
 import com.beforeyoudie.CommonTest
@@ -8,6 +10,7 @@ import com.beforeyoudie.common.applogic.AppLogicRoot
 import com.beforeyoudie.common.applogic.TaskGraphEvent
 import com.beforeyoudie.common.di.ApplicationCoroutineContext
 import com.beforeyoudie.common.di.BydKotlinInjectAppComponent
+import com.beforeyoudie.common.di.DecomposeAppLogicComponent
 import com.beforeyoudie.common.di.IOCoroutineContext
 import com.beforeyoudie.common.di.MockStoragePlatformComponent
 import com.beforeyoudie.common.di.TestDecomposeAppLogicComponent
@@ -17,10 +20,12 @@ import com.beforeyoudie.common.state.TaskId
 import com.beforeyoudie.common.state.TaskIdGenerator
 import com.beforeyoudie.common.state.TaskNode
 import com.beforeyoudie.common.storage.IBydStorage
+import com.beforeyoudie.common.util.BYDFailure
 import com.beforeyoudie.randomTaskId
 import io.kotest.matchers.maps.shouldContainAll
 import io.kotest.matchers.maps.shouldContainExactly
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldContain
 import io.mockk.every
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -66,7 +71,7 @@ private val picardTaskId = randomTaskId()
 private val rikerTaskId = randomTaskId()
 private val laforgeTaskId = randomTaskId()
 
-@OptIn(ExperimentalCoroutinesApi::class)
+@OptIn(ExperimentalCoroutinesApi::class, ExperimentalKermitApi::class)
 class AppLogicRootDecomposeComponentTest : CommonTest() {
   private lateinit var testMainDispatcher: TestDispatcher
   private lateinit var testIODispatcher: TestDispatcher
@@ -432,6 +437,36 @@ class AppLogicRootDecomposeComponentTest : CommonTest() {
       )
     }
 
+    // TODO(#14) This should also show the error state in AppState
+    test("Illegal Add Parent From Edit Has No Effect -- Reparent") {
+      finishOnCreate()
+      val graph = rootDecomposeComponent.childStack.value.active.instance
+      graph as AppLogicRoot.Child.TaskGraph
+
+      graph.appLogic.openEdit(picardTaskId)
+      testMainDispatcher.scheduler.advanceUntilIdle()
+
+      every {
+        mockStorage.addChildToTaskNode(rikerTaskId, picardTaskId)
+      } answers {
+        Result.failure(BYDFailure.OperationWouldIntroduceCycle(picardTaskId, rikerTaskId))
+      }
+
+      val edit = appLogicRoot.appStateFlow.value.activeChild as AppLogicRoot.Child.EditTask
+      edit.appLogic.setParent(rikerTaskId)
+      testMainDispatcher.scheduler.advanceUntilIdle()
+
+      verify(exactly = 1) {
+        mockStorage.addChildToTaskNode(rikerTaskId, picardTaskId)
+      }
+
+      assertLogSeverityWithStrings(
+        Severity.Error,
+        listOf(rikerTaskId, picardTaskId).map { it.toString() }
+      )
+      appLogicRoot.appStateFlow.value.taskGraph shouldContainExactly taskNodes
+    }
+
     test("Add Blocking") {
       finishOnCreate()
       val graph = rootDecomposeComponent.childStack.value.active.instance
@@ -478,8 +513,7 @@ class AppLogicRootDecomposeComponentTest : CommonTest() {
     }
 
     // TODO(#14) This should also show the error state in AppState
-    // TODO illegal add parent has no effect
-    // TODO illegal add blocking has no effect
+    // TODO NOW illegal add blocking has no effect
 
     // TODO NOW make tests for add blocked
     // TODO NOW Add child and parent from graph view
@@ -518,5 +552,12 @@ class AppLogicRootDecomposeComponentTest : CommonTest() {
 
   private fun setupMocks() {
     every { mockStorage.selectAllTaskNodeInformation() } returns taskNodes
+  }
+
+  private fun assertLogSeverityWithStrings(sev: Severity, strings: Iterable<String>) {
+    testLogWriter.logs.last().severity shouldBe sev
+    strings.forEach {
+      testLogWriter.logs.last().message shouldContain it
+    }
   }
 }

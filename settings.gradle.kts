@@ -39,7 +39,7 @@ dependencyResolutionManagement {
       // Logging
       val kermitVersion = "1.1.3"
       library("kermit", "co.touchlab:kermit:$kermitVersion")
-      library("kermit-koin", "co.touchlab:kermit-koin:$kermitVersion")
+      library("kermit-test", "co.touchlab:kermit-test:$kermitVersion")
 
       // Storage/SQLite
       val sqlDelightVersion = "1.5.4"

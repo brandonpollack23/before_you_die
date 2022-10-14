@@ -54,6 +54,7 @@ kotlin {
         implementation(libs.kotest.assertions)
         implementation(libs.kotest.properties)
         implementation(libs.kotlinx.coroutines.test)
+        implementation(libs.kermit.test)
       }
     }
 
