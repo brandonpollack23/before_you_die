@@ -467,7 +467,71 @@ class AppLogicRootDecomposeComponentTest : CommonTest() {
       appLogicRoot.appStateFlow.value.taskGraph shouldContainExactly taskNodes
     }
 
-    // TODO NOW Add child and parent from graph view
+    test("Add parent child relationship from graph view") {
+      finishOnCreate()
+      val graph = rootDecomposeComponent.childStack.value.active.instance
+      graph as AppLogicRoot.Child.TaskGraph
+
+      every {
+        mockStorage.addChildToTaskNode(rikerTaskId, laforgeTaskId)
+      } answers {
+        Result.success(Unit)
+      }
+
+      graph.appLogic.setParentChildRelation(rikerTaskId, laforgeTaskId)
+      testMainDispatcher.scheduler.advanceUntilIdle()
+
+      verify(exactly = 1) {
+        mockStorage.addChildToTaskNode(rikerTaskId, laforgeTaskId)
+      }
+
+      appLogicRoot.appStateFlow.value.taskGraph[picardTaskId] shouldBe TaskNode(
+        picardTaskId,
+        "Captain Picard",
+        "Worlds best captain",
+        children = setOf(rikerTaskId)
+      )
+      appLogicRoot.appStateFlow.value.taskGraph[rikerTaskId] shouldBe TaskNode(
+        rikerTaskId,
+        "William T Riker",
+        "Beard or go home",
+        parent = picardTaskId,
+        children = setOf(laforgeTaskId),
+        blockedTasks = setOf(laforgeTaskId)
+      )
+      appLogicRoot.appStateFlow.value.taskGraph[laforgeTaskId] shouldBe TaskNode(
+        laforgeTaskId,
+        "Geordi Laforge",
+        "Space Engineering Master",
+        parent = rikerTaskId,
+        blockingTasks = setOf(rikerTaskId)
+      )
+    }
+
+    test("Add parent child relationship from graph view Illegal") {
+      finishOnCreate()
+      val graph = rootDecomposeComponent.childStack.value.active.instance
+      graph as AppLogicRoot.Child.TaskGraph
+
+      every {
+        mockStorage.addChildToTaskNode(rikerTaskId, laforgeTaskId)
+      } answers {
+        Result.failure(BYDFailure.OperationWouldIntroduceCycle(rikerTaskId, laforgeTaskId))
+      }
+
+      graph.appLogic.setParentChildRelation(rikerTaskId, laforgeTaskId)
+      testMainDispatcher.scheduler.advanceUntilIdle()
+
+      verify(exactly = 1) {
+        mockStorage.addChildToTaskNode(rikerTaskId, laforgeTaskId)
+      }
+
+      assertLogSeverityWithStrings(
+        Severity.Error,
+        listOf(rikerTaskId, laforgeTaskId).map { it.toString() }
+      )
+      appLogicRoot.appStateFlow.value.taskGraph shouldContainExactly taskNodes
+    }
 
     test("Add Blocking") {
       finishOnCreate()
