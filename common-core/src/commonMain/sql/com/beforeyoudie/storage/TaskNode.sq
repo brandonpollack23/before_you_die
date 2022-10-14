@@ -1,0 +1,204 @@
+-- TODO SEARCH create a fts table
+CREATE TABLE IF NOT EXISTS TaskNode (
+    id TEXT NOT NULL PRIMARY KEY UNIQUE,
+    title TEXT NOT NULL,
+    description TEXT DEFAULT "",
+    complete INTEGER AS Boolean DEFAULT 0 NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS TaskChildren (
+    parent TEXT NOT NULL,
+    child TEXT NOT NULL UNIQUE, -- Can only be child of one task!
+    FOREIGN KEY(parent) REFERENCES TaskNode(id),
+    FOREIGN KEY(child) REFERENCES TaskNode(id)
+);
+CREATE INDEX IF NOT EXISTS parent_idx ON TaskChildren(parent);
+CREATE INDEX IF NOT EXISTS child_idx ON TaskChildren(child);
+
+CREATE TABLE IF NOT EXISTS TaskDependency (
+    blockedTask TEXT NOT NULL,
+    blockingTask TEXT NOT NULL,
+    FOREIGN KEY(blockingTask) REFERENCES TaskNode(id),
+    FOREIGN KEY(blockedTask) REFERENCES TaskNode(id)
+);
+CREATE INDEX IF NOT EXISTS blocking_task_index ON TaskDependency(blockingTask);
+CREATE INDEX IF NOT EXISTS blocked_task_index ON TaskDependency(blockedTask);
+
+-- Selection operations
+selectTaskNode:
+SELECT
+  n.id,
+  n.title,
+  n.complete,
+  n.description,
+  IFNULL((SELECT parent FROM TaskChildren WHERE child = n.id LIMIT 1), "") AS parent,
+  group_concat(children_table.child) AS children,
+  group_concat(td.blockedTask) AS blockedTasks,
+  IFNULL((SELECT group_concat(blockingTask) FROM TaskDependency WHERE blockedTask = n.id GROUP BY blockedTask), "") AS blockingTasks
+FROM TaskNode AS n
+LEFT JOIN TaskDependency AS td
+ON n.id = td.blockingTask
+LEFT JOIN TaskChildren AS children_table
+ON n.id = children_table.parent
+WHERE n.id = :nodeId
+GROUP BY n.id;
+
+selectAllTaskNodes:
+SELECT * FROM TaskNode;
+
+selectAllTaskNodesWithDependentAndChildData:
+SELECT
+  n.id,
+  n.title,
+  n.complete,
+  n.description,
+  IFNULL((SELECT parent FROM TaskChildren WHERE child = n.id LIMIT 1), "") AS parent,
+  group_concat(children_table.child) AS children,
+  group_concat(td.blockedTask) AS blocked_tasks,
+  IFNULL((SELECT group_concat(blockingTask) FROM TaskDependency WHERE blockedTask = n.id GROUP BY blockedTask), "") AS blocking_tasks
+FROM TaskNode AS n
+LEFT JOIN TaskDependency AS td
+ON n.id = td.blockingTask
+LEFT JOIN TaskChildren AS children_table
+ON n.id = children_table.parent
+GROUP BY n.id;
+
+selectAllChildren:
+SELECT child FROM TaskChildren WHERE parent = :parentId;
+
+selectTaskselectTaskNodeAndDescendentIds:
+WITH RECURSIVE descendents(parent) AS (
+  VALUES (:uuid)
+  UNION ALL
+  SELECT child FROM TaskChildren, descendents
+  WHERE TaskChildren.parent = descendents.parent
+)
+SELECT IFNULL(parent,"") AS id FROM descendents;
+
+-- Modification operations
+insertTaskNode:
+INSERT OR REPLACE INTO
+    TaskNode( id, title, description, complete)
+VALUES (:id, :title, :description, :complete);
+
+toggleTaskCompletion:
+UPDATE TaskNode
+SET complete = IIF(complete = 1, 0, 1)
+WHERE id = :nodeId;
+
+updateTitle:
+UPDATE TaskNode
+SET title = :title
+WHERE id = :nodeId;
+
+updateDescription:
+UPDATE TaskNode
+SET description = :description
+WHERE id = :nodeId;
+
+markTaskComplete:
+UPDATE TaskNode
+SET complete = :isComplete
+WHERE id = :nodeId;
+
+addChildToTaskNode:
+INSERT INTO
+TaskChildren(parent, child)
+VALUES (:parent, :child);
+
+reparentChild:
+UPDATE TaskChildren
+SET parent = :newParent
+WHERE child = :child;
+
+addDependencyToTaskNode:
+INSERT INTO
+TaskDependency(blockedTask, blockingTask)
+-- VALUES (:blocked_task, :blocking_task)
+SELECT :blockedTask, :blockingTask
+WHERE NOT EXISTS (SELECT * FROM TaskDependency WHERE blockedTask = :blockedTask AND blockingTask = :blockingTask);
+
+-- Removal Operations
+removeTaskNodeAndChildren {
+  DELETE FROM TaskDependency
+  WHERE blockedTask IN :nodesToRemove1 OR blockingTask IN :nodesToRemove1;
+
+  DELETE FROM TaskNode
+  WHERE id IN :nodesToRemove2;
+
+  DELETE FROM TaskChildren
+  WHERE child IN :nodesToRemove3 OR parent IN :nodesToRemove3;
+}
+
+removeDependencyRelationship:
+DELETE FROM TaskDependency
+WHERE blockingTask = :blockingTask AND blockedTask = :blockedTask;
+
+-- This selects all nodes who have all their blocking tasks marked as complete
+selectAllActionableTaskNodes:
+WITH completedBlockers AS (
+-- This is all the task ids who's blocking tasks are ALL marked complete
+  SELECT id FROM (
+    SELECT
+        td.blockedTask AS id,
+        SUM(blockingTaskNode.complete) AS completedBlockers,
+        COUNT(blockingTaskNode.complete) AS totalBlockers
+      FROM TaskDependency AS td, TaskNode AS blockingTaskNode
+      WHERE blockingTaskNode.id = td.blockingTask
+      GROUP BY td.blockedTask
+  )
+  WHERE completedBlockers = totalBlockers
+),
+-- This is all nodes that have no blockers at all
+nodesWithNoBlockingTasks AS (
+  SELECT
+    id
+  FROM TaskNode AS n
+  WHERE n.id NOT IN (SELECT blockedTask FROM TaskDependency) AND n.complete = 0
+),
+-- Those two tables unioned is what we want
+nodesToInclude AS (
+  SELECT id FROM completedBlockers
+  UNION ALL
+  SELECT id FROM nodesWithNoBlockingTasks
+)
+-- This query repeats the regular joins etc to get all the nodes and then joins it with the nodesToInclude as a filter
+SELECT
+  n.id,
+  n.title,
+  n.complete,
+  n.description,
+  IFNULL((SELECT parent FROM TaskChildren WHERE child = n.id LIMIT 1), "") AS parent,
+  group_concat(children_table.child) AS children,
+  group_concat(td.blockedTask) AS blocked_tasks,
+  IFNULL((SELECT group_concat(blockingTask) FROM TaskDependency WHERE blockedTask = n.id GROUP BY blockedTask), "") AS blocking_tasks
+FROM TaskNode AS n, nodesToInclude
+LEFT JOIN TaskDependency AS td
+ON n.id = td.blockingTask
+LEFT JOIN TaskChildren AS children_table
+ON n.id = children_table.parent
+WHERE nodesToInclude.id = n.id AND n.complete = 0
+GROUP BY n.id;
+
+-- Utility operations
+isDependencyAncestorOf:
+WITH RECURSIVE
+  recursedBlockedTasks(blockedTask) AS (
+    VALUES (IFNULL(:blockedTask, ""))
+    UNION ALL
+    SELECT TaskDependency.blockedTask FROM TaskDependency, recursedBlockedTasks
+    WHERE TaskDependency.blockingTask = recursedBlockedTasks.blockedTask
+)
+SELECT COUNT(*) FROM recursedBlockedTasks WHERE blockedTask = :blockingTask;
+
+isParentAncestorOf:
+WITH RECURSIVE
+  recursedBlockedTasks(child) AS (
+    VALUES (IFNULL(:childTask, ""))
+    UNION ALL
+    SELECT TaskChildren.child FROM TaskChildren, recursedBlockedTasks
+    WHERE TaskChildren.parent = recursedBlockedTasks.child
+)
+SELECT COUNT(*) FROM recursedBlockedTasks WHERE child = :parentTask;
+
+-- TODO STORAGE make a modifications db for syncing, store text or blobs and serialize them
