@@ -24,6 +24,7 @@ dependencyResolutionManagement {
       // WARNING JS won't work until in kotlin 1.7.20 until compose 1.21 according to release notes
       version("jetbrains-compose", "1.2.0")
       version("spotless", "6.11.0")
+      version("gradleversions", "0.42.0")
 
       // kotlin-inject DI
       library("di-kotlinInject-ksp", "me.tatarka.inject:kotlin-inject-compiler-ksp:0.5.1")

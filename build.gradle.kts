@@ -7,6 +7,7 @@ plugins {
   id("com.squareup.sqldelight") version libs.versions.sqldelight apply false
   id("io.kotest.multiplatform") version libs.versions.kotest
   id("org.jetbrains.compose") version libs.versions.jetbrains.compose
+  id("com.github.ben-manes.versions") version libs.versions.gradleversions
   id("org.jetbrains.dokka") version "1.7.10"
 }
 
