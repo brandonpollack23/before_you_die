@@ -10,7 +10,6 @@ import com.beforeyoudie.common.applogic.AppLogicRoot
 import com.beforeyoudie.common.applogic.TaskGraphEvent
 import com.beforeyoudie.common.di.ApplicationCoroutineContext
 import com.beforeyoudie.common.di.BydKotlinInjectAppComponent
-import com.beforeyoudie.common.di.DecomposeAppLogicComponent
 import com.beforeyoudie.common.di.IOCoroutineContext
 import com.beforeyoudie.common.di.MockStoragePlatformComponent
 import com.beforeyoudie.common.di.TestDecomposeAppLogicComponent
