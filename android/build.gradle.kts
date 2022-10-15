@@ -66,7 +66,6 @@ android {
     coreLibraryDesugaring(libs.desugar)
     implementation(compose.material)
     implementation(libs.kermit)
-    implementation(libs.decompose.extensions.jetpack)
     implementation(libs.kotlinx.coroutines.android)
     implementation(project(":common-core"))
     implementation(project(":common-ui"))
