@@ -1,3 +1,5 @@
+// TODO NOW update deps, but configure the updater to ignore non stable when I am stable (see example in gh: https://github.com/ben-manes/gradle-versions-plugin#rejectversionsif-and-componentselection)
+
 pluginManagement {
   repositories {
     google()
