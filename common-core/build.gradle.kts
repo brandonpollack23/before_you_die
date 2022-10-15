@@ -1,3 +1,4 @@
+import org.gradle.configurationcache.extensions.capitalized
 import org.jetbrains.dokka.gradle.DokkaTaskPartial
 
 plugins {
@@ -108,16 +109,19 @@ android {
       isIncludeAndroidResources = true
     }
   }
-  sourceSets {
-    named("release") {
-      kotlin.srcDir("build/generated/ksp/android/androidRelease/kotlin")
-    }
-    named("debug") {
-      kotlin.srcDir("build/generated/ksp/android/androidDebug/kotlin")
-    }
-  }
+
   dependencies {
     coreLibraryDesugaring(libs.desugar)
+  }
+
+  libraryVariants.all {
+    kotlin {
+      sourceSets {
+        getByName("android${name.capitalized()}") {
+          kotlin.srcDir("build/generated/ksp/android/$name/kotlin")
+        }
+      }
+    }
   }
 }
 
