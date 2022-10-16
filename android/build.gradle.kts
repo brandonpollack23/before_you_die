@@ -61,14 +61,16 @@ android {
   buildFeatures {
     compose = true
   }
+}
 
-  dependencies {
-    coreLibraryDesugaring(libs.desugar)
-    implementation(compose.material)
-    implementation(libs.kermit)
-    implementation(libs.kotlinx.coroutines.android)
-    implementation(project(":common-core"))
-    implementation(project(":common-ui"))
-    implementation("androidx.activity:activity-compose:1.6.0")
-  }
+dependencies {
+  val composeVersion = "1.2.1"
+  implementation("androidx.compose.material:material:$composeVersion")
+
+  coreLibraryDesugaring(libs.desugar)
+  implementation(libs.kermit)
+  implementation(libs.kotlinx.coroutines.android)
+  implementation(project(":common-core"))
+  implementation(project(":common-ui"))
+  implementation("androidx.activity:activity-compose:1.6.0")
 }

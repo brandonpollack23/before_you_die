@@ -6,7 +6,7 @@ plugins {
   id("com.google.devtools.ksp") version libs.versions.kotlin.ksp apply false
   id("com.squareup.sqldelight") version libs.versions.sqldelight apply false
   id("io.kotest.multiplatform") version libs.versions.kotest
-  id("org.jetbrains.compose") version libs.versions.jetbrains.compose
+  id("org.jetbrains.compose") version libs.versions.jetbrains.compose apply false
   id("com.github.ben-manes.versions") version libs.versions.gradleversions
   id("org.jetbrains.dokka") version "1.7.10"
 }
