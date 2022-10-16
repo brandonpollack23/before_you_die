@@ -1,4 +1,3 @@
-import org.jetbrains.dokka.gradle.DokkaTask
 import org.jetbrains.dokka.gradle.DokkaTaskPartial
 
 plugins {
@@ -8,7 +7,7 @@ plugins {
   id("io.kotest.multiplatform") version libs.versions.kotest
   id("org.jetbrains.compose") version libs.versions.jetbrains.compose apply false
   id("com.github.ben-manes.versions") version libs.versions.gradleversions
-  id("org.jetbrains.dokka") version "1.7.10"
+  id("org.jetbrains.dokka") version "1.7.20"
 }
 
 buildscript {

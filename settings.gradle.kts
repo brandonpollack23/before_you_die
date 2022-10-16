@@ -1,5 +1,3 @@
-// TODO NOW update deps, but configure the updater to ignore non stable when I am stable (see example in gh: https://github.com/ben-manes/gradle-versions-plugin#rejectversionsif-and-componentselection)
-
 pluginManagement {
   repositories {
     google()
@@ -53,7 +51,7 @@ dependencyResolutionManagement {
       library("requiry-sqliteandroid", "com.github.requery:sqlite-android:3.39.2")
 
       // Kotest framework
-      val kotestVersion = "5.4.2"
+      val kotestVersion = "5.5.1"
       version("kotest", kotestVersion)
       library("kotest", "io.kotest:kotest-framework-engine:$kotestVersion")
       library("kotest-runner-junit5", "io.kotest:kotest-runner-junit5:$kotestVersion")

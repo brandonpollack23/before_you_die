@@ -37,8 +37,12 @@ fun main() {
     val windowState = rememberWindowState()
     LifecycleController(app.lifecycle, windowState)
 
-    // TODO UI Look at all these options.
-    Window(onCloseRequest = ::exitApplication, state = windowState) {
+    // TODO NOW investigate resource options
+    // TODO NOW UI Look at all these options.
+    Window(
+      onCloseRequest = ::exitApplication,
+      state = windowState
+    ) {
       MaterialTheme {
         App()
       }
