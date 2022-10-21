@@ -29,6 +29,7 @@ kotlin {
         implementation(libs.decompose.extensions.jetbrains)
         implementation(libs.kotlinx.coroutines.core)
         implementation(libs.kotlinx.coroutines.swing)
+        implementation(libs.mokoresources.compose)
       }
     }
     val jvmTest by getting

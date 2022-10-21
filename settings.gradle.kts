@@ -70,6 +70,13 @@ dependencyResolutionManagement {
       library("uuid", "com.benasher44:uuid:0.5.0")
 
       library("desugar", "com.android.tools:desugar_jdk_libs:1.1.5")
+
+      // Resources
+      val mokoResourcesVersion = "0.20.1"
+      version("mokoresources", mokoResourcesVersion)
+      library("mokoresources", "dev.icerock.moko:resources:$mokoResourcesVersion")
+      library("mokoresources-compose", "dev.icerock.moko:resources-compose:$mokoResourcesVersion")
+      library("mokoresources-test", "dev.icerock.moko:resources-test:$mokoResourcesVersion")
     }
   }
 }

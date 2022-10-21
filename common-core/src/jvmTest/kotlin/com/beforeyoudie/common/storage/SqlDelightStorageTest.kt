@@ -156,23 +156,48 @@ class SqlDelightStorageTest : CommonTest() {
         TaskNode(uuid3, "uuid3")
       ).associateBy { it.id }
 
-      storage.markComplete(uuid1)
+      storage.markTaskAndChildrenComplete(uuid1)
       storage.selectAllTaskNodeInformation() shouldContainExactly setOf(
         TaskNode(uuid1, "uuid1", isComplete = true),
         TaskNode(uuid2, "uuid2"),
         TaskNode(uuid3, "uuid3")
       ).associateBy { it.id }
-      storage.markComplete(uuid2)
+      storage.markTaskAndChildrenComplete(uuid2)
       storage.selectAllTaskNodeInformation() shouldContainExactly setOf(
         TaskNode(uuid1, "uuid1", isComplete = true),
         TaskNode(uuid2, "uuid2", isComplete = true),
         TaskNode(uuid3, "uuid3")
       ).associateBy { it.id }
-      storage.markComplete(uuid3)
+      storage.markTaskAndChildrenComplete(uuid3)
       storage.selectAllTaskNodeInformation() shouldContainExactly setOf(
         TaskNode(uuid1, "uuid1", isComplete = true),
         TaskNode(uuid2, "uuid2", isComplete = true),
         TaskNode(uuid3, "uuid3", isComplete = true)
+      ).associateBy { it.id }
+    }
+
+    test("set mark complete should work with children") {
+      val uuid1 = TaskId(uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3599"))
+      storage.insertTaskNode(uuid1, "uuid1", null, complete = false)
+      val uuid2 = TaskId(uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3598"))
+      storage.insertTaskNode(uuid2, "uuid2", null, complete = false)
+      val uuid3 = TaskId(uuidFrom("3d7f7dd6-c345-49a8-aa1d-404fb9ea3588"))
+      storage.insertTaskNode(uuid3, "uuid3", null, complete = false)
+
+      storage.addChildToTaskNode(uuid1, uuid2)
+      storage.addChildToTaskNode(uuid2, uuid3)
+
+      storage.selectAllTaskNodeInformation() shouldContainExactly setOf(
+        TaskNode(uuid1, "uuid1", children = setOf(uuid2)),
+        TaskNode(uuid2, "uuid2", parent = uuid1, children = setOf(uuid3)),
+        TaskNode(uuid3, "uuid3", parent = uuid2)
+      ).associateBy { it.id }
+
+      storage.markTaskAndChildrenComplete(uuid1)
+      storage.selectAllTaskNodeInformation() shouldContainExactly setOf(
+        TaskNode(uuid1, "uuid1", children = setOf(uuid2), isComplete = true),
+        TaskNode(uuid2, "uuid2", parent = uuid1, children = setOf(uuid3), isComplete = true),
+        TaskNode(uuid3, "uuid3", parent = uuid2, isComplete = true)
       ).associateBy { it.id }
     }
 
@@ -425,8 +450,8 @@ class SqlDelightStorageTest : CommonTest() {
         TaskNode(uuid1, "uuid1", blockedTasks = setOf(uuid2, uuid3))
       ).associateBy { it.id }
 
-      storage.markComplete(uuid0) shouldBeSuccess Unit
-      storage.markComplete(uuid1) shouldBeSuccess Unit
+      storage.markTaskAndChildrenComplete(uuid0) shouldBeSuccess Unit
+      storage.markTaskAndChildrenComplete(uuid1) shouldBeSuccess Unit
       // Now 2 and 3 should be actionable, since 4 is blocked and 1 is complete.
       storage.selectAllActionableTaskNodeInformation() shouldContainExactly setOf(
         TaskNode(
@@ -445,7 +470,7 @@ class SqlDelightStorageTest : CommonTest() {
         )
       ).associateBy { it.id }
 
-      storage.markComplete(uuid2) shouldBeSuccess Unit
+      storage.markTaskAndChildrenComplete(uuid2) shouldBeSuccess Unit
       // only 3 should still be actionable, since 4 is blocked by 3 still
       storage.selectAllActionableTaskNodeInformation() shouldContainExactly setOf(
         TaskNode(
@@ -457,7 +482,7 @@ class SqlDelightStorageTest : CommonTest() {
         )
       ).associateBy { it.id }
 
-      storage.markComplete(uuid3) shouldBeSuccess Unit
+      storage.markTaskAndChildrenComplete(uuid3) shouldBeSuccess Unit
       // now 4 is opened up!
       storage.selectAllActionableTaskNodeInformation() shouldContainExactly setOf(
         TaskNode(
@@ -468,7 +493,7 @@ class SqlDelightStorageTest : CommonTest() {
         )
       ).associateBy { it.id }
 
-      storage.markComplete(uuid4) shouldBeSuccess Unit
+      storage.markTaskAndChildrenComplete(uuid4) shouldBeSuccess Unit
       // now 4 is opened up!
       storage.selectAllActionableTaskNodeInformation() shouldHaveSize 0
     }
@@ -496,8 +521,8 @@ class SqlDelightStorageTest : CommonTest() {
         TaskNode(uuid1, "uuid1", blockedTasks = setOf(uuid2, uuid3))
       ).associateBy { it.id }
 
-      storage.markComplete(uuid0) shouldBeSuccess Unit
-      storage.markComplete(uuid1) shouldBeSuccess Unit
+      storage.markTaskAndChildrenComplete(uuid0) shouldBeSuccess Unit
+      storage.markTaskAndChildrenComplete(uuid1) shouldBeSuccess Unit
       // Now 2 and 3 should be actionable, since 4 is blocked and 1 is complete.
       storage.selectAllActionableTaskNodeInformation() shouldContainExactly setOf(
         TaskNode(
@@ -516,7 +541,7 @@ class SqlDelightStorageTest : CommonTest() {
         )
       ).associateBy { it.id }
 
-      storage.markIncomplete(uuid1) shouldBeSuccess Unit
+      storage.markTaskAndChildrenIncomplete(uuid1) shouldBeSuccess Unit
       storage.selectAllActionableTaskNodeInformation() shouldContainExactly setOf(
         TaskNode(uuid1, "uuid1", blockedTasks = setOf(uuid2, uuid3))
       ).associateBy { it.id }

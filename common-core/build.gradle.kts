@@ -8,6 +8,7 @@ plugins {
   id("io.kotest.multiplatform")
   id("com.google.devtools.ksp")
   id("kotlin-parcelize")
+  id("dev.icerock.mobile.multiplatform-resources")
 }
 
 group = "com.beforeyoudie"
@@ -29,6 +30,7 @@ kotlin {
         implementation(libs.kotlinx.coroutines.core)
         implementation(libs.uuid)
         implementation(libs.di.kotlinInject.runtime)
+        implementation(libs.mokoresources)
       }
     }
 
@@ -136,4 +138,9 @@ sqldelight {
 
 tasks.withType<DokkaTaskPartial>().configureEach {
   moduleName.set("Common Core")
+}
+
+// TODO(#16) make sure to setup iOS integration for resources
+multiplatformResources {
+  multiplatformResourcesPackage = "com.beforeyoudie.common.resources"
 }

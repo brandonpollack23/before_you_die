@@ -32,20 +32,7 @@ data class TaskNode(
   val children: Set<TaskId> = setOf(),
   val blockingTasks: Set<TaskId> = setOf(),
   val blockedTasks: Set<TaskId> = setOf()
-) {
-  override fun hashCode() = id.hashCode()
-  // override fun equals(other: Any?): Boolean {
-  //   if (this === other) return true
-  //   if (javaClass != other?.javaClass) return false
-  //   other as TaskNode
-  //   if (id != other.id) return false
-  //   if (children != other.children) return false
-  //   if (blockingTasks != other.blockingTasks) return false
-  //   if (blockedTasks != other.blockedTasks) return false
-  //   if (isComplete != other.isComplete) return false
-  //   return true
-  // }
-}
+)
 
 /** A basic task ID generator to be injected and therefore overridable for testing.*/
 open class TaskIdGenerator {

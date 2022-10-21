@@ -18,9 +18,12 @@ kotlin {
   sourceSets {
     val commonMain by getting {
       dependencies {
+        implementation(project(":common-core"))
+
         api(compose.runtime)
         api(compose.foundation)
         api(compose.material)
+        implementation(libs.mokoresources.compose)
       }
     }
     val commonTest by getting {
@@ -40,6 +43,7 @@ kotlin {
     val jvmMain by getting {
       dependencies {
         api(compose.preview)
+        implementation(libs.decompose) // Needed for test previews
       }
     }
     val jvmTest by getting

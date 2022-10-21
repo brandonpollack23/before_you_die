@@ -7,7 +7,7 @@ import com.arkivanov.essenty.lifecycle.create
 import com.beforeyoudie.CommonTest
 import com.beforeyoudie.common.applogic.AppLogicEditConfig
 import com.beforeyoudie.common.applogic.AppLogicRoot
-import com.beforeyoudie.common.applogic.TaskGraphEvent
+import com.beforeyoudie.common.applogic.TaskEvent
 import com.beforeyoudie.common.di.ApplicationCoroutineContext
 import com.beforeyoudie.common.di.BydKotlinInjectAppComponent
 import com.beforeyoudie.common.di.IOCoroutineContext
@@ -128,7 +128,7 @@ class AppLogicRootDecomposeComponentTest : CommonTest() {
 
       // Detect this ocurred on the mock.
       graph.appLogic.taskGraphEvents.onEach {
-        it shouldBe TaskGraphEvent.OpenEdit(picardTaskId)
+        it shouldBe TaskEvent.OpenEdit(picardTaskId)
       }
 
       // Advance all coroutine flows.
@@ -159,7 +159,7 @@ class AppLogicRootDecomposeComponentTest : CommonTest() {
 
       // Verify the event is sent in the stream.
       graph.appLogic.taskGraphEvents.onEach {
-        it shouldBe TaskGraphEvent.DeleteTaskAndChildren(picardTaskId)
+        it shouldBe TaskEvent.DeleteTaskAndChildren(picardTaskId)
       }
 
       // Propogate coroutines and verify the call was made to storage.
@@ -222,7 +222,7 @@ class AppLogicRootDecomposeComponentTest : CommonTest() {
       }
 
       graph.appLogic.taskGraphEvents.onEach {
-        it shouldBe TaskGraphEvent.CreateTask(
+        it shouldBe TaskEvent.CreateTask(
           "Take This Message To Your Leaders, Gul Macet",
           "We'll be watching",
           picardTaskId

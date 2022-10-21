@@ -4,6 +4,7 @@ import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.router.stack.ChildStack
 import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.childStack
+import com.arkivanov.decompose.router.stack.pop
 import com.arkivanov.decompose.router.stack.push
 import com.arkivanov.decompose.value.Value
 import com.arkivanov.essenty.instancekeeper.InstanceKeeper
@@ -18,10 +19,10 @@ import com.beforeyoudie.common.applogic.AppLogicTaskGraph
 import com.beforeyoudie.common.applogic.AppLogicTaskGraphConfig
 import com.beforeyoudie.common.applogic.AppState
 import com.beforeyoudie.common.applogic.DeepLink
+import com.beforeyoudie.common.applogic.TaskEvent
 import com.beforeyoudie.common.di.ApplicationCoroutineContext
 import com.beforeyoudie.common.di.IOCoroutineContext
 import com.beforeyoudie.common.di.RootComponentContext
-import com.beforeyoudie.common.state.TaskId
 import com.beforeyoudie.common.state.TaskIdGenerator
 import com.beforeyoudie.common.storage.IBydStorage
 import com.beforeyoudie.common.util.getClassLogger
@@ -107,7 +108,9 @@ class RootDecomposeComponent(
     })
   }
 
-  override fun onOpenEdit(taskId: TaskId) {
+  override fun onOpenEdit(event: TaskEvent.OpenEdit) {
+    val taskId = event.taskId
+
     if (appStateFlow.value.isLoading) {
       logger.e(
         "Open edit called while loading, this shouldn't be possible! " +
@@ -118,6 +121,10 @@ class RootDecomposeComponent(
 
     logger.v("Open edit triggered for task $taskId")
     navigation.push(NavigationConfig.Edit(AppLogicEditConfig(taskId)))
+  }
+
+  override fun onBack() {
+    navigation.pop()
   }
 
   private fun createChild(
@@ -141,7 +148,7 @@ class RootDecomposeComponent(
       componentContext
     )
 
-    subscribeToTaskGraphEvents(taskGraph.taskGraphEvents)
+    subscribeToTaskEvents(taskGraph.taskGraphEvents)
     return Child.TaskGraph(taskGraph)
   }
 
@@ -155,7 +162,7 @@ class RootDecomposeComponent(
       componentContext
     )
 
-    subscribeToEditTaskEvents(editTask.editTaskEvents)
+    subscribeToTaskEvents(editTask.editTaskEvents)
     return Child.EditTask(editTask)
   }
 

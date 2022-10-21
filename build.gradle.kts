@@ -8,6 +8,7 @@ plugins {
   id("org.jetbrains.compose") version libs.versions.jetbrains.compose apply false
   id("com.github.ben-manes.versions") version libs.versions.gradleversions
   id("org.jetbrains.dokka") version "1.7.20"
+  id("dev.icerock.mobile.multiplatform-resources") version libs.versions.mokoresources apply false
 }
 
 buildscript {
@@ -17,8 +18,12 @@ buildscript {
     mavenCentral()
   }
   dependencies {
+    // Kotlin/Android
     classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:${libs.versions.kotlin.compiler}")
     classpath("com.android.tools.build:gradle:7.2.2")
+
+    // Moko Resources
+    classpath("dev.icerock.moko:resources-generator:${libs.versions.mokoresources}")
   }
 }
 

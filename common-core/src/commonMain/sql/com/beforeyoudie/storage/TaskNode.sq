@@ -96,10 +96,10 @@ UPDATE TaskNode
 SET description = :description
 WHERE id = :nodeId;
 
-markTaskComplete:
+markTasksComplete:
 UPDATE TaskNode
 SET complete = :isComplete
-WHERE id = :nodeId;
+WHERE id IN :nodeIds;
 
 addChildToTaskNode:
 INSERT INTO

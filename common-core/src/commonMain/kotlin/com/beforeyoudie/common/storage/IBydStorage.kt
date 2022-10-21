@@ -36,11 +36,14 @@ interface IBydStorage {
     complete: Boolean = false
   ): Result<TaskNode>
 
-  /** Mark a task as done, returning an error if it doesn't exist. */
-  fun markComplete(uuid: TaskId): Result<Unit>
+  /**
+   * Mark a task as done, returning an error if it doesn't exist.
+   * @returns list of completed tasks
+   */
+  fun markTaskAndChildrenComplete(uuid: TaskId): Result<Collection<TaskId>>
 
   /** Mark a task as incomplete, returning an error if it doesn't exist. */
-  fun markIncomplete(uuid: TaskId): Result<Unit>
+  fun markTaskAndChildrenIncomplete(uuid: TaskId): Result<Collection<TaskId>>
 
   /**
    * Add a child to a task mode, if you need to reparent use that operation instead.

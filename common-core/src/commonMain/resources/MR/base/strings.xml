@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<resources>
+    <string name="app_title">Before You Die</string>
+    <string name="unimplemented_view">This view is currently unimplemented</string>
+    <string name="add_note">Add a note</string>
+    <string name="input_title_placeholder">New note title</string>
+    <string name="input_description_placeholder">New note description</string>
+    <string name="new_note_confirm">Create Note</string>
+    <string name="expand_completed_tasks">Expand completed tasks</string>
+    <string name="back">Go Back</string>
+
+    <string name="edit_title_field">Title</string>
+    <string name="edit_description_field">Description</string>
+    <string name="edit_parent_field">Parent</string>
+    <string name="edit_children_field">Children</string>
+    <string name="edit_blockedby_field">Blocked By</string>
+    <string name="edit_blocking_field">Blocking</string>
+</resources>

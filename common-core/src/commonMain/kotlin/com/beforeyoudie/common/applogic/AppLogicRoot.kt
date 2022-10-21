@@ -55,38 +55,33 @@ abstract class AppLogicRoot(
   }
 
   /** Function to be called when an edit view is requested from the task graph. */
-  protected abstract fun onOpenEdit(taskId: TaskId)
+  protected abstract fun onOpenEdit(event: TaskEvent.OpenEdit)
+
+  /** To be called on app back navigation. */
+  protected abstract fun onBack()
 
   /** Use this to subscribe to a child navigable view on task graph events after creation.*/
-  protected fun subscribeToTaskGraphEvents(taskGraphEvents: SharedFlow<TaskGraphEvent>) {
+  protected fun subscribeToTaskEvents(taskGraphEvents: SharedFlow<TaskEvent>) {
     coroutineScope.launch {
       taskGraphEvents.collect {
         when (it) {
-          is TaskGraphEvent.CreateTask -> handleCreateTaskEvent(it)
-          is TaskGraphEvent.DeleteTaskAndChildren -> handleDeleteTaskAndChildrenEvent(it)
-          is TaskGraphEvent.OpenEdit -> onOpenEdit(it.taskId)
-          is TaskGraphEvent.SetParentChild -> onSetParentChild(it)
+          is TaskEvent.CreateTask -> handleCreateTaskEvent(it)
+          is TaskEvent.DeleteTaskAndChildren -> handleDeleteTaskAndChildrenEvent(it)
+          is TaskEvent.SetTaskAndChildrenComplete -> handleSetTaskAndChildrenComplete(it)
+          is TaskEvent.OpenEdit -> onOpenEdit(it)
+          is TaskEvent.SetParentChild -> onSetParentChild(it)
+
+          is TaskEvent.EditTitle -> handleEditTaskTitle(it)
+          is TaskEvent.EditDescription -> handleEditTaskDescription(it)
+          is TaskEvent.AddBlockingTask -> handleAddBlockingTask(it)
+          is TaskEvent.AddBlockedTask -> handleAddBlockedTask(it)
+          TaskEvent.Back -> onBack()
         }
       }
     }
   }
 
-  protected fun subscribeToEditTaskEvents(editTaskEvents: SharedFlow<EditTaskEvent>) {
-    coroutineScope.launch {
-      editTaskEvents.collect { taskEvent ->
-        when (taskEvent) {
-          is EditTaskEvent.EditTitle -> handleEditTaskTitle(taskEvent)
-          is EditTaskEvent.EditDescription -> handleEditTaskDescription(taskEvent)
-          is EditTaskEvent.SetParent -> handleSetParent(taskEvent)
-          is EditTaskEvent.AddChild -> handleAddChild(taskEvent)
-          is EditTaskEvent.AddBlockingTask -> handleAddBlockingTask(taskEvent)
-          is EditTaskEvent.AddBlockedTask -> handleAddBlockedTask(taskEvent)
-        }
-      }
-    }
-  }
-
-  private fun handleCreateTaskEvent(it: TaskGraphEvent.CreateTask) {
+  private fun handleCreateTaskEvent(it: TaskEvent.CreateTask) {
     storage.insertTaskNode(
       id = taskIdGenerator.generateTaskId(),
       title = it.title,
@@ -111,7 +106,7 @@ abstract class AppLogicRoot(
     }
   }
 
-  private fun handleDeleteTaskAndChildrenEvent(it: TaskGraphEvent.DeleteTaskAndChildren) {
+  private fun handleDeleteTaskAndChildrenEvent(it: TaskEvent.DeleteTaskAndChildren) {
     storage.removeTaskNodeAndChildren(it.taskId)
       .onSuccess { removedNodes ->
         val removedNodesSet = removedNodes.toSet()
@@ -138,7 +133,30 @@ abstract class AppLogicRoot(
       }
   }
 
-  private fun handleEditTaskTitle(taskEvent: EditTaskEvent.EditTitle) {
+  private fun handleSetTaskAndChildrenComplete(it: TaskEvent.SetTaskAndChildrenComplete) {
+    if (it.isComplete) {
+      storage.markTaskAndChildrenComplete(it.taskId)
+    } else {
+      storage.markTaskAndChildrenIncomplete(it.taskId)
+    }.onSuccess { completionNodes ->
+      logger.i(
+        "Node ${it.taskId} and children (total of ${completionNodes.size}) " +
+          "set completion to: ${it.isComplete}, updating in memory state"
+      )
+
+      // TODO(#13) Measure this and make it more efficent, potentially via full reload.
+      taskGraphStateFlow.update { taskGraph ->
+        // Keep all values but overwrite changed ones.
+        taskGraph + taskGraph
+          .filter { entry -> completionNodes.contains(entry.key) }
+          .mapValues { entry -> entry.value.copy(isComplete = it.isComplete) }
+      }
+    }.onFailure {
+      logger.e("Failed to mark tasks and children complete! $it")
+    }
+  }
+
+  private fun handleEditTaskTitle(taskEvent: TaskEvent.EditTitle) {
     storage.updateTaskTitle(taskEvent.taskId, taskEvent.newTitle)
       .onSuccess {
         taskGraphStateFlow.update { taskGraph ->
@@ -153,7 +171,7 @@ abstract class AppLogicRoot(
       }
   }
 
-  private fun handleEditTaskDescription(taskEvent: EditTaskEvent.EditDescription) {
+  private fun handleEditTaskDescription(taskEvent: TaskEvent.EditDescription) {
     storage.updateTaskDescription(taskEvent.taskId, taskEvent.newDescription)
       .onSuccess {
         taskGraphStateFlow.update { taskGraph ->
@@ -169,12 +187,8 @@ abstract class AppLogicRoot(
       }
   }
 
-  private fun onSetParentChild(setParentChildEvent: TaskGraphEvent.SetParentChild) {
+  private fun onSetParentChild(setParentChildEvent: TaskEvent.SetParentChild) {
     handleSetParent(setParentChildEvent.parent, setParentChildEvent.child)
-  }
-
-  private fun handleSetParent(taskEvent: EditTaskEvent.SetParent) {
-    handleSetParent(taskEvent.newParent, taskEvent.taskId)
   }
 
   private fun handleSetParent(parent: TaskId, child: TaskId) {
@@ -193,23 +207,7 @@ abstract class AppLogicRoot(
     addChildHelper(parentToUpdate, childToUpdate)
   }
 
-  private fun handleAddChild(taskEvent: EditTaskEvent.AddChild) {
-    val childToUpdate = appStateFlow.value.taskGraph[taskEvent.newChild]
-    if (childToUpdate == null) {
-      logger.e { "No such task ${taskEvent.newChild} to update parent to ${taskEvent.taskId}" }
-    }
-
-    val parentToUpdate = appStateFlow.value.taskGraph[taskEvent.taskId]
-    if (parentToUpdate == null) {
-      logger.e { "No such parent ${taskEvent.taskId} to update with child ${taskEvent.newChild}" }
-    }
-
-    if (childToUpdate == null || parentToUpdate == null) return
-
-    addChildHelper(parentToUpdate, childToUpdate)
-  }
-
-  private fun handleAddBlockingTask(taskEvent: EditTaskEvent.AddBlockingTask) {
+  private fun handleAddBlockingTask(taskEvent: TaskEvent.AddBlockingTask) {
     val blockedTask = appStateFlow.value.taskGraph[taskEvent.taskId]
     if (blockedTask == null) {
       logger.e {
@@ -227,7 +225,7 @@ abstract class AppLogicRoot(
     addTaskDependencyHelper(blockingTask, blockedTask)
   }
 
-  private fun handleAddBlockedTask(taskEvent: EditTaskEvent.AddBlockedTask) {
+  private fun handleAddBlockedTask(taskEvent: TaskEvent.AddBlockedTask) {
     val blockedTask = appStateFlow.value.taskGraph[taskEvent.blockedTask]
     if (blockedTask == null) {
       logger.e { "No such task ${taskEvent.taskId} to add blocking task to to ${taskEvent.taskId}" }
@@ -310,6 +308,26 @@ data class AppState(
   val activeChild: AppLogicRoot.Child,
   val isLoading: Boolean = true
 )
+
+/**
+ * These are the events emitted by the reactive stream/flow to be responded to upstream.
+ */
+sealed interface TaskEvent {
+  /** Create a task with the specified parameters. */
+  data class CreateTask(val title: String, val description: String?, val parent: TaskId?) :
+    TaskEvent
+
+  /** Delete a task with the specified uuid. */
+  data class DeleteTaskAndChildren(val taskId: TaskId) : TaskEvent
+  data class SetTaskAndChildrenComplete(val taskId: TaskId, val isComplete: Boolean) : TaskEvent
+  data class OpenEdit(val taskId: TaskId) : TaskEvent
+  data class SetParentChild(val parent: TaskId, val child: TaskId) : TaskEvent
+  data class EditTitle(val taskId: TaskId, val newTitle: String) : TaskEvent
+  data class EditDescription(val taskId: TaskId, val newDescription: String) : TaskEvent
+  data class AddBlockingTask(val taskId: TaskId, val blockingTask: TaskId) : TaskEvent
+  data class AddBlockedTask(val taskId: TaskId, val blockedTask: TaskId) : TaskEvent
+  object Back : TaskEvent
+}
 
 // TODO(#9) Deep links add deep link functionality
 /** Deep link types for the app. */

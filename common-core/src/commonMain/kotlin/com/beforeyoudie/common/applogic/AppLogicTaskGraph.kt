@@ -3,10 +3,7 @@ package com.beforeyoudie.common.applogic
 import com.arkivanov.essenty.parcelable.Parcelable
 import com.arkivanov.essenty.parcelable.Parcelize
 import com.beforeyoudie.common.state.TaskId
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.channels.BufferOverflow
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.asSharedFlow
+import com.beforeyoudie.common.util.getClassLogger
 import kotlinx.coroutines.launch
 
 /**
@@ -15,40 +12,40 @@ import kotlinx.coroutines.launch
  */
 abstract class AppLogicTaskGraph(
   val appLogicTaskGraphConfig: AppLogicTaskGraphConfig
-) {
-  /** See [AppLogicRoot] */
-  abstract val coroutineScope: CoroutineScope
+) : AppLogicChild() {
+  protected val logger = getClassLogger()
 
-  private val mutableTaskGraphEvents: MutableSharedFlow<TaskGraphEvent> =
-    MutableSharedFlow(replay = 1, onBufferOverflow = BufferOverflow.DROP_OLDEST)
-
-  /**
-   * The immutable view on the events emitted by the task graph to be consumed by owning AppLogic
-   * components.
-   */
-  val taskGraphEvents = mutableTaskGraphEvents.asSharedFlow()
+  override fun onBackPressed() {
+    logger.e("Should not press back from Graph view, ignoring...")
+  }
 
   fun createTask(title: String, description: String?, parent: TaskId?) {
     coroutineScope.launch {
-      mutableTaskGraphEvents.emit(TaskGraphEvent.CreateTask(title, description, parent))
+      mutableTaskEvents.emit(TaskEvent.CreateTask(title, description, parent))
     }
   }
 
   fun deleteTaskAndChildren(uuid: TaskId) {
     coroutineScope.launch {
-      mutableTaskGraphEvents.emit(TaskGraphEvent.DeleteTaskAndChildren(uuid))
+      mutableTaskEvents.emit(TaskEvent.DeleteTaskAndChildren(uuid))
+    }
+  }
+
+  fun setTaskAndChildrenComplete(uuid: TaskId, isComplete: Boolean) {
+    coroutineScope.launch {
+      mutableTaskEvents.emit(TaskEvent.SetTaskAndChildrenComplete(uuid, isComplete))
     }
   }
 
   fun openEdit(uuid: TaskId) {
     coroutineScope.launch {
-      mutableTaskGraphEvents.emit(TaskGraphEvent.OpenEdit(uuid))
+      mutableTaskEvents.emit(TaskEvent.OpenEdit(uuid))
     }
   }
 
   fun setParentChildRelation(parent: TaskId, child: TaskId) {
     coroutineScope.launch {
-      mutableTaskGraphEvents.emit(TaskGraphEvent.SetParentChild(parent, child))
+      mutableTaskEvents.emit(TaskEvent.SetParentChild(parent, child))
     }
   }
 }
@@ -71,18 +68,4 @@ enum class ViewMode {
 enum class VisibilityMode {
   AllTasks,
   ActionableTasks
-}
-
-/**
- * These are the events emitted by the reactive stream/flow to be responded to upstream.
- */
-sealed interface TaskGraphEvent {
-  /** Create a task with the specified parameters. */
-  data class CreateTask(val title: String, val description: String?, val parent: TaskId?) :
-    TaskGraphEvent
-
-  /** Delete a task with the specified uuid. */
-  data class DeleteTaskAndChildren(val taskId: TaskId) : TaskGraphEvent
-  data class OpenEdit(val taskId: TaskId) : TaskGraphEvent
-  data class SetParentChild(val parent: TaskId, val child: TaskId) : TaskGraphEvent
 }

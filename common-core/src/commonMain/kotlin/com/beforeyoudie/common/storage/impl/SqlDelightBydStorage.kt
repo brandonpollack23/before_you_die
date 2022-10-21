@@ -117,18 +117,29 @@ class SqlDelightBydStorage(
     return result
   }
 
-  override fun markComplete(uuid: TaskId): Result<Unit> {
-    logger.v("Marking task: $uuid as complete")
-    return simpleUpdate(uuid) {
-      database.taskNodeQueries.markTaskComplete(true, uuid.toString())
-    }
+  override fun markTaskAndChildrenComplete(uuid: TaskId): Result<Collection<TaskId>> {
+    logger.v("Marking task $uuid and all descendants complete")
+    return markCompleteHelper(uuid, true)
   }
 
-  override fun markIncomplete(uuid: TaskId): Result<Unit> {
-    logger.v("Marking task: $uuid as incomplete")
-    return simpleUpdate(uuid) {
-      database.taskNodeQueries.markTaskComplete(false, uuid.toString())
+  override fun markTaskAndChildrenIncomplete(uuid: TaskId): Result<Collection<TaskId>> {
+    logger.v("Marking task $uuid and all descendants incomplete")
+    return markCompleteHelper(uuid, false)
+  }
+
+  private fun markCompleteHelper(uuid: TaskId, isComplete: Boolean) = database.transactionWithResult {
+    val root = database.taskNodeQueries.selectTaskNode(uuid.toString()).executeAsOneOrNull()
+    if (root == null) {
+      logger.e("No such task $uuid")
+      rollback(Result.failure(BYDFailure.NonExistentNodeId(uuid)))
     }
+
+    val taskIdsToComplete =
+      database.taskNodeQueries.selectTaskselectTaskNodeAndDescendentIds(uuid.toString())
+        .executeAsList()
+
+    database.taskNodeQueries.markTasksComplete(isComplete, taskIdsToComplete.map { it })
+    Result.success(taskIdsToComplete.asSequence().map { TaskId(uuidFrom(it)) }.toSet())
   }
 
   override fun addChildToTaskNode(parent: TaskId, child: TaskId): Result<Unit> {

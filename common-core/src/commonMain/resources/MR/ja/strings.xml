@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<resources>
+    <string name="app_title">死ぬ前に</string>
+    <string name="unimplemented_view">このビューがまだ開発中です</string>
+    <string name="add_note">ノートを追加</string>
+    <string name="input_title_placeholder">新たなノートの題名欄</string>
+    <string name="input_description_placeholder">新たなノートの説明欄</string>
+    <string name="new_note_confirm">ノートを作成</string>
+    <string name="expand_completed_tasks">完成のノートを拡大</string>
+    <string name="back">戻る</string>
+
+    <string name="edit_title_field">題名欄</string>
+    <string name="edit_description_field">説明欄</string>
+    <string name="edit_parent_field">親欄</string>
+    <string name="edit_children_field">子欄</string>
+    <string name="edit_blockedby_field">阻まれるノート</string>
+    <string name="edit_blocking_field">阻んでいるノート</string>
+</resources>
